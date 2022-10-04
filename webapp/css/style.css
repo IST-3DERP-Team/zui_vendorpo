@@ -1,0 +1,82 @@
+/* Enter your custom styles here */
+/*
+#__toolbar0{
+    height: 45px;
+}*/
+
+/* Enter your custom styles here */
+.sapMGenericTag{
+    margin-bottom: 0.6rem !important;
+}
+.sidePadding {
+    padding: 0 0.5rem;
+}
+
+.borderX {
+    border-right: 1px ridge #d9d9d9;
+    border-left: 1px ridge #d9d9d9;
+}
+
+.margin2 {
+    margin: 0.5rem;
+}
+
+.bgAliceblue {
+    background: #eff4f9;
+}
+
+.cursorPointer {
+    cursor: pointer;
+}
+
+.padding1 {
+    padding: 0.25rem;
+}
+
+.tabColor {
+    background-color: aliceblue !important;
+}
+.paddingTop1 {
+    padding-top: 0.25rem;
+}
+
+.borderRightRidge {
+    border-right: 1px ridge #d9d9d9;
+}
+
+.borderRight {
+    border-right: 1px ridge #d9d9d9;
+}
+
+.mbTag {
+    margin-bottom: 0.15rem !important;
+}
+
+.warningBGColor {
+    background-color: #f9a429 !important;
+}
+.selHdrKeyFontStyle {
+    font-style: italic;
+    font-weight: bold;
+}
+
+.tabColumnRowsBgColor .sapUiTableTr.sapUiTableRowSel, 
+.tabColumnRowsBgColor .sapUiTableRowSelectionCell.sapUiTableRowSel, 
+.tabColumnRowsBgColor .sapUiTableRowActionCell.sapUiTableRowSel {
+    background-color: #ffffff !important;
+}
+.sapMITBHead {
+    margin: 0 !important;
+}
+
+.marginTopNone {
+    margin-top: 0 !important;
+}
+
+/*.sapUiCompFilterBarNonPhone.sapUiRespGrid.sapUiRespGridHSpace0{*/
+.sapUiRespGrid{
+    padding-top: 0rem !important;
+    padding-bottom: 0rem !important;
+    /*padding-right: 2rem;
+    padding-left: 2rem;*/
+}
