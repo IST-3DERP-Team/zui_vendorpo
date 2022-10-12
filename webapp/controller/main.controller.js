@@ -77,7 +77,6 @@ sap.ui.define([
             getColumns(arg,type,tabname,tableTab) {
                 var me = this;
                 //get dynamic columns based on saved layout or ZERP_CHECK
-                
                 var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_COMMON_SRV");
                 var vSBU = this.getView().getModel("ui").getData().sbu;
                 // console.log(oModel)
