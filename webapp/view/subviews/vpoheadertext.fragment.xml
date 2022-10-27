@@ -1,0 +1,56 @@
+<core:FragmentDefinition 
+    xmlns:mvc="sap.ui.core.mvc" 
+    xmlns:c="zuivendorpo.control"
+    xmlns:core="sap.ui.core"
+    xmlns:uiL="sap.ui.layout"
+    xmlns:uiT="sap.ui.table"
+    xmlns:plugins="sap.ui.table.plugins"
+    xmlns="sap.m"
+    xmlns:f="sap.ui.layout.form" 
+    xmlns:semantic="sap.m.semantic"
+    xmlns:smartfilterbar="sap.ui.comp.smartfilterbar"
+    xmlns:fb="sap.ui.comp.filterbar" 
+    displayBlock="false"> 
+    <IconTabBar
+        id="vpoHeaderTxtIconTab"
+        headerMode="Inline"
+        expanded="{device>/isNoPhone}"
+        stretchContentHeight="true" 
+        applyContentPadding="false"
+        class="sapUiResponsivePadding" 
+        expandable="false">
+            <items>
+                <IconTabFilter
+                    text="REMARKS"
+                    key="itfDLVSCHED">
+                    <uiT:Table id="RemarksTbl"
+                        class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
+                        visibleRowCountMode="Auto"
+                        showColumnVisibilityMenu="true"
+                        rows="{VPOHdr>/results}"
+                        enableColumnFreeze="true"
+                        selectionMode="MultiToggle"
+                        selectionBehavior="Row"
+                        rowSelectionChange=".onSelectionChange"
+                        sort="onSorted">
+                    </uiT:Table>
+                </IconTabFilter>
+                <IconTabFilter
+                    text="PACKING INSTRUCTION"
+                    key="itfDLVSCHED">
+                    <uiT:Table id="PackingInstTbl"
+                        class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
+                        visibleRowCountMode="Auto"
+                        showColumnVisibilityMenu="true"
+                        rows="{VPOHdr>/results}"
+                        enableColumnFreeze="true"
+                        selectionMode="MultiToggle"
+                        selectionBehavior="Row"
+                        rowSelectionChange=".onSelectionChange"
+                        sort="onSorted">
+                    </uiT:Table>
+                </IconTabFilter>
+            </items>
+    </IconTabBar>
+    
+</core:FragmentDefinition>

@@ -1,0 +1,80 @@
+<core:FragmentDefinition 
+    xmlns:mvc="sap.ui.core.mvc" 
+    xmlns:c="zuivendorpo.control"
+    xmlns:core="sap.ui.core"
+    xmlns:uiL="sap.ui.layout"
+    xmlns:uiT="sap.ui.table"
+    xmlns:plugins="sap.ui.table.plugins"
+    xmlns="sap.m"
+    xmlns:f="sap.ui.layout.form" 
+    xmlns:semantic="sap.m.semantic"
+    xmlns:smartfilterbar="sap.ui.comp.smartfilterbar"
+    xmlns:fb="sap.ui.comp.filterbar" 
+    displayBlock="false"> 
+    <IconTabBar
+        id="vpoRelStatIconTab"
+        headerMode="Inline"
+        expanded="{device>/isNoPhone}"
+        stretchContentHeight="true" 
+        applyContentPadding="false"
+        class="sapUiResponsivePadding" 
+        expandable="false">
+            <content>
+                <f:Form id="PORelStatDetailForm1" editable="false" class="sapUiNoContentPadding formHdr1">
+                    <f:layout>
+                        <f:ResponsiveGridLayout columnsXL="3" columnsL="3" columnsM="3" singleContainerFullSize="false" />
+                    </f:layout>
+                    <f:formContainers>
+                        <f:FormContainer ariaLabelledBy="Grp1" class="sapUiNoContentPadding" >
+                            <f:formElements>
+                                <f:FormElement label="Release Group" visible="true">
+                                    <f:fields>
+                                        <Input id="PORelSRelGrp" value="{relStratData>/RELGRP} {relStratData>/RELGRPDESC}" editable="false" valueStateText="Required" 
+                                            change="onHeaderChange" liveChange="onHeaderChange">
+                                        </Input>
+                                    </f:fields>
+                                </f:FormElement>
+                                <f:FormElement label="Release Strategy" visible="true">
+                                    <f:fields>
+                                        <Input id="PORelSRelStrat" value="{relStratData>/RELSTRAT} {relStratData>/RELSTRATDESC}" editable="false" valueStateText="Required" 
+                                            change="onHeaderChange" liveChange="onHeaderChange"/>
+                                    </f:fields>
+                                </f:FormElement>
+                                <f:FormElement label="Expected Release" visible="true">
+                                    <f:fields>
+                                        <Input id="PORelSExpRel" value="{relStratData>/expectedRel}" editable="false" valueStateText="Required" 
+                                            change="onHeaderChange" liveChange="onHeaderChange"/>
+                                    </f:fields>
+                                </f:FormElement>
+                            </f:formElements>
+                        </f:FormContainer>
+                        <f:FormContainer ariaLabelledBy="Grp2">
+                            <f:formElements>
+                                <f:FormElement label="Release Code" visible="true">
+                                    <f:fields>
+                                        <Input id="PORelSRelCd" value="{headerData>/PONumber}" editable="false" valueStateText="Required" 
+                                            change="onHeaderChange" liveChange="onHeaderChange">
+                                        </Input>
+                                    </f:fields>
+                                </f:FormElement>
+                                <f:FormElement label="Release Indicator" visible="true">
+                                    <f:fields>
+                                        <Input id="PORelSRelInd" value="{relStratData>/RELIND} {relStratData>/RELINDDESC}" editable="false" valueStateText="Required" 
+                                            change="onHeaderChange" liveChange="onHeaderChange"/>
+                                    </f:fields>
+                                </f:FormElement>
+                                <f:FormElement label="Release to Date" visible="true">
+                                    <f:fields>
+                                        <Input id="PORelSRelDt" value="{relStratData>/relState}" editable="false" valueStateText="Required" 
+                                            change="onHeaderChange" liveChange="onHeaderChange"/>
+                                    </f:fields>
+                                </f:FormElement>
+                            </f:formElements>
+                        </f:FormContainer>
+                    </f:formContainers>
+                </f:Form>
+
+            </content>
+    </IconTabBar>
+    
+</core:FragmentDefinition>

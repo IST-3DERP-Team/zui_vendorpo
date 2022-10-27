@@ -13,462 +13,325 @@
     displayBlock="true"> 
     <Page id="page" title="{i18n>title}" showHeader="false">
         <content>
-            <VBox id="_IDGenVBox1" fitContainer="true" class="sidePadding">
-                <smartfilterbar:SmartFilterBar id="smartFilterBar" entitySet="ZVB_3DERP_VPO_FILTERS" search="onSearch" persistencyKey="3DERP_StylesPKey" filterContainerWidth="15rem">
-                    <smartfilterbar:controlConfiguration>
-                        <smartfilterbar:ControlConfiguration key="SBU" groupId="_BASIC" label="SBU" mandatory="mandatory" width="50px">
-                            <smartfilterbar:customControl>
-                                <ComboBox id="cboxSBU"
-                                    selectedKey="{ui>/sbu}"
-                                    change="onSBUChange"
-                                    items="{
-                                        path: '/ZVB_3DERP_SBU_SH'
-                                    }">
-                                    <core:Item key="{SBU}" text="{SBU}" />
-                                </ComboBox>                                  
-                            </smartfilterbar:customControl>
-                        </smartfilterbar:ControlConfiguration>
-                    </smartfilterbar:controlConfiguration>
-                    <smartfilterbar:controlConfiguration>
-                        <smartfilterbar:ControlConfiguration id="filterVendor" key="VENDOR" groupId="_BASIC" displayBehaviour="descriptionAndId"
-                            preventInitialDataFetchInValueHelpDialog="false"> 
-                        </smartfilterbar:ControlConfiguration>
-                    </smartfilterbar:controlConfiguration>
-                    <smartfilterbar:controlConfiguration>
-                        <smartfilterbar:ControlConfiguration key="DOCTYPE" label="Document Type" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false" />
-                    </smartfilterbar:controlConfiguration>
-                    <smartfilterbar:controlConfiguration>
-                        <smartfilterbar:ControlConfiguration key="COMPANY" label="Company" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false" />
-                    </smartfilterbar:controlConfiguration>
-                    <smartfilterbar:controlConfiguration>
-                        <smartfilterbar:ControlConfiguration key="SHIPTOPLANT" label="Ship-To-Plant" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false" />
-                    </smartfilterbar:controlConfiguration>
-                    <smartfilterbar:layoutData>
-                        <FlexItemData growFactor="0"/>
-                    </smartfilterbar:layoutData>
-                </smartfilterbar:SmartFilterBar>
-                <uiT:Table id="mainTab"
-                    class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
-                    visibleRowCountMode="Auto"
-                    showColumnVisibilityMenu="true"
-                    rows="{VPOHdr>/results}"
-                    enableColumnFreeze="true"
-                    selectionMode="MultiToggle"
-                    sort="onSorted">
-                    <uiT:extension>
-                        <Toolbar>
-                            <uiL:HorizontalLayout class="sapUiTinyMarginTop sapUiTinyMarginBegin sapUiTinyMarginEnd">
-                                <GenericTag text="{i18n>UNRELEASEDPO}" design="StatusIconHidden" status="Warning" class="sapUiTinyMarginEnd" >
-                                    <ObjectNumber emphasized="true" number="{counts>/unreleasedpo}" state="Information" id="unreleasedPO"/>
-                                </GenericTag>
-                                <GenericTag text="{i18n>OPENLINEITEMS}" design="StatusIconHidden" status="Information" class="sapUiTinyMarginEnd">
-                                    <ObjectNumber emphasized="true" number="{counts>/openlineitems}" state="Information" id="openLineItem"/>
-                                </GenericTag>
-                            </uiL:HorizontalLayout>
-                            <ToolbarSpacer/>
-                            <SearchField
-                                id="searchFieldMain"
-                                placeholder="Search"
-                                value=""
-                                search="filterGlobally"
-                                width="15rem"/>
-                            <ToolbarSeparator />
-                            <Button id="btnRelStrat" 
-                                visible="true"
-                                text="Release Strategy" />
-                            <MenuButton id="_IDGenMenuButton1" text="Header">
-                            <menu>
-                                <Menu id="_IDGenMenu1">
-                                    <MenuItem id="_IDGenMenuItem_01_1" text="Conditions" press="onPress"/>
-                                    <MenuItem id="_IDGenMenuItem_01_2" text="Text" />
-                                    <MenuItem id="_IDGenMenuItem_01_3" text="Changes" />
-                                </Menu>
-                            </menu>                    
-                            </MenuButton>
-                            <MenuButton id="_IDGenMenuButton2" text="PO Actions">
-                            <menu>
-                                <Menu id="_IDGenMenu2">
-                                    <MenuItem id="_IDGenMenuItem_02_1" text="Change Del. Date" press="onPress"/>
-                                    <MenuItem id="_IDGenMenuItem_02_2" text="Change Vendor" />
-                                    <MenuItem id="_IDGenMenuItem_02_3" text="Delete PO" />
-                                    <MenuItem id="_IDGenMenuItem_02_4" text="Cancel PO" />
-                                    <MenuItem id="_IDGenMenuItem_02_5" text="Split PO" />
-                                </Menu>
-                            </menu>                    
-                            </MenuButton>
-                            <MenuButton id="_IDGenMenuButton3" icon="sap-icon://add">
-                            <menu>
-                                <Menu id="_IDGenMenu3">
-                                    <MenuItem id="_IDGenMenuItem_03_1" text="Manual" press="onPress"/>
-                                    <MenuItem id="_IDGenMenuItem_03_2" text="Assign and Process" />
-                                </Menu>
-                            </menu>                    
-                            </MenuButton>
-                            <MenuButton id="_IDGenMenuButton4" icon="sap-icon://edit">
-                            <menu>
-                                <Menu id="_IDGenMenu4">
-                                    <MenuItem id="_IDGenMenuItem_04_1" text="Manual" press="onPress"/>
-                                    <MenuItem id="_IDGenMenuItem_04_2" text="Assign and Process" />
-                                </Menu>
-                            </menu>                    
-                            </MenuButton>
-                            <Button id="btnRefreshMain" 
-                                    icon="sap-icon://refresh"
-                                    press=".onRefreshMain"
-                                    visible="true" />
-                            <Button id="btnSortMain" 
-                                icon="sap-icon://sort"
-                                press=".onColSort"
-                                visible="true" />
-                            <Button id="btnFilterMain" 
-                                icon="sap-icon://filter"
-                                press=".onColFilter"
-                                visible="true" />
-                            <Button id="btnFullScreenMain" 
-                                icon="sap-icon://full-screen"
-                                press="onTableResize('Main','Max')"
-                                visible="true" />
-                            <Button id="btnExitFullScreenMain" 
-                                icon="sap-icon://exit-full-screen"
-                                press="onTableResize('Main','Min')"
-                                visible="false" />
-                            <Button id="btnColPropMain" 
-                                icon="sap-icon://table-column"
-                                press="onColumnProp"
-                                tooltip="Columns"
-                                visible="true" />
-                            <Button id="btnTabLayout"
-                                icon="sap-icon://grid" 
-                                tooltip="{i18n>Savetablelayout}" 
-                                press="onSaveTableLayout"/>
-                        </Toolbar>
-                    </uiT:extension>
-                    <uiT:layoutData>
-                        <FlexItemData growFactor="1" baseSize="0%"/>
-                    </uiT:layoutData>                        
-                </uiT:Table> 
-                <IconTabBar id="itbDetail"
-                    expanded="{device>/isNoPhone}" 
-                    expandable="false" 
-                    class="tabColor" 
-                    select="onSelectTab"
-                    headerBackgroundDesign="Transparent" 
-                    stretchContentHeight="true" 
-                    applyContentPadding="false">
-                    <items>
-                        <IconTabFilter text="Details">
-                            <uiT:Table id="detailsTab"
+            
+            <smartfilterbar:SmartFilterBar id="smartFilterBar" entitySet="ZVB_3DERP_VPO_FILTERS" search="onSearch" persistencyKey="3DERP_StylesPKey" filterContainerWidth="15rem">
+                <smartfilterbar:controlConfiguration>
+                    <smartfilterbar:ControlConfiguration key="SBU" groupId="_BASIC" label="SBU" mandatory="mandatory" width="50px">
+                        <smartfilterbar:customControl>
+                            <ComboBox id="cboxSBU"
+                                selectedKey="{ui>/sbu}"
+                                change="onSBUChange"
+                                items="{
+                                    path: '/ZVB_3DERP_SBU_SH'
+                                }">
+                                <core:Item key="{SBU}" text="{SBU}" />
+                            </ComboBox>                                  
+                        </smartfilterbar:customControl>
+                    </smartfilterbar:ControlConfiguration>
+                </smartfilterbar:controlConfiguration>
+                <smartfilterbar:controlConfiguration>
+                    <smartfilterbar:ControlConfiguration id="filterVendor" key="VENDOR" groupId="_BASIC" displayBehaviour="descriptionAndId"
+                        preventInitialDataFetchInValueHelpDialog="false"> 
+                    </smartfilterbar:ControlConfiguration>
+                </smartfilterbar:controlConfiguration>
+                <smartfilterbar:controlConfiguration>
+                    <smartfilterbar:ControlConfiguration key="DOCTYPE" label="Document Type" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false" />
+                </smartfilterbar:controlConfiguration>
+                <smartfilterbar:controlConfiguration>
+                    <smartfilterbar:ControlConfiguration key="COMPANY" label="Company" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false" />
+                </smartfilterbar:controlConfiguration>
+                <smartfilterbar:controlConfiguration>
+                    <smartfilterbar:ControlConfiguration key="SHIPTOPLANT" label="Ship-To-Plant" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false" />
+                </smartfilterbar:controlConfiguration>
+                <smartfilterbar:layoutData>
+                    <FlexItemData growFactor="0"/>
+                </smartfilterbar:layoutData>
+            </smartfilterbar:SmartFilterBar>
+            
+            <VBox id="_IDGenVBox1" fitContainer="true" class="sidePadding vboxHeight">
+                <uiL:ResponsiveSplitter defaultPane="default">
+                    <uiL:PaneContainer orientation="Vertical">
+                        <uiL:SplitPane  requiredParentWidth="800">
+                            <uiT:Table id="mainTab"
                                 class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
                                 visibleRowCountMode="Auto"
                                 showColumnVisibilityMenu="true"
+                                rows="{VPOHdr>/results}"
                                 enableColumnFreeze="true"
                                 selectionMode="MultiToggle"
-                                rows="{VPODtls>/results}"
-                                sort="onSorted">
+                                selectionBehavior="Row"
+                                rowSelectionChange=".onSelectionChange"
+                                
+                                firstVisibleRowChanged=".onFirstVisibleRowChanged"
+                                cellClick=".onCellClickGMC"
+                                sort="onSort"
+                                filter="onFilter"
+                                columnFreeze=".onColumnUpdated"
+                                columnMove=".onColumnUpdated"
+                                columnResize=".onColumnUpdated"
+                                columnSelect=".onColumnUpdated"
+                                columnVisibility=".onColumnUpdated"
+                                >
                                 <uiT:extension>
                                     <Toolbar>
-                                        <Text text="PO No: {ui>/activePONo}" class="selHdrKeyFontStyle" />
+                                        <uiL:HorizontalLayout class="sapUiTinyMarginTop sapUiTinyMarginBegin sapUiTinyMarginEnd">
+                                            <GenericTag text="{i18n>UNRELEASEDPO}" design="StatusIconHidden" status="Warning" class="sapUiTinyMarginEnd" >
+                                                <ObjectNumber emphasized="true" number="{counts>/unreleasedpo}" state="Information" id="unreleasedPO"/>
+                                            </GenericTag>
+                                            <GenericTag text="{i18n>OPENLINEITEMS}" design="StatusIconHidden" status="Information" class="sapUiTinyMarginEnd">
+                                                <ObjectNumber emphasized="true" number="{counts>/openlineitems}" state="Information" id="openLineItem"/>
+                                            </GenericTag>
+                                        </uiL:HorizontalLayout>
                                         <ToolbarSpacer/>
                                         <SearchField
-                                            id="searchFieldDetails"
+                                            id="searchFieldMain"
                                             placeholder="Search"
                                             value=""
                                             search="filterGlobally"
                                             width="15rem"/>
-                                        <Button id="btnAddPRtoPO" visible="true" text="Add PR to PO" />
-                                        <Button id="btnItemChanges" visible="true" text="Item Changes" />
-                                        <Button id="btnRefreshDetails" 
-                                            icon="sap-icon://refresh"
-                                            press=".onRefreshDetails"
-                                            visible="true" />
-                                        <Button id="btnEditDetails" 
-                                            icon="sap-icon://edit"
-                                            press="onEditDetails"
-                                            tooltip="Edit"
-                                            visible="true"/>
-                                        <Button id="btnSaveDetails" 
-                                            icon="sap-icon://save"
-                                            press=".onSave('details')" 
-                                            visible="false" />
-                                        <Button id="btnCancelDetails" 
-                                            icon="sap-icon://sys-cancel"
-                                            press="onCancelDetails" 
-                                            visible="false" />                                        
-                                        <Button id="btnDeleteDetails" 
-                                            icon="sap-icon://delete"
-                                            press="onDeleteDetails"
-                                            visible="true"/>
-                                        <Button id="btnSortDetails" 
+                                        <ToolbarSeparator />
+                                        <!-- <Button id="btnRelStrat" 
+                                            visible="true"
+                                            text="Release Strategy" />
+                                        <MenuButton id="_IDGenMenuButton1" text="Header">
+                                        <menu>
+                                            <Menu id="_IDGenMenu1">
+                                                <MenuItem id="_IDGenMenuItem_01_1" text="Conditions" press="onPress"/>
+                                                <MenuItem id="_IDGenMenuItem_01_2" text="Text" />
+                                                <MenuItem id="_IDGenMenuItem_01_3" text="Changes" />
+                                            </Menu>
+                                        </menu>                    
+                                        </MenuButton>
+                                        <MenuButton id="_IDGenMenuButton2" text="PO Actions">
+                                        <menu>
+                                            <Menu id="_IDGenMenu2">
+                                                <MenuItem id="_IDGenMenuItem_02_1" text="Change Del. Date" press="onPress"/>
+                                                <MenuItem id="_IDGenMenuItem_02_2" text="Change Vendor" />
+                                                <MenuItem id="_IDGenMenuItem_02_3" text="Delete PO" />
+                                                <MenuItem id="_IDGenMenuItem_02_4" text="Cancel PO" />
+                                                <MenuItem id="_IDGenMenuItem_02_5" text="Split PO" />
+                                            </Menu>
+                                        </menu>                    
+                                        </MenuButton> -->
+                                        <MenuButton id="_IDGenMenuButton3" icon="sap-icon://add">
+                                        <menu>
+                                            <Menu id="_IDGenMenu3">
+                                                <MenuItem id="_IDGenMenuItem_03_1" text="Manual" press="onPress"/>
+                                                <MenuItem id="_IDGenMenuItem_03_2" text="Assign and Process" />
+                                            </Menu>
+                                        </menu>                    
+                                        </MenuButton>
+                                        <Button id="btnEdit"
+                                            icon="sap-icon://edit" 
+                                            tooltip="{i18n>Edit}" 
+                                            press=".onClickEdit"/>
+                                        <Button id="btnRefreshMain" 
+                                                icon="sap-icon://refresh"
+                                                press=".onRefreshMain"
+                                                visible="true" />
+                                        <!-- <Button id="btnSortMain" 
                                             icon="sap-icon://sort"
                                             press=".onColSort"
                                             visible="true" />
-                                        <Button id="btnFilterDetails" 
+                                        <Button id="btnFilterMain" 
                                             icon="sap-icon://filter"
                                             press=".onColFilter"
-                                            visible="true" />
-                                        <Button id="btnFullScreenDetails" 
+                                            visible="true" /> -->
+                                        <!-- <Button id="btnFullScreenMain" 
                                             icon="sap-icon://full-screen"
-                                            press="onTableResize('Details','Max')"
+                                            press="onTableResize('Main','Max')"
                                             visible="true" />
-                                        <Button id="btnExitFullScreenDetails" 
+                                        <Button id="btnExitFullScreenMain" 
                                             icon="sap-icon://exit-full-screen"
-                                            press="onTableResize('Details','Min')"
+                                            press="onTableResize('Main','Min')"
                                             visible="false" />
-                                        <Button id="btnColPropDetails" 
+                                        <Button id="btnColPropMain" 
                                             icon="sap-icon://table-column"
                                             press="onColumnProp"
                                             tooltip="Columns"
-                                            visible="true" />
+                                            visible="true" /> -->
+                                        <Button id="btnTabLayout"
+                                            icon="sap-icon://grid" 
+                                            tooltip="{i18n>Savetablelayout}" 
+                                            press=".onSaveTableLayout('mainTab')"/>
                                     </Toolbar>
                                 </uiT:extension>
                                 <uiT:layoutData>
                                     <FlexItemData growFactor="1" baseSize="0%"/>
                                 </uiT:layoutData>                        
                             </uiT:Table> 
-                        </IconTabFilter>
-                        <IconTabFilter text="Delivery Schedule">
-                            <uiT:Table id="delSchedTab"
-                                class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
-                                visibleRowCountMode="Auto"
-                                showColumnVisibilityMenu="true"
-                                rows="{VPODelSched>/results}"
-                                enableColumnFreeze="true"
-                                selectionMode="MultiToggle"
-                                sort="onSorted">
-                                <uiT:extension>
-                                    <Toolbar>
-                                        <Text text="PO No: {ui>/activePONo}," class="selHdrKeyFontStyle" />
-                                        <Text text="Item: {ui>/activeItem}" class="selHdrKeyFontStyle" />
-                                        <ToolbarSpacer/>
-                                        <SearchField
-                                            id="searchFieldDelSched"
-                                            placeholder="Search"
-                                            value=""
-                                            search="filterGlobally"
-                                            width="15rem"/>
-                                        <Button id="btnLineSplit" visible="true" text="Line Split" />
-                                        <Button id="btnRefresDelSched" 
-                                            icon="sap-icon://refresh"
-                                            press=".onRefreshDelSched"
-                                            visible="true" />
-                                        <Button id="btnEditDelSched" 
-                                            icon="sap-icon://edit"
-                                            press="onEditDelSched"
-                                            tooltip="Edit"
-                                            visible="true"/>
-                                        <Button id="btnSaveDelSched" 
-                                            icon="sap-icon://save"
-                                            press=".onSave('DelSched')" 
-                                            visible="false" />
-                                        <Button id="btnCancelDelSched" 
-                                            icon="sap-icon://sys-cancel"
-                                            press="onCancelDelSched" 
-                                            visible="false" />                                        
-                                        <Button id="btnDeleteDelSched" 
-                                            icon="sap-icon://delete"
-                                            press="onDeleteDelSched"
-                                            visible="true"/>
-                                        <Button id="btnSortDelSched" 
-                                            icon="sap-icon://sort"
-                                            press=".onColSort"
-                                            visible="true" />
-                                        <Button id="btnFilterDelSched" 
-                                            icon="sap-icon://filter"
-                                            press=".onColFilter"
-                                            visible="true" />
-                                        <Button id="btnFullScreenDelSched" 
-                                            icon="sap-icon://full-screen"
-                                            press="onTableResize('DelSched','Max')"
-                                            visible="true" />
-                                        <Button id="btnExitFullScreenDelSched" 
-                                            icon="sap-icon://exit-full-screen"
-                                            press="onTableResize('DelSched','Min')"
-                                            visible="false" />
-                                        <Button id="btnColPropDelSched" 
-                                            icon="sap-icon://table-column"
-                                            press="onColumnProp"
-                                            tooltip="Columns"
-                                            visible="true" />
-                                    </Toolbar>
-                                </uiT:extension>
-                                <uiT:layoutData>
+                        </uiL:SplitPane>
+                        <uiL:SplitPane  requiredParentWidth="800">
+                            <IconTabBar id="itbDetail"
+                                expanded="{device>/isNoPhone}" 
+                                expandable="false" 
+                                class="designSection2" 
+                                select="onSelectTab"
+                                headerBackgroundDesign="Solid" 
+                                stretchContentHeight="true" 
+                                applyContentPadding="false">
+                                <items>
+                                    <IconTabFilter text="Details">
+                                        <uiT:Table id="detailsTab"
+                                            class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
+                                            visibleRowCountMode="Auto"
+                                            showColumnVisibilityMenu="true"
+                                            enableColumnFreeze="true"
+                                            selectionMode="MultiToggle"
+                                            selectionBehavior="Row"
+                                            rows="{VPODtls>/results}"
+                                            sort="onSorted">
+                                            <uiT:extension>
+                                                <Toolbar>
+                                                    <Text text="PO No: {ui>/activePONo}" class="selHdrKeyFontStyle" />
+                                                    <ToolbarSpacer/>
+                                                    <Button id="btnRefreshDetails" 
+                                                        icon="sap-icon://refresh"
+                                                        press=".onRefreshDetails"
+                                                        visible="true" />
+                                                    <Button id="btnColPropDetails" 
+                                                        icon="sap-icon://table-column"
+                                                        press="onColumnProp"
+                                                        tooltip="Columns"
+                                                        visible="true" />
+                                                </Toolbar>
+                                            </uiT:extension>
+                                            <uiT:layoutData>
+                                                <FlexItemData growFactor="1" baseSize="0%"/>
+                                            </uiT:layoutData>                        
+                                        </uiT:Table> 
+                                    </IconTabFilter>
+                                    <IconTabFilter text="Delivery Schedule">
+                                        <uiT:Table id="delSchedTab"
+                                            class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
+                                            visibleRowCountMode="Auto"
+                                            showColumnVisibilityMenu="true"
+                                            rows="{VPODelSched>/results}"
+                                            enableColumnFreeze="true"
+                                            selectionMode="MultiToggle"
+                                            selectionBehavior="Row"
+                                            sort="onSorted">
+                                            <uiT:extension>
+                                                <Toolbar>
+                                                    <Text text="PO No: {ui>/activePONo}," class="selHdrKeyFontStyle" />
+                                                    <Text text="Item: {ui>/activeItem}" class="selHdrKeyFontStyle" />
+                                                    <ToolbarSpacer/>
+                                                    <Button id="btnRefresDelSched" 
+                                                        icon="sap-icon://refresh"
+                                                        press=".onRefreshDelSched"
+                                                        visible="true" />
+                                                    <Button id="btnColPropDelSched" 
+                                                        icon="sap-icon://table-column"
+                                                        press="onColumnProp"
+                                                        tooltip="Columns"
+                                                        visible="true" />
+                                                </Toolbar>
+                                            </uiT:extension>
+                                            <uiT:layoutData>
+                                                <FlexItemData growFactor="1" baseSize="0%"/>
+                                            </uiT:layoutData>                        
+                                        </uiT:Table> 
+                                    </IconTabFilter>
+                                    <IconTabFilter text="Delivery/Invoice">
+                                        <uiT:Table id="delInvTab"
+                                            class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
+                                            visibleRowCountMode="Auto"
+                                            showColumnVisibilityMenu="true"
+                                            rows="{VPODelInv>/results}"
+                                            enableColumnFreeze="true"
+                                            selectionMode="MultiToggle"
+                                            selectionBehavior="Row"
+                                            sort="onSorted">
+                                            <uiT:extension>
+                                                <Toolbar>
+                                                    <Text text="PO No: {ui>/activePONo}," class="selHdrKeyFontStyle" />
+                                                    <Text text="Item: {ui>/activeItem}" class="selHdrKeyFontStyle" />
+                                                    <ToolbarSpacer/>
+                                                    <Button id="btnRefresDelInv" 
+                                                        icon="sap-icon://refresh"
+                                                        press=".onRefreshDelInv"
+                                                        visible="true" />
+                                                    <Button id="btnColPropDelInv" 
+                                                        icon="sap-icon://table-column"
+                                                        press="onColumnProp"
+                                                        tooltip="Columns"
+                                                        visible="true" />
+                                                </Toolbar>
+                                            </uiT:extension>
+                                            <uiT:layoutData>
+                                                <FlexItemData growFactor="1" baseSize="0%"/>
+                                            </uiT:layoutData>                        
+                                        </uiT:Table> 
+                                    </IconTabFilter>
+                                    <IconTabFilter text="PO History">
+                                        <uiT:Table id="poHistTab"
+                                            class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
+                                            visibleRowCountMode="Auto"
+                                            showColumnVisibilityMenu="true"
+                                            enableColumnFreeze="true"
+                                            selectionMode="MultiToggle"
+                                            selectionBehavior="Row"
+                                            rows="{VPOPOHist>/results}"
+                                            sort="onSorted">
+                                            <uiT:extension>
+                                                <Toolbar>
+                                                    <Text text="PO No: {ui>/activePONo}," class="selHdrKeyFontStyle" />
+                                                    <Text text="Item: {ui>/activeItem}" class="selHdrKeyFontStyle" />
+                                                    <ToolbarSpacer/>
+                                                    <Button id="btnRefresPOHistory" 
+                                                        icon="sap-icon://refresh"
+                                                        press=".onRefreshPOHistory"
+                                                        visible="true" />
+                                                    <Button id="btnColPropPOHistory" 
+                                                        icon="sap-icon://table-column"
+                                                        press="onColumnProp"
+                                                        tooltip="Columns"
+                                                        visible="true" />
+                                                </Toolbar>
+                                            </uiT:extension>
+                                            <uiT:layoutData>
+                                                <FlexItemData growFactor="1" baseSize="0%"/>
+                                            </uiT:layoutData>                        
+                                        </uiT:Table> 
+                                    </IconTabFilter>
+                                    <IconTabFilter text="Conditions">
+                                        <uiT:Table id="conditionsTab"
+                                            class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
+                                            visibleRowCountMode="Auto"
+                                            showColumnVisibilityMenu="true"
+                                            enableColumnFreeze="true"
+                                            selectionMode="MultiToggle"
+                                            selectionBehavior="Row"
+                                            rows="{VPOCond>/results}"
+                                            sort="onSorted">
+                                            <uiT:extension>
+                                                <Toolbar>
+                                                    <Text text="Condition Record: {ui>/activeCondRec}" class="selHdrKeyFontStyle" />
+                                                    <ToolbarSpacer/>
+                                                    <Button id="btnRefreshConditions" 
+                                                        icon="sap-icon://refresh"
+                                                        press=".onRefreshPOHistory"
+                                                        visible="true" />
+                                                    <Button id="btnColPropConditions" 
+                                                        icon="sap-icon://table-column"
+                                                        press="onColumnProp"
+                                                        tooltip="Columns"
+                                                        visible="true" />
+                                                </Toolbar>
+                                            </uiT:extension>
+                                            <uiT:layoutData>
+                                                <FlexItemData growFactor="1" baseSize="0%"/>
+                                            </uiT:layoutData>                        
+                                        </uiT:Table>
+                                    </IconTabFilter>
+                                </items>
+                                <layoutData>
                                     <FlexItemData growFactor="1" baseSize="0%"/>
-                                </uiT:layoutData>                        
-                            </uiT:Table> 
-                        </IconTabFilter>
-                        <IconTabFilter text="Delivery/Invoice">
-                            <uiT:Table id="delInvTab"
-                                class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
-                                visibleRowCountMode="Auto"
-                                showColumnVisibilityMenu="true"
-                                rows="{VPODelInv>/results}"
-                                enableColumnFreeze="true"
-                                selectionMode="MultiToggle"
-                                sort="onSorted">
-                                <uiT:extension>
-                                    <Toolbar>
-                                        <Text text="PO No: {ui>/activePONo}," class="selHdrKeyFontStyle" />
-                                        <Text text="Item: {ui>/activeItem}" class="selHdrKeyFontStyle" />
-                                        <ToolbarSpacer/>
-                                        <SearchField
-                                            id="searchFieldDelInv"
-                                            placeholder="Search"
-                                            value=""
-                                            search="filterGlobally"
-                                            width="15rem"/>
-                                        <Button id="btnRefresDelInv" 
-                                            icon="sap-icon://refresh"
-                                            press=".onRefreshDelInv"
-                                            visible="true" />
-                                        <Button id="btnEditDelInv" 
-                                            icon="sap-icon://edit"
-                                            press="onEditDelInv"
-                                            tooltip="Edit"
-                                            visible="true"/>
-                                        <Button id="btnSaveDelInv" 
-                                            icon="sap-icon://save"
-                                            press=".onSave('DelInv')" 
-                                            visible="false" />
-                                        <Button id="btnCancelDelInv" 
-                                            icon="sap-icon://sys-cancel"
-                                            press="onCancelDelInv" 
-                                            visible="false" />    
-                                        <Button id="btnSortDelInv" 
-                                            icon="sap-icon://sort"
-                                            press=".onColSort"
-                                            visible="true" />
-                                        <Button id="btnFilterDelInv" 
-                                            icon="sap-icon://filter"
-                                            press=".onColFilter"
-                                            visible="true" />
-                                        <Button id="btnFullScreenDelInv" 
-                                            icon="sap-icon://full-screen"
-                                            press="onTableResize('DelInv','Max')"
-                                            visible="true" />
-                                        <Button id="btnExitFullScreenDelInv" 
-                                            icon="sap-icon://exit-full-screen"
-                                            press="onTableResize('DelInv','Min')"
-                                            visible="false" />
-                                        <Button id="btnColPropDelInv" 
-                                            icon="sap-icon://table-column"
-                                            press="onColumnProp"
-                                            tooltip="Columns"
-                                            visible="true" />
-                                    </Toolbar>
-                                </uiT:extension>
-                                <uiT:layoutData>
-                                    <FlexItemData growFactor="1" baseSize="0%"/>
-                                </uiT:layoutData>                        
-                            </uiT:Table> 
-                        </IconTabFilter>
-                        <IconTabFilter text="PO History">
-                            <uiT:Table id="poHistTab"
-                                class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
-                                visibleRowCountMode="Auto"
-                                showColumnVisibilityMenu="true"
-                                enableColumnFreeze="true"
-                                selectionMode="MultiToggle"
-                                rows="{VPOPOHist>/results}"
-                                sort="onSorted">
-                                <uiT:extension>
-                                    <Toolbar>
-                                        <Text text="PO No: {ui>/activePONo}," class="selHdrKeyFontStyle" />
-                                        <Text text="Item: {ui>/activeItem}" class="selHdrKeyFontStyle" />
-                                        <ToolbarSpacer/>
-                                        <SearchField
-                                            id="searchFieldPOHistory"
-                                            placeholder="Search"
-                                            value=""
-                                            search="filterGlobally"
-                                            width="15rem"/>
-                                        <Button id="btnRefresPOHistory" 
-                                            icon="sap-icon://refresh"
-                                            press=".onRefreshPOHistory"
-                                            visible="true" />
-                                        <Button id="btnSortPOHistory" 
-                                            icon="sap-icon://sort"
-                                            press=".onColSort"
-                                            visible="true" />
-                                        <Button id="btnFilterPOHistory" 
-                                            icon="sap-icon://filter"
-                                            press=".onColFilter"
-                                            visible="true" />
-                                        <Button id="btnFullScreenPOHistory" 
-                                            icon="sap-icon://full-screen"
-                                            press="onTableResize('POHistory','Max')"
-                                            visible="true" />
-                                        <Button id="btnExitFullScreenPOHistory" 
-                                            icon="sap-icon://exit-full-screen"
-                                            press="onTableResize('POHistory','Min')"
-                                            visible="false" />
-                                        <Button id="btnColPropPOHistory" 
-                                            icon="sap-icon://table-column"
-                                            press="onColumnProp"
-                                            tooltip="Columns"
-                                            visible="true" />
-                                    </Toolbar>
-                                </uiT:extension>
-                                <uiT:layoutData>
-                                    <FlexItemData growFactor="1" baseSize="0%"/>
-                                </uiT:layoutData>                        
-                            </uiT:Table> 
-                        </IconTabFilter>
-                        <IconTabFilter text="Conditions">
-                            <uiT:Table id="conditionsTab"
-                                class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
-                                visibleRowCountMode="Auto"
-                                showColumnVisibilityMenu="true"
-                                enableColumnFreeze="true"
-                                selectionMode="MultiToggle"
-                                rows="{VPOCond>/results}"
-                                sort="onSorted">
-                                <uiT:extension>
-                                    <Toolbar>
-                                        <Text text="Condition Record: {ui>/activeCondRec}" class="selHdrKeyFontStyle" />
-                                        <ToolbarSpacer/>
-                                        <SearchField
-                                            id="searchFieldConditions"
-                                            placeholder="Search"
-                                            value=""
-                                            search="filterGlobally"
-                                            width="15rem"/>
-                                        <Button id="btnRefreshConditions" 
-                                            icon="sap-icon://refresh"
-                                            press=".onRefreshPOHistory"
-                                            visible="true" />
-                                        <Button id="btnSortConditions" 
-                                            icon="sap-icon://sort"
-                                            press=".onColSort"
-                                            visible="true" />
-                                        <Button id="btnFilterConditions" 
-                                            icon="sap-icon://filter"
-                                            press=".onColFilter"
-                                            visible="true" />
-                                        <Button id="btnFullScreenConditions" 
-                                            icon="sap-icon://full-screen"
-                                            press="onTableResize('Conditions','Max')"
-                                            visible="true" />
-                                        <Button id="btnExitFullScreenConditions" 
-                                            icon="sap-icon://exit-full-screen"
-                                            press="onTableResize('Conditions','Min')"
-                                            visible="false" />
-                                        <Button id="btnColPropConditions" 
-                                            icon="sap-icon://table-column"
-                                            press="onColumnProp"
-                                            tooltip="Columns"
-                                            visible="true" />
-                                    </Toolbar>
-                                </uiT:extension>
-                                <uiT:layoutData>
-                                    <FlexItemData growFactor="1" baseSize="0%"/>
-                                </uiT:layoutData>                        
-                            </uiT:Table>
-                        </IconTabFilter>
-                    </items>
-                    <layoutData>
-                        <FlexItemData growFactor="1" baseSize="0%"/>
-                    </layoutData>
-                </IconTabBar>
+                                </layoutData>
+                            </IconTabBar>
+                        </uiL:SplitPane>
+                    </uiL:PaneContainer>
+                </uiL:ResponsiveSplitter>
             </VBox>
         </content>
     </Page>
