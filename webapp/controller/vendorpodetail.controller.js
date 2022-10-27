@@ -1184,52 +1184,49 @@ sap.ui.define([
                             data.results.forEach(item => {
                                 console.log(item);
 
-                                _promiseResult = new Promise((resolve, reject)=>{
-                                    poItemList.forEach((resItem, index) => {
-                                        if(resItem == item.ITEM){
-                                            iCounter++;
-                                            
-                                            // console.log(item.ITEM);
-                                            // console.log(resItem);
-                                            // console.log(aData.at(item));
-                                            aDataToEdit.push(aData.at(item).ITEM);
-                                            // console.log(aDataToEdit);
-                                            if (aSelIndices.length === iCounter) {
-                                                me._oDataBeforeChange = me.getView().getModel("VPODtlsVPODet").getData();
-                                                me.getView().getModel("VPODtlsVPODet").setProperty("/results", aDataToEdit);
-                                                me.setTableColumnsData("VPODTLS");
-                                                // me.getCols();
-                                                // rfcModel.read("/ValidatePO_ChangeSet", { 
-                                                //     urlParameters: {
-                                                //         "$filter": "PO_NUMBER eq '" + poNo + "'"
-                                                //     },success: function (data, response) {
-                                                //         console.log(data);
-                                                //     },error: function(err){
-            
-                                                //     }
-                                                // })
-                                                me.byId("vpoSearchFieldDetails").setVisible(false);
-                                                me.byId("vpoBtnAddPRtoPO").setVisible(false);
-                                                me.byId("vpoBtnItemChanges").setVisible(false);
-                                                me.byId("vpoBtnRefreshDetails").setVisible(false);
-                                                me.byId("vpoBtnEditDetails").setVisible(false);
-                                                me.byId("vpoBtnDeleteDetails").setVisible(false);
-                                                me.byId("vpoBtnColPropDetails").setVisible(false);
-                                                me.byId("vpoBtnSaveDetails").setVisible(true);
-                                                me.byId("vpoBtnCancelDetails").setVisible(true);
-                                                
-                                                
-                                                me.onRowEditPO("VPODtlsVPODet");
-                                                
-                                                me.getView().getModel("ui").setProperty("/dataMode", 'EDIT');
-                                                
-                                            }
-                                        }
+                                poItemList.forEach((resItem, index) => {
+                                    if(resItem == item.ITEM){
+                                        iCounter++;
                                         
-                                    })
-                                    resolve();
-                                });
-                                await _promiseResult;
+                                        // console.log(item.ITEM);
+                                        // console.log(resItem);
+                                        // console.log(aData.at(item));
+                                        aDataToEdit.push(aData.at(item).ITEM);
+                                        // console.log(aDataToEdit);
+                                        if (aSelIndices.length === iCounter) {
+                                            me._oDataBeforeChange = me.getView().getModel("VPODtlsVPODet").getData();
+                                            me.getView().getModel("VPODtlsVPODet").setProperty("/results", aDataToEdit);
+                                            me.setTableColumnsData("VPODTLS");
+                                            // me.getCols();
+                                            // rfcModel.read("/ValidatePO_ChangeSet", { 
+                                            //     urlParameters: {
+                                            //         "$filter": "PO_NUMBER eq '" + poNo + "'"
+                                            //     },success: function (data, response) {
+                                            //         console.log(data);
+                                            //     },error: function(err){
+        
+                                            //     }
+                                            // })
+                                            me.byId("vpoSearchFieldDetails").setVisible(false);
+                                            me.byId("vpoBtnAddPRtoPO").setVisible(false);
+                                            me.byId("vpoBtnItemChanges").setVisible(false);
+                                            me.byId("vpoBtnRefreshDetails").setVisible(false);
+                                            me.byId("vpoBtnEditDetails").setVisible(false);
+                                            me.byId("vpoBtnDeleteDetails").setVisible(false);
+                                            me.byId("vpoBtnColPropDetails").setVisible(false);
+                                            me.byId("vpoBtnSaveDetails").setVisible(true);
+                                            me.byId("vpoBtnCancelDetails").setVisible(true);
+                                            
+                                            
+                                            me.onRowEditPO("VPODtlsVPODet");
+                                            
+                                            me.getView().getModel("ui").setProperty("/dataMode", 'EDIT');
+                                            
+                                        }
+                                    }
+                                    
+                                })
+                                resolve();
                                 
                                 
                             });
