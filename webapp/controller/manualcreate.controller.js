@@ -84,8 +84,13 @@ sap.ui.define([
                 this.getView().setModel(new JSONModel({
                     results: []
                 }), "packInstruct");
-
+                
                 this._aInvalidValueState = [];
+
+                setTimeout(() => {
+                    this.onEditHeader()
+                }, 1000);
+
                 this.closeLoadingDialog();
             },
 
@@ -585,6 +590,17 @@ sap.ui.define([
                 }
 
                 this.setControlEditMode("header", true)
+            },
+
+            onCloseHeader() {
+                sap.m.MessageBox.confirm(_oCaption.CONFIRM_PROCEED_CLOSE, {
+                    actions: ["Yes", "No"],
+                    onClose: function (sAction) {
+                        if (sAction == "Yes") {          
+                            _this.navBack();         
+                        }
+                    }
+                });
             },
 
             onSaveHeader() {
@@ -1251,6 +1267,21 @@ sap.ui.define([
                         } else if (pModel == "acctAssCat" && data.results.length > 0) {
                             _oHeader.acctAssCat = data.results[0].FIELD3;
                             console.log("final oheader", _oHeader)
+                        } else if (pModel == "vendor") {
+                            if (data.results.length > 0) _this.byId("cmbVendor").setPlaceholder("");
+                            else _this.byId("cmbVendor").setPlaceholder("No data for selected " + _oCaption.PURCHORG);
+                        } else if (pModel == "shipToPlant") {
+                            if (data.results.length > 0) _this.byId("cmbShipToPlant").setPlaceholder("");
+                            else _this.byId("cmbShipToPlant").setPlaceholder("No data for selected " + _oCaption.PURCHORG);
+                        } else if (pModel == "incoTerms") {
+                            if (data.results.length > 0) _this.byId("cmbIncoTerms").setPlaceholder("");
+                            else _this.byId("cmbIncoTerms").setPlaceholder("No data for selected " + _oCaption.VENDOR);
+                        } else if (pModel == "payTerms") {
+                            if (data.results.length > 0) _this.byId("cmbPayTerms").setPlaceholder("");
+                            else _this.byId("cmbPayTerms").setPlaceholder("No data for selected " + _oCaption.VENDOR);
+                        } else if (pModel == "purchPlant") {
+                            if (data.results.length > 0) _this.byId("cmbPurchPlant").setPlaceholder("");
+                            else _this.byId("cmbPurchPlant").setPlaceholder("No data for selected " + _oCaption.COMPANY);
                         }
                     },
                     error: function (err) { 
@@ -1473,7 +1504,7 @@ sap.ui.define([
                 oDDTextParam.push({CODE: "INFO_EXECUTE_SUCCESS"});
                 oDDTextParam.push({CODE: "INFO_EXECUTE_FAIL"});
                 oDDTextParam.push({CODE: "CONFIRM_PROCEED_EXECUTE"});
-
+                oDDTextParam.push({CODE: "CONFIRM_PROCEED_CLOSE"});
                 
                 oModel.create("/CaptionMsgSet", { CaptionMsgItems: oDDTextParam  }, {
                     method: "POST",

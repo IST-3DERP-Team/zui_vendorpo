@@ -65,20 +65,11 @@ sap.ui.define([
                 };
 
                 this._aColumns = {};
-<<<<<<< HEAD
-
-                this.getCols();
-                this.getMain();
-
-                var oComponent = this.getOwnerComponent();
-                this._router = oComponent.getRouter();
-=======
                 this._columnLoadError = false;
                 var oComponent = this.getOwnerComponent();
                 this._router = oComponent.getRouter();
                 // this.getCols();
                 // this.getMain();
->>>>>>> 70de7748590affd3b04fac7633cc8695e8330fd2
             },
             setSmartFilterModel: function () {
                 //Model StyleHeaderFilters is for the smartfilterbar

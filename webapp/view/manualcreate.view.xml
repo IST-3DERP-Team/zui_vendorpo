@@ -24,7 +24,7 @@
                         <ToolbarSpacer />
                         <Button id="btnCreateHeader" type="Ghost" text="Create PO" press="onCreatePO" visible="true"/>
                         <Button id="btnEditHeader" type="Ghost" icon="sap-icon://edit" press="onEditHeader" visible="true"/>
-                        <Button id="btnCloseHeader" type="Ghost" icon="sap-icon://sys-cancel" press="" visible="true"/> 
+                        <Button id="btnCloseHeader" type="Ghost" icon="sap-icon://sys-cancel" press="onCloseHeader" visible="true"/> 
                         <Button id="btnSaveHeader" type="Ghost" icon="sap-icon://save" press="onSaveHeader" visible="false"/> 
                         <Button id="btnCancelHeader" type="Ghost" icon="sap-icon://sys-cancel" press="onCancelHeader" visible="false"/> 
                     </Toolbar>

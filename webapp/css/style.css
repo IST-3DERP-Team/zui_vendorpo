@@ -103,6 +103,7 @@
 /* #container-zuivendorpo---main--itbDetail{
     position: relative;
 } */
+
 .VBOXHdrSize{
     height: 100%;
 }
@@ -130,9 +131,9 @@
 .formHdr1{
     padding-top: 10px;
 }
-.sapUiSizeCompact .sapMInputBaseHeightMargin {
+/* .sapUiSizeCompact .sapMInputBaseHeightMargin {
     margin: 0rem 0 !important;
-}
+} */
 .vpoDetSection{
     position: relative;
     height: 100%;
