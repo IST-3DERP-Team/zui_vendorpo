@@ -80,3 +80,11 @@
     /*padding-right: 2rem;
     padding-left: 2rem;*/
 }
+
+/* sapUiRespGridSpanXL8 {
+    margin-bottom: 100px !important
+} */
+
+.requiredField {
+    color: red !important;
+}

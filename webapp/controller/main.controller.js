@@ -67,6 +67,9 @@ sap.ui.define([
 
                 this.getCols();
                 this.getMain();
+
+                var oComponent = this.getOwnerComponent();
+                this._router = oComponent.getRouter();
             },
             setSmartFilterModel: function () {
                 //Model StyleHeaderFilters is for the smartfilterbar
@@ -983,6 +986,18 @@ sap.ui.define([
                     this.getDelInvoice2(oRow.PONO);
                     this.getPOHistory2(oRow.PONO);
                     this.getConditions2(oRow.CONDREC);
+                }
+            },
+
+            onCreateManualPO() {
+                if (this.getView().getModel("ui").getData().sbu) {
+                    var sSbu = this.getView().getModel("ui").getData().sbu;
+                    console.log("onCreateManualPO", sSbu)
+                    that._router.navTo("RouteCreateManualPO", {
+                        sbu: sSbu
+                    });
+                } else {
+                    sap.m.MessageBox.information("SBU is required.");
                 }
             }
         });

@@ -108,7 +108,11 @@
             "": {
                 "dataSource": "mainService",
                 "preload": true,
-                "settings": {}
+                "settings": {
+                    "defaultBindingMode": "TwoWay",
+                    "defaultCountMode": "Inline",
+                    "refreshAfterChange": false
+                }
             },
             "ZVB_3DERP_VPO_FILTERS_CDS": {
                 "dataSource": "ZVB_3DERP_VPO_FILTERS_CDS",
@@ -162,6 +166,14 @@
                     "target": [
                         "Targetmain"
                     ]
+                },
+                {
+                    "name": "RouteCreateManualPO",
+                    "pattern": "RouteCreateManualPO/{sbu}",
+                    "greedy": false,
+                    "target": [
+                        "TargetCreateManualPO"
+                    ]
                 }
             ],
             "targets": {
@@ -171,6 +183,13 @@
                     "clearControlAggregation": false,
                     "viewId": "main",
                     "viewName": "main"
+                },
+                "TargetCreateManualPO": {
+                    "viewType": "XML",
+                    "transition": "slide",
+                    "clearControlAggregation": false,
+                    "viewId": "manualcreate",
+                    "viewName": "manualcreate"
                 }
             }
         },

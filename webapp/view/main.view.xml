@@ -99,7 +99,7 @@
                             <MenuButton id="_IDGenMenuButton3" icon="sap-icon://add">
                             <menu>
                                 <Menu id="_IDGenMenu3">
-                                    <MenuItem id="_IDGenMenuItem_03_1" text="Manual" press="onPress"/>
+                                    <MenuItem id="_IDGenMenuItem_03_1" text="Manual" press="onCreateManualPO"/>
                                     <MenuItem id="_IDGenMenuItem_03_2" text="Assign and Process" />
                                 </Menu>
                             </menu>                    
