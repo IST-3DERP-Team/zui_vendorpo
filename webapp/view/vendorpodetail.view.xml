@@ -1,0 +1,87 @@
+<mvc:View controllerName="zuivendorpo.controller.vendorpodetail"
+    xmlns:mvc="sap.ui.core.mvc" displayBlock="true"
+    xmlns="sap.m" xmlns:cards="sap.f.cards"
+    xmlns:core="sap.ui.core" 
+    xmlns:c="zuivendorpo.control"
+    xmlns:smartFilterBar="sap.ui.comp.smartfilterbar"
+    xmlns:smartTable="sap.ui.comp.smarttable"
+    xmlns:sv="sap.ui.comp.smartvariants" 
+    xmlns:uiL="sap.ui.layout"
+    xmlns:t="sap.ui.table" xmlns:plugins="sap.ui.table.plugins" xmlns:fb="sap.ui.comp.filterbar" 
+    xmlns:smartfilterbar="sap.ui.comp.smartfilterbar"
+    xmlns:f="sap.ui.layout.form" 
+	height="100%">
+    <Page id="pageVPODET" title="{i18n>title_iodet}" showHeader="false"
+        titleLevel="H3" class="iodet" showNavButton="true"  
+        navButtonPress="onNavBack">
+        <content>
+            <ObjectHeader id="objectHeader" 
+                responsive="true" 
+                fullScreenOptimized="true"  
+                backgroundDesign="Solid" 
+                icon="sap-icon://multiselect-none"
+                class="sapUiResponsivePadding--header sapMFlexItem--poObjectHdr" 
+                title="PONO# {topHeaderData>/PONO}"
+                >
+                <layoutData>
+                    <FlexItemData growFactor="0" />
+                </layoutData>
+            </ObjectHeader>
+            <VBox id="_IDGenVBox1" fitContainer="true" class="sidePadding vboxHeight">
+                <uiL:ResponsiveSplitter defaultPane="default">
+                    <uiL:PaneContainer orientation="Vertical">
+                        <uiL:SplitPane  requiredParentWidth="800">
+                            <IconTabBar
+                                id="idIconTabBarInlineMode"
+                                headerMode="Inline"
+                                expanded="{device>/isNoPhone}"
+                                stretchContentHeight="false" 
+                                applyContentPadding="false"
+                                class="sapUiNoContentPadding" 
+                                expandable="false">
+                                    <items>
+                                        <!-- IO HEADER DETAILS ICON TAB BAR -->
+                                        <IconTabFilter
+                                            text="HEADER"
+                                            key="itfIOHDR">
+                                            <core:Fragment fragmentName="zuivendorpo.view.subviews.vpoheader" type="XML"/>
+                                        </IconTabFilter>
+
+                                        <!-- STYLE -->
+                                        <IconTabFilter
+                                            text="RELEASE STRATEGY"
+                                            key="itfSTYLE">
+                                            <core:Fragment fragmentName="zuivendorpo.view.subviews.vporelstat" type="XML"/>                                 
+                                        </IconTabFilter>
+
+                                        <!-- DELIVERY SCHEDULE -->
+                                        <IconTabFilter
+                                            text="CONDITIONS"
+                                            key="itfDLVSCHED">
+                                            <Text text="Conditions..." />
+                                        </IconTabFilter>
+                                            
+                                        <!-- MATERIAL LIST -->
+                                        <IconTabFilter
+                                            text="HEADER TEXT"
+                                            key="itfMATLIST">
+                                            <core:Fragment fragmentName="zuivendorpo.view.subviews.vpoheadertext" type="XML"/>
+                                        </IconTabFilter>
+
+                                        <IconTabFilter
+                                            text="CHANGES"
+                                            key="itfCOSTING">
+                                            <Text text="Changes..." />
+                                        </IconTabFilter>
+                                    </items>
+                            </IconTabBar>
+                        </uiL:SplitPane>
+                        <uiL:SplitPane  requiredParentWidth="800">
+                            <core:Fragment fragmentName="zuivendorpo.view.subviews.vpodetailtab" type="XML"/>
+                        </uiL:SplitPane>
+                    </uiL:PaneContainer>
+                </uiL:ResponsiveSplitter>
+            </VBox>
+        </content>
+    </Page>
+</mvc:View>

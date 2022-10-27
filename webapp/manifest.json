@@ -162,6 +162,14 @@
                     "target": [
                         "Targetmain"
                     ]
+                },
+                {
+                    "name": "vendorpodetail",
+                    "pattern": "VPODet/{PONO}",
+                    "greedy": false,
+                    "target": [
+                        "TargetVPODetail"
+                    ]
                 }
             ],
             "targets": {
@@ -171,6 +179,13 @@
                     "clearControlAggregation": false,
                     "viewId": "main",
                     "viewName": "main"
+                },
+                "TargetVPODetail": {
+                    "viewType": "XML",
+                    "transition": "slide",
+                    "clearControlAggregation": false,
+                    "viewId": "vendorpodetail",
+                    "viewName": "vendorpodetail"
                 }
             }
         },
