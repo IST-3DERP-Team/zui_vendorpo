@@ -913,7 +913,7 @@ sap.ui.define([
                     console.log("onCreateManualPO", sSbu)
                     that._router.navTo("RouteCreateManualPO", {
                         sbu: sSbu
-                    });
+                    }, true);
                 } else {
                     sap.m.MessageBox.information("SBU is required.");
                 }

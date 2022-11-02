@@ -157,7 +157,8 @@
                 "viewPath": "zuivendorpo.view",
                 "controlAggregation": "pages",
                 "controlId": "app",
-                "clearControlAggregation": false
+                "clearControlAggregation": false,
+                "clearTarget": false
             },
             "routes": [
                 {

@@ -98,15 +98,15 @@
     "VPOManualDtl":[
         {"name": "UOM",
             "valueHelp": {"show": true, "items": {"path": "/VPOManualUomRscSet", "value": "UOM", "text": "DESCRIP"},
-            "suggestionItems": {"path": "/VPOManualUomRscSet", "text": "{UOM}", "additionalText": "{DESCRIP}", "maxSuggestionWidth": "350px"}}
+            "suggestionItems": {"path": "uom>/results", "text": "{uom>UOM}", "additionalText": "{uom>DESCRIP}", "maxSuggestionWidth": "350px"}}
         },
         {"name": "ORDERPRICEUNIT",
             "valueHelp": {"show": true, "items": {"path": "/VPOManualUomRscSet", "value": "UOM", "text": "DESCRIP"},
-            "suggestionItems": {"path": "/VPOManualUomRscSet", "text": "{UOM}", "additionalText": "{DESCRIP}", "maxSuggestionWidth": "350px"}}
+            "suggestionItems": {"path": "uom>/results", "text": "{uom>UOM}", "additionalText": "{uom>DESCRIP}", "maxSuggestionWidth": "350px"}}
         },
         {"name": "ORDERNO",
             "valueHelp": {"show": true, "items": {"path": "/VPOManualOrderNoRscSet", "value": "IONO", "text": "IODESC"},
-            "suggestionItems": {"path": "/VPOManualOrderNoRscSet", "text": "{IONO}", "additionalText": "{IODESC}", "maxSuggestionWidth": "350px"}}
+            "suggestionItems": {"path": "orderNo>/results", "text": "{orderNo>IONO}", "additionalText": "{orderNo>IODESC}", "maxSuggestionWidth": "350px"}}
         }
     ]
 }
