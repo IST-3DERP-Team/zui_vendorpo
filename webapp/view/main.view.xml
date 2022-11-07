@@ -63,7 +63,7 @@
                                 rowSelectionChange=".onSelectionChange"
                                 
                                 firstVisibleRowChanged=".onFirstVisibleRowChanged"
-                                cellClick=".onCellClickGMC"
+                                cellClick=".onCellClick"
                                 sort="onSort"
                                 filter="onFilter"
                                 columnFreeze=".onColumnUpdated"
