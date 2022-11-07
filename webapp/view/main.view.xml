@@ -127,7 +127,7 @@
                                             press=".onClickEdit"/>
                                         <Button id="btnRefreshMain" 
                                                 icon="sap-icon://refresh"
-                                                press=".onRefreshMain"
+                                                press=".onRefresh"
                                                 visible="true" />
                                         <!-- <Button id="btnSortMain" 
                                             icon="sap-icon://sort"
@@ -152,7 +152,7 @@
                                             visible="true" /> -->
                                         <Button id="btnTabLayout"
                                             icon="sap-icon://grid" 
-                                            tooltip="{i18n>Savetablelayout}" 
+                                            tooltip="Savetablelayout" 
                                             press=".onSaveTableLayout('mainTab')"/>
                                     </Toolbar>
                                 </uiT:extension>
@@ -187,12 +187,12 @@
                                                     <ToolbarSpacer/>
                                                     <Button id="btnRefreshDetails" 
                                                         icon="sap-icon://refresh"
-                                                        press=".onRefreshDetails"
+                                                        press=".onRefresh"
                                                         visible="true" />
                                                     <Button id="btnColPropDetails" 
                                                         icon="sap-icon://table-column"
-                                                        press="onColumnProp"
-                                                        tooltip="Columns"
+                                                        press=".onSaveTableLayout('detailsTab')"
+                                                        tooltip="Savetablelayout"
                                                         visible="true" />
                                                 </Toolbar>
                                             </uiT:extension>
@@ -218,12 +218,12 @@
                                                     <ToolbarSpacer/>
                                                     <Button id="btnRefresDelSched" 
                                                         icon="sap-icon://refresh"
-                                                        press=".onRefreshDelSched"
+                                                        press=".onRefresh"
                                                         visible="true" />
                                                     <Button id="btnColPropDelSched" 
                                                         icon="sap-icon://table-column"
-                                                        press="onColumnProp"
-                                                        tooltip="Columns"
+                                                        press=".onSaveTableLayout('delSchedTab')"
+                                                        tooltip="Savetablelayout"
                                                         visible="true" />
                                                 </Toolbar>
                                             </uiT:extension>
@@ -249,12 +249,12 @@
                                                     <ToolbarSpacer/>
                                                     <Button id="btnRefresDelInv" 
                                                         icon="sap-icon://refresh"
-                                                        press=".onRefreshDelInv"
+                                                        press=".onRefresh"
                                                         visible="true" />
                                                     <Button id="btnColPropDelInv" 
                                                         icon="sap-icon://table-column"
-                                                        press="onColumnProp"
-                                                        tooltip="Columns"
+                                                        press=".onSaveTableLayout('delInvTab')"
+                                                        tooltip="Savetablelayout"
                                                         visible="true" />
                                                 </Toolbar>
                                             </uiT:extension>
@@ -280,12 +280,12 @@
                                                     <ToolbarSpacer/>
                                                     <Button id="btnRefresPOHistory" 
                                                         icon="sap-icon://refresh"
-                                                        press=".onRefreshPOHistory"
+                                                        press=".onRefresh"
                                                         visible="true" />
                                                     <Button id="btnColPropPOHistory" 
                                                         icon="sap-icon://table-column"
-                                                        press="onColumnProp"
-                                                        tooltip="Columns"
+                                                        press=".onSaveTableLayout('poHistTab')"
+                                                        tooltip="Savetablelayout"
                                                         visible="true" />
                                                 </Toolbar>
                                             </uiT:extension>
@@ -310,12 +310,12 @@
                                                     <ToolbarSpacer/>
                                                     <Button id="btnRefreshConditions" 
                                                         icon="sap-icon://refresh"
-                                                        press=".onRefreshPOHistory"
+                                                        press=".onRefresh"
                                                         visible="true" />
                                                     <Button id="btnColPropConditions" 
                                                         icon="sap-icon://table-column"
-                                                        press="onColumnProp"
-                                                        tooltip="Columns"
+                                                        press=".onSaveTableLayout('conditionsTab')"
+                                                        tooltip="Savetablelayout"
                                                         visible="true" />
                                                 </Toolbar>
                                             </uiT:extension>

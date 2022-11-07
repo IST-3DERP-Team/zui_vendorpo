@@ -46,7 +46,7 @@
                             <Button id="vpoBtnItemChanges" visible="true" text="Item Changes" />
                             <Button id="vpoBtnRefreshDetails" 
                                 icon="sap-icon://refresh"
-                                press=".onRefreshDetails"
+                                press=".onRefresh"
                                 visible="true" />
                             <Button id="vpoBtnEditDetails" 
                                 icon="sap-icon://edit"
@@ -134,7 +134,7 @@
                                 visible="true"/>
                             <Button id="vpoBtnRefresDelSched" 
                                 icon="sap-icon://refresh"
-                                press=".onRefreshDelSched"
+                                press=".onRefresh"
                                 visible="true" />
                             <!-- <Button id="vpoBtnSortDelSched" 
                                 icon="sap-icon://sort"
@@ -187,7 +187,7 @@
                                 width="15rem"/>
                             <Button id="vpoBtnRefresDelInv" 
                                 icon="sap-icon://refresh"
-                                press=".onRefreshDelInv"
+                                press=".onRefresh"
                                 visible="true" />
                             <Button id="vpoBtnEditDelInv" 
                                 icon="sap-icon://edit"
@@ -253,7 +253,7 @@
                                 width="15rem"/>
                             <Button id="vpoBtnRefresPOHistory" 
                                 icon="sap-icon://refresh"
-                                press=".onRefreshPOHistory"
+                                press=".onRefresh"
                                 visible="true" />
                             <Button id="vpoBtnSortPOHistory" 
                                 icon="sap-icon://sort"
@@ -305,7 +305,7 @@
                                 width="15rem"/>
                             <Button id="vpoBtnRefreshConditions" 
                                 icon="sap-icon://refresh"
-                                press=".onRefreshPOHistory"
+                                press=".onRefresh"
                                 visible="true" />
                             <Button id="vpoBtnSortConditions" 
                                 icon="sap-icon://sort"

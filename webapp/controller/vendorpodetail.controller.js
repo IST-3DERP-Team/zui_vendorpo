@@ -1186,7 +1186,6 @@ sap.ui.define([
                 this.byId("vpoBtnCancelHeader").setVisible(true);
                 oView.setModel(oJSONEdit, "topHeaderDataEdit");
             },
-
             onHeaderInputChange: async function(oEvent){
                 console.log(oEvent.getParameters().selectedItem.mProperties.key);
                 var textValue = oEvent.getParameters().selectedItem.mProperties.key;
@@ -1199,7 +1198,6 @@ sap.ui.define([
                 console.log(oEvent.getSource().getBindingInfo("value").binding.oValue);
                 console.log(oEvent.getSource().getBindingInfo("value").mandatory);
             },
-
             onSaveVPOHeader: async function(){
                 var me = this;
                 this.showLoadingDialog('Loading...')
@@ -1316,7 +1314,6 @@ sap.ui.define([
                 this.getView().getModel("ui").setProperty("/dataMode", 'READ');
                 this.closeLoadingDialog(that);
             },
-
             onCancelVPOHeader: async function(){
                 var me = this;
                 var oView = this.getView();
@@ -1339,7 +1336,6 @@ sap.ui.define([
                 this.loadAllData();
                 oView.setModel(oJSONEdit, "topHeaderDataEdit");
             },
-
             onChangeVendorVPOHeader: async function(){
                 MessageToast.show("Changed CLick");
                 var me = this;
@@ -2706,6 +2702,15 @@ sap.ui.define([
                     resolve(this.loadAllData());
                 });
                 await _promiseResult;
+            },
+
+            onRefresh: async function(){
+                this.showLoadingDialog('Loading...');
+                _promiseResult = new Promise((resolve, reject)=> {
+                    resolve(this.loadAllData());
+                });
+                await _promiseResult;
+                this.closeLoadingDialog(that);
             }
         });
     });
