@@ -33,6 +33,30 @@
                         selectionBehavior="Row"
                         rowSelectionChange=".onSelectionChange"
                         sort="onSorted">
+                        <uiT:extension>
+                            <Toolbar>
+                                <Button id="vpoEditHdrTxtRemarks" 
+                                    icon="sap-icon://edit"
+                                    press=".onEditHdrTxt('Remarks')"
+                                    tooltip="Edit"
+                                    visible="true"/>
+                                <Button id="vpoDeleteHdrTxtRemarks" 
+                                    icon="sap-icon://delete"
+                                    press=".onDeleteEditHdrTxt('Remarks')"
+                                    tooltip="Delete"
+                                    visible="true"/>
+                                <Button id="vpoSaveHdrTxtRemarks" 
+                                    icon="sap-icon://save"
+                                    press=".onSaveEditHdrTxt('Remarks')" 
+                                    tooltip="Save"
+                                    visible="false" />
+                                <Button id="vpoCancelHdrTxtRemarks" 
+                                    icon="sap-icon://sys-cancel"
+                                    press=".onCancelEditHdrTxt('Remarks')" 
+                                    tooltip="Cancel"
+                                    visible="false" />
+                            </Toolbar>
+                        </uiT:extension>
                     </uiT:Table>
                 </IconTabFilter>
                 <IconTabFilter
@@ -48,6 +72,30 @@
                         selectionBehavior="Row"
                         rowSelectionChange=".onSelectionChange"
                         sort="onSorted">
+                        <uiT:extension>
+                            <Toolbar>
+                                <Button id="vpoEditHdrTxtPkgInst" 
+                                    icon="sap-icon://edit"
+                                    press=".onEditHdrTxt('PkgInst')"
+                                    tooltip="Edit"
+                                    visible="true"/>
+                                <Button id="vpoDeleteHdrTxtPkgInst" 
+                                    icon="sap-icon://delete"
+                                    press=".onDeleteEditHdrTxt('PkgInst')"
+                                    tooltip="Delete"
+                                    visible="true"/>
+                                <Button id="vpoSaveHdrTxtPkgInst" 
+                                    icon="sap-icon://save"
+                                    press=".onSaveEditHdrTxt('PkgInst')" 
+                                    tooltip="Save"
+                                    visible="false" />
+                                <Button id="vpoCancelHdrTxtPkgInst" 
+                                    icon="sap-icon://sys-cancel"
+                                    press=".onCancelEditHdrTxt('PkgInst')" 
+                                    tooltip="Cancel"
+                                    visible="false" />
+                            </Toolbar>
+                        </uiT:extension>
                     </uiT:Table>
                 </IconTabFilter>
             </items>
