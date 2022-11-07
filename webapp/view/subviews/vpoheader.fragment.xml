@@ -33,7 +33,7 @@
                         </menu>                    
                     </MenuButton>
                     <Button id ="vpoBtnEditHeader" type="Ghost"  icon="sap-icon://edit" tooltip="Edit" press=".onEditVPOHeader"/>
-                    <Button id ="vpoBtnRefreshtHeader" type="Ghost"  icon="sap-icon://refresh" tooltip="Refresh" press="onEditIO"/>
+                    <Button id ="vpoBtnRefreshtHeader" type="Ghost"  icon="sap-icon://refresh" tooltip="Refresh" press=".onRefresh"/>
                     
                     <Button id ="vpoBtnSaveHeader" type="Ghost"  icon="sap-icon://save" visible="false" tooltip="Save" press=".onSaveVPOHeader"/>
                     <Button id ="vpoBtnCancelHeader" type="Ghost"  icon="sap-icon://sys-cancel" visible="false" tooltip="Cancel" press=".onCancelVPOHeader"/>
