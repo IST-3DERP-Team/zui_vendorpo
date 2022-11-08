@@ -39,6 +39,7 @@ sap.ui.define([
 
 
                 this._sbuChange = false;
+                this._tblChange = false;
                 var oJSONDataModel = new JSONModel(); 
                 oJSONDataModel.setData(this._counts);
                 this.getView().setModel(oJSONDataModel, "counts");
@@ -81,32 +82,46 @@ sap.ui.define([
                 var me = this;
                 this.showLoadingDialog('Loading...');
                 _promiseResult = new Promise((resolve, reject)=>{
-                    me.getMain();
-                    resolve();
+                    resolve(this.getMain());
                 });
                 await _promiseResult;
                 
                 
                 _promiseResult = new Promise((resolve, reject)=>{
-                    setTimeout(() => {
-                        me.getCols();
-                        resolve();
-                    }, 500);
+                    resolve(me.getCols());
                 });
                 await _promiseResult;
                 this.closeLoadingDialog();
 
             },
+            //Same as OnSearch
+            onRefresh: async function(){
+                var me = this;
+                this.showLoadingDialog('Loading...');
+                _promiseResult = new Promise((resolve, reject)=>{
+                    resolve(this.getMain());
+                });
+                await _promiseResult;
+                
+                
+                _promiseResult = new Promise((resolve, reject)=>{
+                    resolve(me.getCols());
+                });
+                await _promiseResult;
+                this.closeLoadingDialog();
+            },
             getMain: async function(){
                 var oModel = this.getOwnerComponent().getModel();
-                var _this = this;
+                var me = this;
                 var poNo;
                 var condrec;
+                var aFilters = this.getView().byId("smartFilterBar").getFilters();
 
                 var vSBU = this.getView().getModel("ui").getData().sbu;
-                _promiseResult = new Promise((resolve, reject) => {
+                return new Promise((resolve, reject) => {
                         
-                    oModel.read('/mainSet', { 
+                    oModel.read('/mainSet', {
+                        filters: aFilters,
                         success: function (data, response) {
                             if (data.results.length > 0) {
                                 data.results.forEach(item => {
@@ -119,150 +134,198 @@ sap.ui.define([
                                 condrec = data.results[0].CONDREC;
                                 var oJSONModel = new sap.ui.model.json.JSONModel();
                                 oJSONModel.setData(data);
-                                _this.getView().setModel(oJSONModel, "VPOHdr");
-                                _this.getView().getModel("ui").setProperty("/activePONo", poNo);
-                                _this.getView().getModel("ui").setProperty("/activeCondRec", condrec);
-                                _this.getPODetails2(poNo);
-                                _this.getDelSchedule2(poNo);
-                                _this.getDelInvoice2(poNo);
-                                _this.getPOHistory2(poNo);
-                                _this.getConditions2(poNo);
+                                me.getView().setModel(oJSONModel, "VPOHdr");
+                                me.getView().getModel("ui").setProperty("/activePONo", poNo);
+                                me.getView().getModel("ui").setProperty("/activeCondRec", condrec);
+                                resolve(me.getPODetails2(poNo));
+                                resolve(me.getDelSchedule2(poNo));
+                                resolve(me.getDelInvoice2(poNo));
+                                resolve(me.getPOHistory2(poNo));
+                                resolve(me.getConditions2(poNo));
+                                resolve();
                             }
                             else {
-                                _this.getView().getModel("ui").setProperty("/activePONo", '');
-                                _this.getView().getModel("ui").setProperty("/activeCondRec", '');
+                                me.getView().getModel("ui").setProperty("/activePONo", '');
+                                me.getView().getModel("ui").setProperty("/activeCondRec", '');
 
-                                _this.getView().setModel(new JSONModel({
+                                me.getView().setModel(new JSONModel({
                                     results: []
                                 }), "materials");
-
-                                _this.getView().setModel(new JSONModel({
+                                me.getView().setModel(new JSONModel({
+                                    results: []
+                                }), "VPOHdr");
+                                me.getView().setModel(new JSONModel({
                                     results: []
                                 }), "VPODtls");
-
-                                _this.getView().setModel(new JSONModel({
+                                me.getView().setModel(new JSONModel({
                                     results: []
                                 }), "VPODelSched");
-
-                                _this.getView().setModel(new JSONModel({
+                                me.getView().setModel(new JSONModel({
                                     results: []
                                 }), "VPODelInv");
-
-                                _this.getView().setModel(new JSONModel({
+                                me.getView().setModel(new JSONModel({
                                     results: []
                                 }), "VPOPOHist");
-
-                                _this.getView().setModel(new JSONModel({
+                                me.getView().setModel(new JSONModel({
                                     results: []
                                 }), "VPOCond");
+                                resolve();
                             }
-                            
+                            me.closeLoadingDialog();
                             resolve();
-                            _this.closeLoadingDialog();
                         },
                         error: function (err) { }
                     });
                     
                     
                 });
-                await _promiseResult;
             },
             getPOHistory2: async function(PONO){
                 var oModel = this.getOwnerComponent().getModel();
-                var _this = this;
-                oModel.read('/VPOHistSet', { 
-                    urlParameters: {
-                        "$filter": "PONO eq '" + PONO + "'"
-                    },
-                    success: function (data, response) {
-                        if (data.results.length > 0) {
-                            data.results.forEach(item => {
-                                item.POSTDT = dateFormat.format(new Date(item.POSTDT));
-                            })
-                            var oJSONModel = new sap.ui.model.json.JSONModel();
-                            oJSONModel.setData(data);
+                var me = this;
+                var tblChange = this._tblChange;
+                var oJSONModel = new sap.ui.model.json.JSONModel();
+                return new Promise((resolve, reject)=>{
+                    oModel.read('/VPOHistSet', { 
+                        urlParameters: {
+                            "$filter": "PONO eq '" + PONO + "'"
+                        },
+                        success: function (data, response) {
+                            if (data.results.length > 0) {
+                                data.results.forEach(item => {
+                                    item.POSTDT = dateFormat.format(new Date(item.POSTDT));
+                                })
+                                oJSONModel.setData(data);
+                            }
+                            me.getView().setModel(oJSONModel, "VPOPOHist");
+                            if(tblChange)
+                                resolve(me.setTableColumnsData('VPOPOHist'));
+                            resolve();
+                        },
+                        error: function (err) { 
+                            me.getView().setModel(oJSONModel, "VPOPOHist");
+                            if(tblChange)
+                                resolve(me.setTableColumnsData('VPOPOHist'));
+                            resolve();
                         }
-                        _this.getView().setModel(oJSONModel, "VPOPOHist");
-                        _this.closeLoadingDialog();
-                    },
-                    error: function (err) { }
+                    });
                 });
             },
             getDelInvoice2: async function(PONO){
                 var oModel = this.getOwnerComponent().getModel();
-                var _this = this;
-                oModel.read('/VPODelInvSet', { 
-                    urlParameters: {
-                        "$filter": "PONO eq '" + PONO + "'"
-                    },
-                    success: function (data, response) {
-                        if (data.results.length > 0) {
-                            var oJSONModel = new sap.ui.model.json.JSONModel();
-                            oJSONModel.setData(data);
+                var me = this;
+                var tblChange = this._tblChange;
+                var oJSONModel = new sap.ui.model.json.JSONModel();
+                return new Promise((resolve, reject)=>{
+                    oModel.read('/VPODelInvSet', { 
+                        urlParameters: {
+                            "$filter": "PONO eq '" + PONO + "'"
+                        },
+                        success: function (data, response) {
+                            if (data.results.length > 0) {
+                                oJSONModel.setData(data);
+                            }
+                            me.getView().setModel(oJSONModel, "VPODelInv");
+                            if(tblChange)
+                                resolve(me.setTableColumnsData('VPODelInv'));
+                            resolve();
+                        },
+                        error: function (err) { 
+                            me.getView().setModel(oJSONModel, "VPODelInv");
+                            if(tblChange)
+                                resolve(me.setTableColumnsData('VPODelInv'));
+                            resolve();
                         }
-                        _this.getView().setModel(oJSONModel, "VPODelInv");
-                        _this.closeLoadingDialog();
-                    },
-                    error: function (err) { }
+                    });
                 });
                 
             },
             getConditions2: async function(CONDREC){
                 var oModel = this.getOwnerComponent().getModel();
-                var _this = this;
-                oModel.read('/VPOConditionsSet', { 
-                    urlParameters: {
-                        "$filter": "KNUMV eq '" + CONDREC + "'"
-                    },
-                    success: function (data, response) {
-                        if (data.results.length > 0) {
-                            var oJSONModel = new sap.ui.model.json.JSONModel();
-                            oJSONModel.setData(data);
+                var me = this;
+                var tblChange = this._tblChange;
+                var oJSONModel = new sap.ui.model.json.JSONModel();
+                return new Promise((resolve, reject)=>{
+                    oModel.read('/VPOConditionsSet', { 
+                        urlParameters: {
+                            "$filter": "KNUMV eq '" + CONDREC + "'"
+                        },
+                        success: function (data, response) {
+                            if (data.results.length > 0) {
+                                oJSONModel.setData(data);
+                            }
+                            me.getView().setModel(oJSONModel, "VPOCond");
+                            if(tblChange)
+                                resolve(me.setTableColumnsData('VPOCond'));
+                            resolve();
+                        },
+                        error: function (err) { 
+                            me.getView().setModel(oJSONModel, "VPOCond");
+                            if(tblChange)
+                                resolve(me.setTableColumnsData('VPOCond'));
+                            resolve();
                         }
-                        _this.getView().setModel(oJSONModel, "VPOCond");
-                        _this.closeLoadingDialog();
-                    },
-                    error: function (err) { }
+                    });
                 });
                 
             },
             getDelSchedule2: async function(PONO){
                 var oModel = this.getOwnerComponent().getModel();
-                var _this = this;
-                oModel.read('/VPODelSchedSet', { 
-                    urlParameters: {
-                        "$filter": "PONO eq '" + PONO + "'"
-                    },
-                    success: function (data, response) {
-                        if (data.results.length > 0) {
-                            var oJSONModel = new sap.ui.model.json.JSONModel();
-                            oJSONModel.setData(data);
+                var me = this;
+                var tblChange = this._tblChange;
+                var oJSONModel = new sap.ui.model.json.JSONModel();
+                return new Promise((resolve, reject)=>{
+                    oModel.read('/VPODelSchedSet', { 
+                        urlParameters: {
+                            "$filter": "PONO eq '" + PONO + "'"
+                        },
+                        success: function (data, response) {
+                            if (data.results.length > 0) {
+                                oJSONModel.setData(data);
+                            }
+                            me.getView().setModel(oJSONModel, "VPODelSched");
+                            if(tblChange)
+                                resolve(me.setTableColumnsData('VPODelSched'));
+                            resolve();
+                        },
+                        error: function (err) { 
+                            me.getView().setModel(oJSONModel, "VPODelSched");
+                            if(tblChange)
+                                resolve(me.setTableColumnsData('VPODelSched'));
+                            resolve();
                         }
-                        _this.getView().setModel(oJSONModel, "VPODelSched");
-                        _this.closeLoadingDialog();
-                    },
-                    error: function (err) { }
+                    });
                 });
                 
             },
             getPODetails2: async function(PONO){
                 var oModel = this.getOwnerComponent().getModel();
-                var _this = this;
-                oModel.read('/VPODetailsSet', { 
-                    urlParameters: {
-                        "$filter": "PONO eq '" + PONO + "'"
-                    },
-                    success: function (data, response) {
-                        if (data.results.length > 0) {
-                            console.log(data);
-                            var oJSONModel = new sap.ui.model.json.JSONModel();
-                            oJSONModel.setData(data);
+                var me = this;
+                var tblChange = this._tblChange;
+                var oJSONModel = new sap.ui.model.json.JSONModel();
+                return new Promise((resolve, reject)=>{
+                    oModel.read('/VPODetailsSet', { 
+                        urlParameters: {
+                            "$filter": "PONO eq '" + PONO + "'"
+                        },
+                        success: function (data, response) {
+                            if (data.results.length > 0) {
+                                oJSONModel.setData(data);
+                            }
+                            me.getView().setModel(oJSONModel, "VPODtls");
+                            if(tblChange)
+                                resolve(me.setTableColumnsData('VPODTLS'));
+                            resolve();
+                        },
+                        error: function (err) {
+                            me.getView().setModel(oJSONModel, "VPODtls");
+                            if(tblChange)
+                                resolve(me.setTableColumnsData('VPODTLS'));
+                            resolve();
                         }
-                        _this.getView().setModel(oJSONModel, "VPODtls");
-                        _this.closeLoadingDialog();
-                    },
-                    error: function (err) { }
+                    });
                 });
+                
             },
             setSmartFilterModel: function () {
                 //Model StyleHeaderFilters is for the smartfilterbar
@@ -272,40 +335,22 @@ sap.ui.define([
             },
 
             getCols: async function() {
-                var sPath = jQuery.sap.getModulePath("zuivendorpo", "/model/columns.json");
-                var oModelColumns = new JSONModel();
-                await oModelColumns.loadData(sPath);
-
-                var oColumns = oModelColumns.getData();
                 var oModel = this.getOwnerComponent().getModel();
-                console.log(oModel);
-                oModel.metadataLoaded().then(() => {
-                    setTimeout(() => {
-                        this.getDynamicColumns(oColumns, "VENDORPO", "ZDV_3DERP_VPO");
-                    }, 100);
-                    setTimeout(() => {
-                        this.getDynamicColumns(oColumns, "VPODTLS", "ZDV_3DERP_VPDTLS");
-                    }, 100);
-                    setTimeout(() => {
-                        this.getDynamicColumns(oColumns,'VPODELSCHED','ZVB_VPO_DELSCHED');
-                    }, 100);
-                    setTimeout(() => {
-                        this.getDynamicColumns(oColumns,'VPODELINV','ZDV_3DERP_DELINV');
-                    }, 100);
-                    setTimeout(() => {
-                        this.getDynamicColumns(oColumns,'VPOHISTORY','ZDV_3DERP_POHIST');
-                    }, 100);
-                    setTimeout(() => {
-                        this.getDynamicColumns(oColumns,'VPOCOND','ZDV_3DERP_COND');
-                    }, 100);
-                });
-
+                return new Promise((resolve, reject)=>{
+                    oModel.metadataLoaded().then(() => {
+                        resolve(this.getDynamicColumns("VENDORPO", "ZDV_3DERP_VPO"))
+                        resolve(this.getDynamicColumns("VPODTLS", "ZDV_3DERP_VPDTLS"))
+                        resolve(this.getDynamicColumns('VPODELSCHED','ZVB_VPO_DELSCHED'))
+                        resolve(this.getDynamicColumns('VPODELINV','ZDV_3DERP_DELINV'))
+                        resolve(this.getDynamicColumns('VPOHISTORY','ZDV_3DERP_POHIST'))
+                        resolve(this.getDynamicColumns('VPOCOND','ZDV_3DERP_COND'))
+                    });
+                })
             },
-            getDynamicColumns(arg1, arg2, arg3) {
-                var me = this;               
-                var oColumns = arg1;
-                var modCode = arg2;
-                var tabName = arg3;
+            getDynamicColumns(model, dataSource) {
+                var me = this;
+                var modCode = model;
+                var tabName = dataSource;
                 //get dynamic columns based on saved layout or ZERP_CHECK
                 var oJSONColumnsModel = new JSONModel();
                 //var vSBU = this.getView().getModel("ui").getData().sbu;
@@ -318,78 +363,91 @@ sap.ui.define([
                     type: modCode,
                     tabname: tabName
                 });
-                oModel.read("/ColumnsSet", {
-                    success: async function (oData, oResponse) {
-                        
-                        if (oData.results.length > 0) {
-                            me._columnLoadError = false;
-                            if (modCode === 'VENDORPO') {
-                                oJSONColumnsModel.setData(oData.results);
-                                me.getView().setModel(oJSONColumnsModel, "VENDORPOColumns");
-                                me.setTableColumnsData(modCode);
-                                
-                            }
-                            if (modCode === 'VPODTLS') {
-                                oJSONColumnsModel.setData(oData.results);
-                                me.getView().setModel(oJSONColumnsModel, "VPODTLSColumns");
-                                me.setTableColumnsData(modCode);
-                            }
-                            if (modCode === 'VPODELSCHED') {
-                                oJSONColumnsModel.setData(oData.results);
-                                me.getView().setModel(oJSONColumnsModel, "VPODELSCHEDColumns");
-                                me.setTableColumnsData(modCode);
-                            }
-                            if (modCode === 'VPODELINV') {
-                                oJSONColumnsModel.setData(oData.results);
-                                me.getView().setModel(oJSONColumnsModel, "VPODELINVColumns");
-                                me.setTableColumnsData(modCode);
-                            }
-                            if (modCode === 'VPOHISTORY') {
-                                oJSONColumnsModel.setData(oData.results);
-                                me.getView().setModel(oJSONColumnsModel, "VPOHISTORYColumns");
-                                me.setTableColumnsData(modCode);
-                            }
-                            if (modCode === 'VPOCOND') {
-                                oJSONColumnsModel.setData(oData.results);
-                                me.getView().setModel(oJSONColumnsModel, "VPOCONDColumns");
-                                me.setTableColumnsData(modCode);
-                            }
+                return new Promise((resolve, reject) => {
+                    oModel.read("/ColumnsSet", {
+                        success: async function (oData, oResponse) {
+                            
+                            if (oData.results.length > 0) {
+                                me._columnLoadError = false;
+                                if (modCode === 'VENDORPO') {
+                                    oJSONColumnsModel.setData(oData.results);
+                                    me.getView().setModel(oJSONColumnsModel, "VENDORPOColumns");
+                                    me.setTableColumnsData(modCode);
+                                    resolve();
+                                }
+                                if (modCode === 'VPODTLS') {
+                                    oJSONColumnsModel.setData(oData.results);
+                                    me.getView().setModel(oJSONColumnsModel, "VPODTLSColumns");
+                                    me.setTableColumnsData(modCode);
+                                    resolve();
+                                }
+                                if (modCode === 'VPODELSCHED') {
+                                    oJSONColumnsModel.setData(oData.results);
+                                    me.getView().setModel(oJSONColumnsModel, "VPODELSCHEDColumns");
+                                    me.setTableColumnsData(modCode);
+                                    resolve();
+                                }
+                                if (modCode === 'VPODELINV') {
+                                    oJSONColumnsModel.setData(oData.results);
+                                    me.getView().setModel(oJSONColumnsModel, "VPODELINVColumns");
+                                    me.setTableColumnsData(modCode);
+                                    resolve();
+                                }
+                                if (modCode === 'VPOHISTORY') {
+                                    oJSONColumnsModel.setData(oData.results);
+                                    me.getView().setModel(oJSONColumnsModel, "VPOHISTORYColumns");
+                                    me.setTableColumnsData(modCode);
+                                    resolve();
+                                }
+                                if (modCode === 'VPOCOND') {
+                                    oJSONColumnsModel.setData(oData.results);
+                                    me.getView().setModel(oJSONColumnsModel, "VPOCONDColumns");
+                                    me.setTableColumnsData(modCode);
+                                    resolve();
+                                }
 
-                        }else{
+                            }else{
+                                me._columnLoadError = true;
+                                if (modCode === 'VENDORPO') {
+                                    me.getView().setModel(oJSONColumnsModel, "VENDORPOColumns");
+                                    me.setTableColumnsData(modCode);
+                                    resolve();                                
+                                }
+                                if (modCode === 'VPODTLS') {
+                                    me.getView().setModel(oJSONColumnsModel, "VPODTLSColumns");
+                                    me.setTableColumnsData(modCode);
+                                    resolve();
+                                }
+                                if (modCode === 'VPODELSCHED') {
+                                    me.getView().setModel(oJSONColumnsModel, "VPODELSCHEDColumns");
+                                    me.setTableColumnsData(modCode);
+                                    resolve();
+                                }
+                                if (modCode === 'VPODELINV') {
+                                    me.getView().setModel(oJSONColumnsModel, "VPODELINVColumns");
+                                    me.setTableColumnsData(modCode);
+                                    resolve();
+                                }
+                                if (modCode === 'VPOHISTORY') {
+                                    me.getView().setModel(oJSONColumnsModel, "VPOHISTORYColumns");
+                                    me.setTableColumnsData(modCode);
+                                    resolve();
+                                }
+                                if (modCode === 'VPOCOND') {
+                                    me.getView().setModel(oJSONColumnsModel, "VPOCONDColumns");
+                                    me.setTableColumnsData(modCode);
+                                    resolve();
+                                }
+
+                            }
+                        },
+                        error: function (err) {
                             me._columnLoadError = true;
-                            if (modCode === 'VENDORPO') {
-                                me.getView().setModel(oJSONColumnsModel, "VENDORPOColumns");
-                                me.setTableColumnsData(modCode);
-                                
-                            }
-                            if (modCode === 'VPODTLS') {
-                                me.getView().setModel(oJSONColumnsModel, "VPODTLSColumns");
-                                me.setTableColumnsData(modCode);
-                            }
-                            if (modCode === 'VPODELSCHED') {
-                                me.getView().setModel(oJSONColumnsModel, "VPODELSCHEDColumns");
-                                me.setTableColumnsData(modCode);
-                            }
-                            if (modCode === 'VPODELINV') {
-                                me.getView().setModel(oJSONColumnsModel, "VPODELINVColumns");
-                                me.setTableColumnsData(modCode);
-                            }
-                            if (modCode === 'VPOHISTORY') {
-                                me.getView().setModel(oJSONColumnsModel, "VPOHISTORYColumns");
-                                me.setTableColumnsData(modCode);
-                            }
-                            if (modCode === 'VPOCOND') {
-                                me.getView().setModel(oJSONColumnsModel, "VPOCONDColumns");
-                                me.setTableColumnsData(modCode);
-                            }
-
+                            me.closeLoadingDialog(that);
+                            resolve();
                         }
-                    },
-                    error: function (err) {
-                        me._columnLoadError = true;
-                        me.closeLoadingDialog(that);
-                    }
-                });
+                    });
+                })
             },
             setTableColumnsData(modCode){
                 var me = this;
@@ -400,76 +458,76 @@ sap.ui.define([
                 var oData;
                 
                 if (modCode === 'VENDORPO') {     
-                    oColumnsModel = me.getView().getModel("VPOHdr");  
-                    oDataModel = me.getView().getModel("VENDORPOColumns"); 
+                    oColumnsModel = this.getView().getModel("VPOHdr");  
+                    oDataModel = this.getView().getModel("VENDORPOColumns"); 
 
                     oData = oColumnsModel === undefined ? [] :oColumnsModel.getProperty('/results');
                     
-                    if(me._columnLoadError){
+                    if(this._columnLoadError){
                         oData = [];
                     }
                     oColumnsData = oDataModel.getProperty('/');                 
-                    me.addColumns("mainTab", oColumnsData, oData, "VPOHdr");
+                    this.addColumns("mainTab", oColumnsData, oData, "VPOHdr");
                 }
                 if (modCode === 'VPODTLS') {
-                    oColumnsModel = me.getView().getModel("VPODtls");  
-                    oDataModel = me.getView().getModel("VPODTLSColumns"); 
+                    oColumnsModel = this.getView().getModel("VPODtls");  
+                    oDataModel = this.getView().getModel("VPODTLSColumns"); 
                     
                     oData = oColumnsModel === undefined ? [] :oColumnsModel.getProperty('/results');
 
-                    if(me._columnLoadError){
+                    if(this._columnLoadError){
                         oData = [];
                     }
                     oColumnsData = oDataModel.getProperty('/');   
-                    me.addColumns("detailsTab", oColumnsData, oData, "VPODtls");
+                    this.addColumns("detailsTab", oColumnsData, oData, "VPODtls");
                 }
                 if (modCode === 'VPODELSCHED') {
-                    oColumnsModel = me.getView().getModel("VPODelSched");  
-                    oDataModel = me.getView().getModel("VPODELSCHEDColumns"); 
+                    oColumnsModel = this.getView().getModel("VPODelSched");  
+                    oDataModel = this.getView().getModel("VPODELSCHEDColumns"); 
                     
                     oData = oColumnsModel === undefined ? [] :oColumnsModel.getProperty('/results');
 
-                    if(me._columnLoadError){
+                    if(this._columnLoadError){
                         oData = [];
                     }
                     oColumnsData = oDataModel.getProperty('/');   
-                    me.addColumns("delSchedTab", oColumnsData, oData, "VPODelSched");
+                    this.addColumns("delSchedTab", oColumnsData, oData, "VPODelSched");
                 }
                 if (modCode === 'VPODELINV') {
-                    oColumnsModel = me.getView().getModel("VPODelInv");  
-                    oDataModel = me.getView().getModel("VPODELINVColumns"); 
+                    oColumnsModel = this.getView().getModel("VPODelInv");  
+                    oDataModel = this.getView().getModel("VPODELINVColumns"); 
                     
                     oData = oColumnsModel === undefined ? [] :oColumnsModel.getProperty('/results');
 
-                    if(me._columnLoadError){
+                    if(this._columnLoadError){
                         oData = [];
                     }
                     oColumnsData = oDataModel.getProperty('/');   
-                    me.addColumns("delInvTab", oColumnsData, oData, "VPODelInv");
+                    this.addColumns("delInvTab", oColumnsData, oData, "VPODelInv");
                 }
                 if (modCode === 'VPOHISTORY') {
-                    oColumnsModel = me.getView().getModel("VPOPOHist");  
-                    oDataModel = me.getView().getModel("VPOHISTORYColumns"); 
+                    oColumnsModel = this.getView().getModel("VPOPOHist");  
+                    oDataModel = this.getView().getModel("VPOHISTORYColumns"); 
                     
                     oData = oColumnsModel === undefined ? [] :oColumnsModel.getProperty('/results');
 
-                    if(me._columnLoadError){
+                    if(this._columnLoadError){
                         oData = [];
                     }
                     oColumnsData = oDataModel.getProperty('/');   
-                    me.addColumns("poHistTab", oColumnsData, oData, "VPOPOHist");
+                    this.addColumns("poHistTab", oColumnsData, oData, "VPOPOHist");
                 }
                 if (modCode === 'VPOCOND') {
-                    oColumnsModel = me.getView().getModel("VPOCond");  
-                    oDataModel = me.getView().getModel("VPOCONDColumns"); 
+                    oColumnsModel = this.getView().getModel("VPOCond");  
+                    oDataModel = this.getView().getModel("VPOCONDColumns"); 
                     
                     oData = oColumnsModel === undefined ? [] :oColumnsModel.getProperty('/results');
 
-                    if(me._columnLoadError){
+                    if(this._columnLoadError){
                         oData = [];
                     }
                     oColumnsData = oDataModel.getProperty('/');   
-                    me.addColumns("conditionsTab", oColumnsData, oData, "VPOCond");
+                    this.addColumns("conditionsTab", oColumnsData, oData, "VPOCond");
                 }
             },
             addColumns: async function(table, columnsData, data, model) {
@@ -620,7 +678,6 @@ sap.ui.define([
                 });
             },
             onSaveTableLayout: function (table) {
-                console.log(table);
                 var type;
                 var tabName
 
@@ -644,7 +701,7 @@ sap.ui.define([
                     type = "VPOHISTORY";
                     tabName = "ZDV_3DERP_POHIST";
                 }
-                if(table == 'mainconditionsTabTab'){
+                if(table == 'conditionsTab'){
                     type = "VPOCOND";
                     tabName = "ZDV_3DERP_COND";
                 }
@@ -663,7 +720,6 @@ sap.ui.define([
                     "TABNAME": tabName,
                     "TableLayoutToItems": []
                 };
-                console.log(oColumns);
                 
                 //get information of columns, add to payload
                 oColumns.forEach((column) => {
@@ -679,7 +735,6 @@ sap.ui.define([
     
                     ctr++;
                 });
-                console.log(oParam);
     
                 //call the layout save
                 var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_COMMON_SRV");
@@ -725,42 +780,47 @@ sap.ui.define([
                 var me = this;
                 var _dataMode = this.getView().getModel("ui").getData().dataMode;
                 _dataMode = _dataMode === undefined ? "READ": _dataMode;
-
                 if ((oEvent.key === "ArrowUp" || oEvent.key === "ArrowDown") && oEvent.srcControl.sParentAggregationName === "rows"){// && _dataMode === "READ") {
                     var sRowPath = this.byId(oEvent.srcControl.sId).oBindingContexts["undefined"].sPath;
                     sRowPath = "/results/"+ sRowPath.split("/")[2];
                     var oRow = this.getView().getModel("VPOHdr").getProperty(sRowPath);
                     var oTable = this.byId("mainTab");
-                    this.getView().getModel("ui").setProperty("/activePONo", oRow.PONO);
-                    this.getView().getModel("ui").setProperty("/activeCondRec", oRow.CONDREC);
-                    _promiseResult = new Promise((resolve,reject)=>{
-                        setTimeout(() => {
-                            me.getPODetails2(oRow.PONO);
-                            me.getDelSchedule2(oRow.PONO);
-                            me.getDelInvoice2(oRow.PONO);
-                            me.getPOHistory2(oRow.PONO);
-                            me.getConditions2(oRow.CONDREC);
-                            resolve();
-                        }, 500);
-                        
-                    });
-                    
-                    await _promiseResult;
 
-                    _promiseResult = new Promise((resolve,reject)=>{
-                        setTimeout(() => {
-                            // me.setTableColumnsData('VENDORPO');
-                            me.setTableColumnsData('VPODTLS');
-                            me.setTableColumnsData('VPODELSCHED');
-                            me.setTableColumnsData('VPODELINV');
-                            me.setTableColumnsData('VPOHISTORY');
-                            me.setTableColumnsData('VPOCOND');
-                            resolve();
-                        }, 1000);
+                    this.getView().getModel("ui").setProperty("/activePONo", oRow.PONO)
+                    this.getView().getModel("ui").setProperty("/activeCondRec", oRow.CONDREC)
+                    _promiseResult = new Promise((resolve,reject)=> {
+                        
+                        me._tblChange = true;
+                        resolve(me.getPODetails2(oRow.PONO));
+                        resolve(me.getDelSchedule2(oRow.PONO));
+                        resolve(me.getDelInvoice2(oRow.PONO));
+                        resolve(me.getPOHistory2(oRow.PONO));
+                        resolve(me.getConditions2(oRow.CONDREC));
+                        resolve();
+                    })
+                    await _promiseResult;
+                    
+                    this._tblChange = false;
+                    var index = sRowPath.split("/");
+
+                    _promiseResult = new Promise((resolve, reject)=>{
+                        
+                        oTable.getRows().forEach(row => {
+                            if(row.getBindingContext().sPath.replace("/rows/", "") === index[2]){
+                                resolve(row.addStyleClass("activeRow"));
+                            }else{
+                                resolve(row.removeStyleClass("activeRow"));
+                            }
+                        });
                     });
                     await _promiseResult;
-                    var index = sRowPath.split("/");
-                    oTable.setSelectedIndex(parseInt(index[2]));
+                     //oEvent.srcControl.sId.split("rows")[1].split("-row")[1];
+                    // console.log(sRowPath);
+                    // console.log(oEvent.srcControl.sId);
+                    // console.log(oEvent.srcControl.sId.split("rows")[1].split("-row")[1]);
+                    // console.log(this.byId(oEvent.srcControl.sId).oBindingContexts["undefined"]);
+                    
+                    // oTable.setSelectedIndex(parseInt(index[2]));
                 }
             },
             onColumnUpdated(oEvent){
@@ -773,9 +833,8 @@ sap.ui.define([
             },
             setActiveRowHighlight(model){
                 var oTable = this.byId(model);
-
                 setTimeout(() => {
-                    var iActiveRowIndex = oTable.getModel("VPOHdr").getData().results.findIndex(item => item.ACTIVE === "X");
+                    var iActiveRowIndex = this.getView().getModel("VPOHdr").getData().results.findIndex(item => item.ACTIVE === "X");
 
                     oTable.getRows().forEach(row => {
                         if (row.getBindingContext("VPOHdr") && +row.getBindingContext("VPOHdr").sPath.replace("/results/", "") === iActiveRowIndex) {
@@ -814,10 +873,7 @@ sap.ui.define([
                     }
                 }, 1);
             },
-            onCellClickGMC: async function(oEvent) {
-                console.log(oEvent.getSource());
-                console.log(oEvent.getParameters().rowBindingContext.sPath);
-
+            onCellClick: async function(oEvent) {
                 var sRowPath = oEvent.getParameters().rowBindingContext.sPath;
                 sRowPath = "/results/"+ sRowPath.split("/")[2];
                 var oRow = this.getView().getModel("VPOHdr").getProperty(sRowPath);
@@ -831,80 +887,19 @@ sap.ui.define([
                 var PONo = this.getView().getModel("ui").getProperty("/activePONo");
                 var me = this;
                 
-                // this.getView().getModel("ui").setProperty("/activeGmc", vGmc);
-                // this.getMaterials(false);
-                // this.getAttributes(false);
-                // this.byId("searchFieldAttr").setProperty("value", "");
-                // this.byId("searchFieldMatl").setProperty("value", "");
-                
+                _promiseResult = new Promise((resolve,reject)=> {
+                        
+                    me._tblChange = true;
+                    me.getPODetails2(PONo)
+                    me.getDelSchedule2(PONo)
+                    me.getDelInvoice2(PONo)
+                    me.getPOHistory2(PONo)
+                    me.getConditions2(PONo)
+                    resolve();
+                })
+                await _promiseResult;;
 
-                _promiseResult = new Promise((resolve,reject)=>{
-                    setTimeout(() => {
-                        me.getPODetails2(PONo);
-                        me.getDelSchedule2(PONo);
-                        me.getDelInvoice2(PONo);
-                        me.getPOHistory2(PONo);
-                        me.getConditions2(PONo);
-                        resolve();
-                    }, 500);
-                    
-                });
-                
-                await _promiseResult;
-
-                _promiseResult = new Promise((resolve,reject)=>{
-                    setTimeout(() => {
-                        // me.setTableColumnsData('VENDORPO');
-                        me.setTableColumnsData('VPODTLS');
-                        me.setTableColumnsData('VPODELSCHED');
-                        me.setTableColumnsData('VPODELINV');
-                        me.setTableColumnsData('VPOHISTORY');
-                        me.setTableColumnsData('VPOCOND');
-                        resolve();
-                    }, 500);
-                });
-                await _promiseResult;
-
-                // var oTable = this.byId('detailsTab');
-                // var oColumns = oTable.getColumns();
-
-                // for (var i = 0, l = oColumns.length; i < l; i++) {
-                //     if (oColumns[i].getFiltered()) {
-                //         oColumns[i].filter("");
-                //     }
-
-                //     if (oColumns[i].getSorted()) {
-                //         oColumns[i].setSorted(false);
-                //     }
-                // }
-
-                // oTable = this.byId('mainTab');
-                // oColumns = oTable.getColumns();
-
-                // for (var i = 0, l = oColumns.length; i < l; i++) {
-                //     if (oColumns[i].getFiltered()) {
-                //         oColumns[i].filter("");
-                //     }
-
-                //     if (oColumns[i].getSorted()) {
-                //         oColumns[i].setSorted(false);
-                //     }
-                // }
-
-                // if (oEvent.getParameters().rowBindingContext) {
-                //     var oTable = oEvent.getSource(); //this.byId("ioMatListTab");
-                //     var sRowPath = oEvent.getParameters().rowBindingContext.sPath;
-
-                //     oTable.getModel("VPOHdr").getData().results.forEach(row => row.ACTIVE = "");
-                //     oTable.getModel("VPOHdr").setProperty(sRowPath + "/ACTIVE", "X"); 
-                    
-                //     oTable.getRows().forEach(row => {
-                //         if (row.getBindingContext("VPOHdr") && row.getBindingContext("VPOHdr").sPath.replace("/results/", "") === sRowPath.replace("/results/", "")) {
-                //             row.addStyleClass("activeRow");
-                //         }
-                //         else row.removeStyleClass("activeRow")
-                //     })
-                // }
+                this._tblChange = false;
             },
 
             onCreateManualPO() {

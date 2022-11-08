@@ -73,9 +73,7 @@
     margin-top: 0 !important;
 }
 .activeRow {
-
     background-color: #e1ebf3 !important;
-
 }
 
 /*.sapUiCompFilterBarNonPhone.sapUiRespGrid.sapUiRespGridHSpace0{*/
@@ -110,9 +108,12 @@
 .VBOXHdrSize2{
     height: 85%;
 }
-.sapMFlexItem{
+.vboxHeight > .sapMFlexItem {
     height: 100%;
 }
+/* .sapMFlexItem{
+    height: 100%;
+} */
 .vboxHeight {
     height: 85%;
     padding-left: 0rem;
