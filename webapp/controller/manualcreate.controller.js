@@ -479,7 +479,7 @@ sap.ui.define([
                         PoUnit: item.UOM,
                         OrderprUn: item.UOM,
                         NetPrice: item.GROSSPRICE,
-                        PriceUnit: "0", // item.ORDERPRICEUNIT
+                        PriceUnit: item.PER,
                         ConvNum1: "1",
                         ConvDen1: "1",
                         DispQuant: item.QTY,
@@ -581,7 +581,7 @@ sap.ui.define([
                 //     "N_CreatePOCondParam": [],
                 //     "N_CreatePOHdrParam": [
                 //         {
-                //             "DocDate": "2022-10-30T00:00:00",
+                //             "DocDate": "2022-11-30T00:00:00",
                 //             "DocType": "ZVAS",
                 //             "DocCat": "",
                 //             "CoCode": "VHKL",
@@ -591,7 +591,7 @@ sap.ui.define([
                 //             "PoNumber": "4100000246",
                 //             "SupplPlnt": "",
                 //             "Status": "",
-                //             "CreatDate": "2022-10-30T00:00:00",
+                //             "CreatDate": "2022-11-02T00:00:00",
                 //             "CreatedBy": "BAS_CONN",
                 //             "Pmnttrms": "",
                 //             "Dsnct1To": "0",
@@ -621,7 +621,7 @@ sap.ui.define([
                 //             "PoUnit": "PC",
                 //             "OrderprUn": "PC",
                 //             "NetPrice": "10",
-                //             "PriceUnit": "0",
+                //             "PriceUnit": "1",
                 //             "ConvNum1": "1",
                 //             "ConvDen1": "1",
                 //             "DispQuant": "10",
@@ -651,7 +651,7 @@ sap.ui.define([
                 //             "PoUnit": "PC",
                 //             "OrderprUn": "PC",
                 //             "NetPrice": "10",
-                //             "PriceUnit": "0",
+                //             "PriceUnit": "1",
                 //             "ConvNum1": "1",
                 //             "ConvDen1": "1",
                 //             "DispQuant": "20",
@@ -673,7 +673,7 @@ sap.ui.define([
                 //             "PoNumber": "4100000246",
                 //             "PoItem": "10",
                 //             "SchedLine": "1",
-                //             "DelivDate": "2022-11-07T00:00:00",
+                //             "DelivDate": "2022-12-01T00:00:00",
                 //             "Quantity": "10",
                 //             "PreqNo": "",
                 //             "PreqItem": "",
@@ -687,7 +687,7 @@ sap.ui.define([
                 //             "PoNumber": "4100000246",
                 //             "PoItem": "20",
                 //             "SchedLine": "1",
-                //             "DelivDate": "2022-11-07T00:00:00",
+                //             "DelivDate": "2022-12-01T00:00:00",
                 //             "Quantity": "20",
                 //             "PreqNo": "",
                 //             "PreqItem": "",
@@ -741,7 +741,12 @@ sap.ui.define([
                             sap.m.MessageBox.information(oResult["N_CreatePOReturn"].results[0].Message);
                             _this.navBack();
                         } else {
-                            sap.m.MessageBox.error(oResult["N_CreatePOReturn"].results[0].Message);
+                            var sMessage = "";
+                            oResult["N_CreatePOReturn"].results.forEach(item => {
+                                sMessage += item.Message + "\n";
+                            })
+
+                            sap.m.MessageBox.error(sMessage);
                             _this.closeLoadingDialog();
                         }
                     },
