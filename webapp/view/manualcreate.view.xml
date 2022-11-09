@@ -239,10 +239,16 @@
                                     enableCellFilter="true"
                                     selectionMode="Single"
                                     selectionBehavior="RowSelector"
-                                    cellClick="onCellClickDetail"
+                                    firstVisibleRowChanged="onFirstVisibleRowChanged"
+                                    cellClick="onCellClick"
                                     sort="onSorted"
-                                    rowSelectionChange="onRowSelectionChangeDetail"
-                                    filter="onFilter">
+                                    filter="onFilter"
+                                    columnFreeze="onColumnUpdated"
+                                    columnMove="onColumnUpdated"
+                                    columnResize="onColumnUpdated"
+                                    columnSelect="onColumnUpdated"
+                                    columnVisibility="onColumnUpdated"
+                                    rowSelectionChange="onRowSelectionChange">
                                     <uiT:extension>
                                         <Toolbar>
                                             <ToolbarSpacer/>
@@ -303,10 +309,16 @@
                                     enableCellFilter="true"
                                     selectionMode="Single"
                                     selectionBehavior="RowOnly"
-                                    cellClick="onCellClickDetail"
+                                    firstVisibleRowChanged="onFirstVisibleRowChanged"
+                                    cellClick="onCellClick"
                                     sort="onSorted"
-                                    rowSelectionChange="onRowSelectionChangeDetail"
-                                    filter="onFilter">
+                                    filter="onFilter"
+                                    columnFreeze="onColumnUpdated"
+                                    columnMove="onColumnUpdated"
+                                    columnResize="onColumnUpdated"
+                                    columnSelect="onColumnUpdated"
+                                    columnVisibility="onColumnUpdated"
+                                    rowSelectionChange="onRowSelectionChange">
                                     <uiT:extension>
                                         <Toolbar>
                                             <ToolbarSpacer/>
@@ -354,10 +366,16 @@
                                     enableCellFilter="true"
                                     selectionMode="Single"
                                     selectionBehavior="RowOnly"
-                                    cellClick="onCellClickDetail"
+                                    firstVisibleRowChanged="onFirstVisibleRowChanged"
+                                    cellClick="onCellClick"
                                     sort="onSorted"
-                                    rowSelectionChange="onRowSelectionChangeDetail"
-                                    filter="onFilter">
+                                    filter="onFilter"
+                                    columnFreeze="onColumnUpdated"
+                                    columnMove="onColumnUpdated"
+                                    columnResize="onColumnUpdated"
+                                    columnSelect="onColumnUpdated"
+                                    columnVisibility="onColumnUpdated"
+                                    rowSelectionChange="onRowSelectionChange">
                                     <uiT:extension>
                                         <Toolbar>
                                             <ToolbarSpacer/>

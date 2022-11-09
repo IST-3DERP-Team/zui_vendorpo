@@ -137,25 +137,60 @@ sap.ui.define([
                 this._aInvalidValueState = [];
                 this._oDataBeforeChange = {results: []};
 
-
-                // Add KeyUp event
-                var oDelegateKeyUp = {
+                this._tableRendered = "";
+                var oTableEventDelegate = {
                     onkeyup: function(oEvent){
                         _this.onKeyUp(oEvent);
+                    },
+
+                    onAfterRendering: function(oEvent) {
+                        _this.onAfterTableRendering(oEvent);
                     }
-                  };
-                this.byId("detailTab").addEventDelegate(oDelegateKeyUp);
-                this.byId("remarksTab").addEventDelegate(oDelegateKeyUp);
-                this.byId("packInstructTab").addEventDelegate(oDelegateKeyUp);
+                };
+
+                this.byId("detailTab").addEventDelegate(oTableEventDelegate);
+                this.byId("remarksTab").addEventDelegate(oTableEventDelegate);
+                this.byId("packInstructTab").addEventDelegate(oTableEventDelegate);
 
                 setTimeout(() => {
                     this.onEditHeader()
                 }, 1000);
             },
 
+            onAfterTableRendering: function(oEvent) {
+                if (this._tableRendered !== "") {
+                    this.setActiveRowHighlight(this._tableRendered.replace("Tab", ""));
+                    this._tableRendered = "";
+                } 
+            },
+
+            onSelectTab: function(oEvent) {
+                this._tableRendered = oEvent.getSource().getSelectedKey() + "Tab";
+                this.setActiveRowHighlight(oEvent.getSource().getSelectedKey());
+            },
+
             onKeyUp(oEvent) {
                 if ((oEvent.key == "ArrowUp" || oEvent.key == "ArrowDown") && oEvent.srcControl.sParentAggregationName == "rows") {
+                    var oTable = this.byId(oEvent.srcControl.sId).oParent;
 
+                    var sModel = "";
+                    if (oTable.getId().indexOf("detailTab") >= 0) sModel = "detail";
+                    else if (oTable.getId().indexOf("remarksTab") >= 0) sModel = "remarks";
+                    else if (oTable.getId().indexOf("packInstructTab") >= 0) sModel = "packInstruct";
+
+                    if (this.byId(oEvent.srcControl.sId).getBindingContext(sModel)) {
+                        var sRowPath = this.byId(oEvent.srcControl.sId).getBindingContext(sModel).sPath;
+                        
+                        oTable.getModel(sModel).getData().results.forEach(row => row.ACTIVE = "");
+                        oTable.getModel(sModel).setProperty(sRowPath + "/ACTIVE", "X"); 
+                        
+                        oTable.getRows().forEach(row => {
+                            if (row.getBindingContext(sModel) && row.getBindingContext(sModel).sPath.replace("/results/", "") === sRowPath.replace("/results/", "")) {
+                                row.addStyleClass("activeRow");
+                            }
+                            else row.removeStyleClass("activeRow")
+                        })
+                    }
                 } else if (oEvent.key == "Enter" && oEvent.srcControl.sParentAggregationName == "rows") {
                     // console.log("enter", oEvent, oEvent.srcControl.getParent().mBindingInfos.rows.model)
                     var sModel = oEvent.srcControl.getParent().mBindingInfos.rows.model;
@@ -363,7 +398,6 @@ sap.ui.define([
 
             onCreatePO() {
                 this.getNumber();
-                //this.createPO("4100000247");
             },
 
             getDiscRate() {
@@ -553,7 +587,6 @@ sap.ui.define([
                 };
                 aParamPOCondHdr.push(oParamPOCondHdr);
 
-
                 var oParam = {};
                 oParam["N_CreatePOAddtlDtlsParam"] = [];
                 oParam["N_CreatePOClosePRParam"] = [];
@@ -566,171 +599,6 @@ sap.ui.define([
                 oParam["N_CreatePOItemTextParam"] = aParamPOItemText;
                 oParam["N_CreatePOReturn"] = [];
 
-                // var oParam = {
-                //     "N_CreatePOAddtlDtlsParam": [],
-                //     "N_CreatePOClosePRParam": [],
-                //     "N_CreatePOCondHdrParam": [
-                //         {
-                //             "CondType": "RL01",
-                //             "CondValue": "0.000",
-                //             "Currency": "HKD",
-                //             "CurrencyIso": "HKD",
-                //             "Conpricdat": null
-                //         }
-                //     ],
-                //     "N_CreatePOCondParam": [],
-                //     "N_CreatePOHdrParam": [
-                //         {
-                //             "DocDate": "2022-11-30T00:00:00",
-                //             "DocType": "ZVAS",
-                //             "DocCat": "",
-                //             "CoCode": "VHKL",
-                //             "PurchOrg": "1601",
-                //             "PurGroup": "601",
-                //             "Vendor": "3101743",
-                //             "PoNumber": "4100000246",
-                //             "SupplPlnt": "",
-                //             "Status": "",
-                //             "CreatDate": "2022-11-02T00:00:00",
-                //             "CreatedBy": "BAS_CONN",
-                //             "Pmnttrms": "",
-                //             "Dsnct1To": "0",
-                //             "Dscnt2To": "0",
-                //             "Dscnt3To": "0",
-                //             "Currency": "HKD",
-                //             "ExchRate": "0",
-                //             "Incoterms1": "FOB",
-                //             "Incoterms2": "Clark, Pampanga",
-                //             "OurRef": "C601",
-                //             "DeleteInd": false
-                //         }
-                //     ],
-                //     "N_CreatePOHdrTextParam": [],
-                //     "N_CreatePOItemParam": [
-                //         {
-                //             "PoNumber": "4100000246",
-                //             "PoItem": "10",
-                //             "Material": "",
-                //             "InfoRec": "",
-                //             "ItemCat": "",
-                //             "Acctasscat": "V",
-                //             "MatGrp": "9999",
-                //             "ShortText": "SAMPLE VAS",
-                //             "Plant": "C600",
-                //             "StgeLoc": "",
-                //             "PoUnit": "PC",
-                //             "OrderprUn": "PC",
-                //             "NetPrice": "10",
-                //             "PriceUnit": "1",
-                //             "ConvNum1": "1",
-                //             "ConvDen1": "1",
-                //             "DispQuant": "10",
-                //             "GrInd": true,
-                //             "IrInd": false,
-                //             "GrBasediv": true,
-                //             "DeleteInd": "",
-                //             "PreqNo": "",
-                //             "PreqItem": "",
-                //             "PeriodIndExpirationDate": "",
-                //             "KOPrctr": "VPRK",
-                //             "Charg": "",
-                //             "Sakto": "20020200",
-                //             "Aufnr": "1000112"
-                //         },
-                //         {
-                //             "PoNumber": "4100000246",
-                //             "PoItem": "20",
-                //             "Material": "",
-                //             "InfoRec": "",
-                //             "ItemCat": "",
-                //             "Acctasscat": "V",
-                //             "MatGrp": "9999",
-                //             "ShortText": "SAMPLE VAS",
-                //             "Plant": "C600",
-                //             "StgeLoc": "",
-                //             "PoUnit": "PC",
-                //             "OrderprUn": "PC",
-                //             "NetPrice": "10",
-                //             "PriceUnit": "1",
-                //             "ConvNum1": "1",
-                //             "ConvDen1": "1",
-                //             "DispQuant": "20",
-                //             "GrInd": true,
-                //             "IrInd": false,
-                //             "GrBasediv": true,
-                //             "DeleteInd": "",
-                //             "PreqNo": "",
-                //             "PreqItem": "",
-                //             "PeriodIndExpirationDate": "",
-                //             "KOPrctr": "VPRK",
-                //             "Charg": "",
-                //             "Sakto": "20020200",
-                //             "Aufnr": "1000112"
-                //         }
-                //     ],
-                //     "N_CreatePOItemSchedParam": [
-                //         {
-                //             "PoNumber": "4100000246",
-                //             "PoItem": "10",
-                //             "SchedLine": "1",
-                //             "DelivDate": "2022-12-01T00:00:00",
-                //             "Quantity": "10",
-                //             "PreqNo": "",
-                //             "PreqItem": "",
-                //             "CreateInd": "",
-                //             "ReservNo": "",
-                //             "Batch": "",
-                //             "VendBatch": "",
-                //             "Version": ""
-                //         },
-                //         {
-                //             "PoNumber": "4100000246",
-                //             "PoItem": "20",
-                //             "SchedLine": "1",
-                //             "DelivDate": "2022-12-01T00:00:00",
-                //             "Quantity": "20",
-                //             "PreqNo": "",
-                //             "PreqItem": "",
-                //             "CreateInd": "",
-                //             "ReservNo": "",
-                //             "Batch": "",
-                //             "VendBatch": "",
-                //             "Version": ""
-                //         }
-                //     ],
-                //     "N_CreatePOItemTextParam": [
-                //         {
-                //             "PoNumber": "4100000246",
-                //             "PoItem": "00001",
-                //             "TextId": "F01",
-                //             "TextForm": "*",
-                //             "TextLine": "Test Remarks"
-                //         },
-                //         {
-                //             "PoNumber": "4100000246",
-                //             "PoItem": "00002",
-                //             "TextId": "F01",
-                //             "TextForm": "*",
-                //             "TextLine": "Test Remarks 2"
-                //         },
-                //         {
-                //             "PoNumber": "4100000246",
-                //             "PoItem": "00001",
-                //             "TextId": "F06",
-                //             "TextForm": "*",
-                //             "TextLine": "Test Pack"
-                //         },
-                //         {
-                //             "PoNumber": "4100000246",
-                //             "PoItem": "00002",
-                //             "TextId": "F06",
-                //             "TextForm": "*",
-                //             "TextLine": "Test Pack 2"
-                //         }
-                //     ],
-                //     "N_CreatePOReturn": []
-                // }
-
                 console.log("createpo param", oParam)
                 oModel.create("/CreatePOSet", oParam, {
                     method: "POST",
@@ -738,8 +606,12 @@ sap.ui.define([
                         console.log("CreatePOSet", oResult, oResponse);
                         
                         if (oResult["N_CreatePOReturn"].results.length > 0 && oResult["N_CreatePOReturn"].results[0].Type == "S") {
-                            sap.m.MessageBox.information(oResult["N_CreatePOReturn"].results[0].Message);
-                            _this.navBack();
+                            _this.closeLoadingDialog();
+                            sap.m.MessageBox.information(oResult["N_CreatePOReturn"].results[0].Message,{
+                                onClose: function(sAction) {
+                                    _this.navBack();
+                                }
+                            });
                         } else {
                             var sMessage = "";
                             oResult["N_CreatePOReturn"].results.forEach(item => {
@@ -1705,6 +1577,119 @@ sap.ui.define([
 
             closeLoadingDialog() {
                 _this._LoadingDialog.close();
+            },
+
+            onFirstVisibleRowChanged: function (oEvent) {
+                var oTable = oEvent.getSource();
+                var sModel;
+
+                if (oTable.getId().indexOf("detailTab") >= 0) {
+                    sModel = "detail";
+                }
+                else if (oTable.getId().indexOf("remarksTab") >= 0) {
+                    sModel = "remarks";
+                }
+                else if (oTable.getId().indexOf("packInstructTab") >= 0) {
+                    sModel = "packInstruct";
+                }
+
+                setTimeout(() => {
+                    var oData = oTable.getModel(sModel).getData().results;
+                    var iStartIndex = oTable.getBinding("rows").iLastStartIndex;
+                    var iLength = oTable.getBinding("rows").iLastLength + iStartIndex;
+
+                    if (oTable.getBinding("rows").aIndices.length > 0) {
+                        for (var i = iStartIndex; i < iLength; i++) {
+                            var iDataIndex = oTable.getBinding("rows").aIndices.filter((fItem, fIndex) => fIndex === i);
+    
+                            if (oData[iDataIndex].ACTIVE === "X") oTable.getRows()[iStartIndex === 0 ? i : i - iStartIndex].addStyleClass("activeRow");
+                            else oTable.getRows()[iStartIndex === 0 ? i : i - iStartIndex].removeStyleClass("activeRow");
+                        }
+                    }
+                    else {
+                        for (var i = iStartIndex; i < iLength; i++) {
+                            if (oData[i].ACTIVE === "X") oTable.getRows()[iStartIndex === 0 ? i : i - iStartIndex].addStyleClass("activeRow");
+                            else oTable.getRows()[iStartIndex === 0 ? i : i - iStartIndex].removeStyleClass("activeRow");
+                        }
+                    }
+                }, 1);
+            },
+
+            onFilter: function(oEvent) {
+                var oTable = oEvent.getSource();
+                var sModel;
+
+                if (oTable.getId().indexOf("detailTab") >= 0) {
+                    sModel = "detail";
+                }
+                else if (oTable.getId().indexOf("remarksTab") >= 0) {
+                    sModel = "remarks";
+                }
+                else if (oTable.getId().indexOf("packInstructTab") >= 0) {
+                    sModel = "packInstruct";
+                }
+
+                this.setActiveRowHighlight(sModel);
+            },
+
+            onColumnUpdated: function (oEvent) {
+                var oTable = oEvent.getSource();
+                var sModel;
+
+                if (oTable.getId().indexOf("detailTab") >= 0) {
+                    sModel = "detail";
+                }
+                else if (oTable.getId().indexOf("remarksTab") >= 0) {
+                    sModel = "remarks";
+                }
+                else if (oTable.getId().indexOf("packInstructTab") >= 0) {
+                    sModel = "packInstruct";
+                }
+
+                this.setActiveRowHighlight(sModel);
+            },
+
+            setActiveRowHighlight(arg) {
+                var oTable = this.byId(arg + "Tab");
+                
+                setTimeout(() => {
+                    var iActiveRowIndex = oTable.getModel(arg).getData().results.findIndex(item => item.ACTIVE === "X");
+
+                    oTable.getRows().forEach(row => {
+                        if (row.getBindingContext(arg) && +row.getBindingContext(arg).sPath.replace("/results/", "") === iActiveRowIndex) {
+                            row.addStyleClass("activeRow");
+                        }
+                        else row.removeStyleClass("activeRow");
+                    })
+                }, 1);
+            },
+
+            onCellClick: function(oEvent) {
+                if (oEvent.getParameters().rowBindingContext) {
+                    var oTable = oEvent.getSource(); //this.byId("ioMatListTab");
+                    var sRowPath = oEvent.getParameters().rowBindingContext.sPath;
+                    var sModel;
+
+                    if (oTable.getId().indexOf("detailTab") >= 0) {
+                        sModel = "detail";
+                    }
+                    else if (oTable.getId().indexOf("remarksTab") >= 0) {
+                        sModel = "remarks";
+                    }
+                    else if (oTable.getId().indexOf("packInstructTab") >= 0) {
+                        sModel = "packInstruct";
+                    }
+    
+                    oTable.getModel(sModel).getData().results.forEach(row => row.ACTIVE = "");
+                    oTable.getModel(sModel).setProperty(sRowPath + "/ACTIVE", "X"); 
+                    
+                    oTable.getRows().forEach(row => {
+                        if (row.getBindingContext(sModel) && row.getBindingContext(sModel).sPath.replace("/results/", "") === sRowPath.replace("/results/", "")) {
+                            row.addStyleClass("activeRow");
+                        }
+                        else row.removeStyleClass("activeRow");
+                    })
+                }
             },
 
             getCaption() {
