@@ -24,7 +24,7 @@ sap.ui.define([
         return Controller.extend("zuivendorpo.controller.manualcreate", {
             onInit() {
                 _this = this;
-                this.showLoadingDialog();
+                this.showLoadingDialog("Loading...");
 
                 this._aColumns = {};
                 this.getCaption();
@@ -408,6 +408,7 @@ sap.ui.define([
             },
 
             onCreatePO() {
+                _this.showLoadingDialog("Creating PO...");
                 this.getNumber();
             },
 
