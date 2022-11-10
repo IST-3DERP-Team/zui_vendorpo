@@ -26,8 +26,8 @@
                             <Menu id="vpoHdrMenu">
                                 <MenuItem id="_IDGenMenuItem_02_1" text="Change Del. Date" press=".onChangeVPODelvDate"/>
                                 <MenuItem id="_IDGenMenuItem_02_2" text="Change Vendor" press=".onChangeVendorVPOHeader"/>
-                                <MenuItem id="_IDGenMenuItem_02_3" text="Delete PO" />
-                                <MenuItem id="_IDGenMenuItem_02_4" text="Cancel PO" />
+                                <MenuItem id="_IDGenMenuItem_02_3" text="Delete PO" press=".onDeleteVPO"/>
+                                <MenuItem id="_IDGenMenuItem_02_4" text="Cancel PO" press=".onCancelVPO" />
                                 <MenuItem id="_IDGenMenuItem_02_5" text="Split PO" />
                             </Menu>
                         </menu>                    

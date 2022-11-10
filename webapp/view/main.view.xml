@@ -87,7 +87,7 @@
                                             id="searchFieldMain"
                                             placeholder="Search"
                                             value=""
-                                            search="filterGlobally"
+                                            search=".onSearchHeader"
                                             width="15rem"/>
                                         <ToolbarSeparator />
                                         <!-- <Button id="btnRelStrat" 
