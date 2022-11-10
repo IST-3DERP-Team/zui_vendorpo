@@ -1,12 +1,14 @@
 sap.ui.define([
     "sap/ui/core/mvc/Controller",
     "sap/ui/model/json/JSONModel",
+    "sap/ui/model/Filter",
+    "sap/ui/model/FilterOperator",
     "sap/m/MessageBox"
 ],
     /**
      * @param {typeof sap.ui.core.mvc.Controller} Controller
      */
-    function (Controller, JSONModel, Common, MessageBox) {
+    function (Controller, JSONModel, Filter, FilterOperator, MessageBox) {
         "use strict";
 
         var that;
@@ -109,6 +111,42 @@ sap.ui.define([
                 });
                 await _promiseResult;
                 this.closeLoadingDialog();
+            },
+            onSearchHeader: async function(oEvent){
+                // if(this.getView().getModel("ui").getData().dataMode === 'NODATA'){
+                //     return;
+                // }
+                var oTable = oEvent.getSource().oParent.oParent;
+                var sTable = oTable.getBindingInfo("rows");
+                var sQuery = oEvent.getParameter("query");
+
+                var oFilter = null;
+                var aFilter = [];
+                var oTableSrc;
+                var oColumnsModel;
+                var oColumnsData;
+                
+                if (oTable.sId.includes("mainTab")) {
+                    oTableSrc = this.byId("mainTab");
+                    oColumnsModel = this.getView().getModel("VENDORPOColumns");
+                    oColumnsData = oColumnsModel.getProperty('/');
+                    if(sQuery) {
+                        oTableSrc.getColumns().forEach((col, idx) => {
+                            console.log(col.sId.split("-")[1]);
+                            var sDataType = oColumnsData.filter(item => item.ColumnName === col.sId.split("-")[1])[0].ColumnName
+                            oColumnsData.filter(item => console.log(item))
+                            console.log(sDataType);
+        
+                            if(sDataType != "DELETED" && sDataType != "UNLIMITED" && sDataType != "INVRCPTIND" && sDataType != "GRBASEDIVIND")
+                                aFilter.push(new Filter(sDataType, FilterOperator.Contains, sQuery));
+                            else
+                                aFilter.push(new Filter(sDataType, FilterOperator.EQ, sQuery));
+                        })
+                        oFilter = new Filter(aFilter, false);
+                        this.byId("mainTab").getBinding("rows").filter(oFilter, "Application");
+                    }
+                }
+    
             },
             getMain: async function(){
                 var oModel = this.getOwnerComponent().getModel();
@@ -336,18 +374,37 @@ sap.ui.define([
 
             getCols: async function() {
                 var oModel = this.getOwnerComponent().getModel();
-                return new Promise((resolve, reject)=>{
-                    oModel.metadataLoaded().then(() => {
-                        resolve(this.getDynamicColumns("VENDORPO", "ZDV_3DERP_VPO"))
-                        resolve(this.getDynamicColumns("VPODTLS", "ZDV_3DERP_VPDTLS"))
-                        resolve(this.getDynamicColumns('VPODELSCHED','ZVB_VPO_DELSCHED'))
-                        resolve(this.getDynamicColumns('VPODELINV','ZDV_3DERP_DELINV'))
-                        resolve(this.getDynamicColumns('VPOHISTORY','ZDV_3DERP_POHIST'))
-                        resolve(this.getDynamicColumns('VPOCOND','ZDV_3DERP_COND'))
-                    });
-                })
+                _promiseResult = new Promise((resolve, reject)=>{
+                    resolve(this.getDynamicColumns('VENDORPO', 'ZDV_3DERP_VPO'));
+                });
+                await _promiseResult
+                
+                _promiseResult = new Promise((resolve, reject)=>{
+                    resolve(this.getDynamicColumns('VPODTLS', 'ZDV_3DERP_VPDTLS'));
+                });
+                await _promiseResult
+                
+                _promiseResult = new Promise((resolve, reject)=>{
+                    resolve(this.getDynamicColumns('VPODELSCHED','ZVB_VPO_DELSCHED'));
+                });
+                await _promiseResult
+                
+                _promiseResult = new Promise((resolve, reject)=>{
+                    resolve(this.getDynamicColumns('VPODELINV','ZDV_3DERP_DELINV'));
+                });
+                await _promiseResult
+                
+                _promiseResult = new Promise((resolve, reject)=>{
+                    resolve(this.getDynamicColumns('VPOHISTORY','ZDV_3DERP_POHIST'));
+                });
+                await _promiseResult
+                
+                _promiseResult = new Promise((resolve, reject)=>{
+                    resolve(this.getDynamicColumns('VPOCOND','ZDV_3DERP_COND'));
+                });
+                await _promiseResult
             },
-            getDynamicColumns(model, dataSource) {
+            getDynamicColumns: async function(model, dataSource) {
                 var me = this;
                 var modCode = model;
                 var tabName = dataSource;
@@ -388,6 +445,7 @@ sap.ui.define([
                                     resolve();
                                 }
                                 if (modCode === 'VPODELINV') {
+                                    console.log(oData)
                                     oJSONColumnsModel.setData(oData.results);
                                     me.getView().setModel(oJSONColumnsModel, "VPODELINVColumns");
                                     me.setTableColumnsData(modCode);
@@ -550,7 +608,6 @@ sap.ui.define([
                     var sColumnSorted = context.getObject().Sorted;
                     var sColumnSortOrder = context.getObject().SortOrder;
                     var sColumnWidth = context.getObject().ColumnWidth;
-                    var sColumnWidth = context.getObject().ColumnWidth;
                     if (sColumnType === "STRING" || sColumnType === "DATETIME") {
                         return new sap.ui.table.Column({
                             id: model+"-"+sColumnId,
@@ -621,7 +678,7 @@ sap.ui.define([
                         editable: false
                     });
                 }
-                if (sColumnId === "UNLIMITED") { 
+                if (sColumnId === "UNLIMITED" || sColumnId === "OVERDELTOL" || sColumnId === "UNDERDELTOL") { 
                     //Manage button
                     oColumnTemplate = new sap.m.CheckBox({
                         selected: "{" + sColumnId + "}",
@@ -742,6 +799,7 @@ sap.ui.define([
                 oModel.create("/TableLayoutSet", oParam, {
                     method: "POST",
                     success: function(data, oResponse) {
+                        console.log(data);
                         sap.m.MessageBox.information("Layout saved.");
                         //Common.showMessage(me._i18n.getText('t6'));
                     },
