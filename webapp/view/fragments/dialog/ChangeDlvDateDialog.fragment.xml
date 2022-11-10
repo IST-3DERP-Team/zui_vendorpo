@@ -16,9 +16,9 @@ xmlns:f="sap.ui.layout.form">
                                     </Input>
                                 </f:fields>
                             </f:FormElement>
-                            <f:FormElement label="{/CurrVendorLabel}" visible="true">
+                            <f:FormElement label="{/NewDlvDateLabel}" visible="true">
                                 <f:fields>
-                                    <DatePicker id="dtNewDlvDate" value="{/CURRVENDOR}" editable="true" valueFormat="MM-dd-yyyy" displayFormat="short" 
+                                    <DatePicker id="dtNewDlvDate" value="{/NewDlvDate}" editable="true" valueFormat="MM-dd-yyyy" displayFormat="short" 
                                     valueStateText="Required" change=".onDatePickVPODelvDateChange"/>
                                 </f:fields>
                             </f:FormElement>

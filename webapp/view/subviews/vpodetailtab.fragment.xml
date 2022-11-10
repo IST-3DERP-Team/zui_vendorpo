@@ -42,7 +42,7 @@
                                 value=""
                                 search="filterGlobally"
                                 width="15rem"/>
-                            <Button id="vpoBtnAddPRtoPO" visible="true" text="Add PR to PO" />
+                            <Button id="vpoBtnAddPRtoPO" visible="true" text="Add PR to PO" press=".onAddPRtoPODtls" />
                             <Button id="vpoBtnItemChanges" visible="true" text="Item Changes" />
                             <Button id="vpoBtnRefreshDetails" 
                                 icon="sap-icon://refresh"
