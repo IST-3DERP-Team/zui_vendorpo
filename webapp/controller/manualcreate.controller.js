@@ -1456,9 +1456,9 @@ sap.ui.define([
                 if (sModel == "docType") {
                     var oDocType = (this.getView().getModel(sModel).getData().results.filter(x => x.DOCTYPE == sKey))[0];
                     _oHeader.noRangeCd = oDocType.NORANGECD;
-                    _oHeader.grInd = (oDocType.GRIND == "" ? true : false);
-                    _oHeader.irInd = (oDocType.IRIND == "" ? true : false);
-                    _oHeader.grBasedIV = (oDocType.GRBASEDIV == "" ? true : false);
+                    _oHeader.grInd = (oDocType.GRIND == "" ? false : true);
+                    _oHeader.irInd = (oDocType.IRIND == "" ? false : true);
+                    _oHeader.grBasedIV = (oDocType.GRBASEDIV == "" ? false : true);
                 } else if (sModel == "purchOrg") {
                     this.getResources("VPOManualVendorRscSet", "vendor", "PURCHORG eq '" + sKey + "'");
                     // this.byId("cmbVendor").setEditable(true);
