@@ -133,9 +133,10 @@ sap.ui.define([
                 this.byId("detailTab").dataMode = "READ";
                 this.byId("remarksTab").dataMode = "READ";
                 this.byId("packInstructTab").dataMode = "READ";
-                
+
                 this._aInvalidValueState = [];
                 this._oDataBeforeChange = {results: []};
+                this._sActiveTable = "detail";
 
                 this._tableRendered = "";
                 var oTableEventDelegate = {
@@ -161,11 +162,21 @@ sap.ui.define([
                 if (this._tableRendered !== "") {
                     this.setActiveRowHighlight(this._tableRendered.replace("Tab", ""));
                     this._tableRendered = "";
-                } 
+                }
             },
 
             onSelectTab: function(oEvent) {
-                this._tableRendered = oEvent.getSource().getSelectedKey() + "Tab";
+                var sTab = oEvent.getSource().getSelectedKey();
+
+                if (sTab == "header") {
+                    this._tableRendered = "detailTab";
+                    this._sActiveTable = "detail";
+                } else {
+                    var oIconTabBar = this.byId("itbHeaderText");
+                    this._tableRendered = oIconTabBar.getSelectedKey() + "Tab";
+                    this._sActiveTable = oIconTabBar.getSelectedKey();
+                }
+
                 this.setActiveRowHighlight(oEvent.getSource().getSelectedKey());
             },
 
@@ -180,10 +191,10 @@ sap.ui.define([
 
                     if (this.byId(oEvent.srcControl.sId).getBindingContext(sModel)) {
                         var sRowPath = this.byId(oEvent.srcControl.sId).getBindingContext(sModel).sPath;
-                        
+
                         oTable.getModel(sModel).getData().results.forEach(row => row.ACTIVE = "");
-                        oTable.getModel(sModel).setProperty(sRowPath + "/ACTIVE", "X"); 
-                        
+                        oTable.getModel(sModel).setProperty(sRowPath + "/ACTIVE", "X");
+
                         oTable.getRows().forEach(row => {
                             if (row.getBindingContext(sModel) && row.getBindingContext(sModel).sPath.replace("/results/", "") === sRowPath.replace("/results/", "")) {
                                 row.addStyleClass("activeRow");
@@ -203,12 +214,12 @@ sap.ui.define([
 
             getColumnProp: async function() {
                 var sPath = jQuery.sap.getModulePath("zuivendorpo", "/model/columns.json");
-        
+
                 var oModelColumns = new JSONModel();
                 await oModelColumns.loadData(sPath);
-    
+
                 var oColumns = oModelColumns.getData();
-    
+
                 setTimeout(() => {
                     this.getDynamicColumns(oColumns, "VPOMANUALDTLMOD", "ZDV_VPOMANUALDTL");
                 }, 100);
@@ -236,7 +247,7 @@ sap.ui.define([
                     type: modCode,
                     tabname: tabName
                 });
-                
+
                 oModel.read("/ColumnsSet", {
                     success: function (oData, oResponse) {
                         console.log(arg2, oData)
@@ -250,18 +261,18 @@ sap.ui.define([
                                     }
                                 })
 
-                                var aColumns = _this.setTableColumns(oColumns["VPOManualDtl"], oData.results);                               
+                                var aColumns = _this.setTableColumns(oColumns["VPOManualDtl"], oData.results);
                                 _this._aColumns["detail"] = aColumns["columns"];
                                 _this.addColumns(_this.byId("detailTab"), aColumns["columns"], "detail");
                             } else if (modCode === "VPOMANUALREMMOD") {
-                                var aColumns = _this.setTableColumns(oColumns["VPOManualDtl"], oData.results);     
-                                
+                                var aColumns = _this.setTableColumns(oColumns["VPOManualDtl"], oData.results);
+
                                 // Remarks
                                 _this._aColumns["remarks"] = aColumns["columns"];
                                 _this.addColumns(_this.byId("remarksTab"), aColumns["columns"], "remarks");
                             } else if (modCode === "VPOMANUALPACKMOD") {
-                                var aColumns = _this.setTableColumns(oColumns["VPOManualDtl"], oData.results);     
-                                
+                                var aColumns = _this.setTableColumns(oColumns["VPOManualDtl"], oData.results);
+
                                 // Packing Instruction
                                 _this._aColumns["packInstruct"] = aColumns["columns"];
                                 _this.addColumns(_this.byId("packInstructTab"), aColumns["columns"], "packInstruct");
@@ -300,9 +311,9 @@ sap.ui.define([
                         //sortable
                         if (vSortable) {
                             aSortableColumns.push({
-                                name: prop.ColumnName, 
-                                label: vName, 
-                                position: +vOrder, 
+                                name: prop.ColumnName,
+                                label: vName,
+                                position: +vOrder,
                                 sorted: vSorted,
                                 sortOrder: vSortOrder
                             });
@@ -311,8 +322,8 @@ sap.ui.define([
                         //filterable
                         if (vFilterable) {
                             aFilterableColumns.push({
-                                name: prop.ColumnName, 
-                                label: vName, 
+                                name: prop.ColumnName,
+                                label: vName,
                                 position: +vOrder,
                                 value: "",
                                 connector: "Contains"
@@ -322,8 +333,8 @@ sap.ui.define([
 
                     //columns
                     aColumns.push({
-                        name: prop.ColumnName, 
-                        label: vName, 
+                        name: prop.ColumnName,
+                        label: vName,
                         position: +vOrder,
                         type: prop.DataType,
                         creatable: vCreatable,
@@ -343,7 +354,7 @@ sap.ui.define([
                         scale: prop.Scale !== undefined ? prop.Scale : null
                     })
                 })
-                
+
                 return { columns: aColumns };
             },
 
@@ -387,7 +398,7 @@ sap.ui.define([
                             width: col.width,
                             hAlign: "Center",
                             sortProperty: col.name,
-                            filterProperty: col.name,                            
+                            filterProperty: col.name,
                             label: new sap.m.Text({text: sLabel}),
                             template: new sap.m.CheckBox({selected: "{" + model + ">" + col.name + "}", editable: false}),
                             visible: col.visible
@@ -403,7 +414,7 @@ sap.ui.define([
             getDiscRate() {
                 var oModel = _this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
                 var oParam = {};
-                
+
                 console.log("oheader param", _oHeader)
                 oParam["N_GetDiscRateParam"] = [{
                     ConditionType: "RL01",
@@ -420,7 +431,7 @@ sap.ui.define([
                     success: function(oResult, oResponse) {
                         console.log("GetDiscRateSet", oResult, oResponse);
                         _oHeader.okbetr = oResult.OKbetr;
-                        
+
                         _this.closeLoadingDialog();
                     },
                     error: function(err) {
@@ -433,7 +444,7 @@ sap.ui.define([
             getNumber() {
                 var oModel = _this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
                 var oParamGetNumber = {};
-                
+
                 oParamGetNumber["N_GetNumberParam"] = [{
                     IUserid: _startUpInfo.id,
                     INorangecd: _oHeader.noRangeCd,
@@ -446,7 +457,7 @@ sap.ui.define([
                     method: "POST",
                     success: function(oResult, oResponse) {
                         console.log("GetNumberSet", oResult, oResponse);
-                        
+
                         if (oResult.EReturnno.length > 0) {
                             _this.createPO(oResult.EReturnno);
                         } else {
@@ -604,7 +615,7 @@ sap.ui.define([
                     method: "POST",
                     success: function(oResult, oResponse) {
                         console.log("CreatePOSet", oResult, oResponse);
-                        
+
                         if (oResult["N_CreatePOReturn"].results.length > 0 && oResult["N_CreatePOReturn"].results[0].Type == "S") {
                             _this.closeLoadingDialog();
                             sap.m.MessageBox.information(oResult["N_CreatePOReturn"].results[0].Message,{
@@ -642,7 +653,7 @@ sap.ui.define([
             },
 
             onEditHeader() {
-                
+
                 // Set Placeholder
                 if (!this.byId("cmbPurchOrg").getSelectedKey()) {
                     this.byId("cmbVendor").setPlaceholder(_oCaption.PURCHORG + " is required.");
@@ -673,8 +684,8 @@ sap.ui.define([
                 sap.m.MessageBox.confirm(_oCaption.CONFIRM_PROCEED_CLOSE, {
                     actions: ["Yes", "No"],
                     onClose: function (sAction) {
-                        if (sAction == "Yes") {    
-                            _this.navBack();         
+                        if (sAction == "Yes") {
+                            _this.navBack();
                         }
                     }
                 });
@@ -718,7 +729,7 @@ sap.ui.define([
                 this.getResources("VPOManualTaxSet", "taxCode", "PURCHORG eq '" + _oHeader.purchOrg + "' and VENDORCD eq '" + _oHeader.vendor + "'")
                 this.getResources("VPOManualZCheckSet", "glAccount", "SBU eq '" + _sbu + "' and FIELD1 eq 'GLACCT' and FIELD2 eq '" + _oHeader.shipToPlant + "'");
                 this.getResources("VPOManualZCheckSet", "acctAssCat", "SBU eq '" + _sbu + "' and FIELD1 eq '" + _oHeader.docType + "' and FIELD2 eq 'ACCTASS'");
-                
+
                 this.getDiscRate();
                 this.setControlEditMode("header", false);
             },
@@ -727,7 +738,7 @@ sap.ui.define([
                 sap.m.MessageBox.confirm(_oCaption.CONFIRM_DISREGARD_CHANGE, {
                     actions: ["Yes", "No"],
                     onClose: function (sAction) {
-                        if (sAction == "Yes") {          
+                        if (sAction == "Yes") {
                             _this.setControlEditMode("header", false)
 
                             // Set header values
@@ -751,13 +762,18 @@ sap.ui.define([
             },
 
             onCancel(pModel) {
+                var sModel = "";
+
+                if (pModel == "") sModel = this._sActiveTable;
+                else sModel = pModel;
+
                 sap.m.MessageBox.confirm(_oCaption.CONFIRM_DISREGARD_CHANGE, {
                     actions: ["Yes", "No"],
                     onClose: function (sAction) {
-                        if (sAction == "Yes") {    
-                            _this.byId(pModel + "Tab").dataMode = "READ";      
-                            _this.setControlEditMode(pModel, false)
-                            _this.getView().getModel(pModel).setProperty("/", _this._oDataBeforeChange);
+                        if (sAction == "Yes") {
+                            _this.byId(sModel + "Tab").dataMode = "READ";
+                            _this.setControlEditMode(sModel, false)
+                            _this.getView().getModel(sModel).setProperty("/", _this._oDataBeforeChange);
                             _this._oDataBeforeChange = {results: []};
                             _this._aInvalidValueState = [];
                         }
@@ -766,9 +782,14 @@ sap.ui.define([
             },
 
             onCreate(arg) {
-                this.byId(arg + "Tab").dataMode = "CREATE";
-                this.setControlEditMode(arg, true);
-                this.setRowCreateMode(arg);
+                var sModel = "";
+
+                if (arg == "") sModel = this._sActiveTable;
+                else sModel = arg;
+
+                this.byId(sModel + "Tab").dataMode = "CREATE";
+                this.setControlEditMode(sModel, true);
+                this.setRowCreateMode(sModel);
             },
 
             onAddRow(arg) {
@@ -783,24 +804,38 @@ sap.ui.define([
             },
 
             onEdit(arg) {
-                this.byId(arg + "Tab").dataMode = "EDIT";
-                this.setControlEditMode(arg, true);
-                this.setRowEditMode(arg);
+                var sModel = "";
+
+                if (arg == "") sModel = this._sActiveTable;
+                else sModel = arg;
+
+                if (this.getView().getModel(sModel).getData().results.length > 0) {
+                    this.byId(sModel + "Tab").dataMode = "EDIT";
+                    this.setControlEditMode(sModel, true);
+                    this.setRowEditMode(sModel);
+                } else {
+                    sap.m.MessageBox.warning(_oCaption.INFO_NO_DATA_EDIT);
+                }
             },
 
             onDelete(arg) {
-                var oTable = this.byId(arg + "Tab");
+                var sModel = "";
+
+                if (arg == "") sModel = this._sActiveTable;
+                else sModel = arg;
+
+                var oTable = this.byId(sModel + "Tab");
                 var aSelRows = oTable.getSelectedIndices();
-                
+
                 if (aSelRows.length === 0) {
-                    MessageBox.information(_oCaption.INFO_NO_RECORD_SELECT);
+                    sap.m.MessageBox.information(_oCaption.INFO_NO_RECORD_SELECT);
                 }
                 else {
-                    MessageBox.confirm(_oCaption.INFO_PROCEED_DELETE, {
+                    sap.m.MessageBox.confirm(_oCaption.INFO_PROCEED_DELETE, {
                         actions: ["Yes", "No"],
                         onClose: function (sAction) {
                             if (sAction === "Yes") {
-                                var aRows = this.getView().getModel(arg).getData().results;
+                                var aRows = this.getView().getModel(sModel).getData().results;
                                 aRows.splice(oTable.getSelectedIndices(), 1);
                                 this.getView().getModel(pModel).setProperty("/results", aRows);
                             }
@@ -810,6 +845,11 @@ sap.ui.define([
             },
 
             onSave(arg) {
+                var sModel = "";
+
+                if (arg == "") sModel = this._sActiveTable;
+                else sModel = arg;
+
                 // _this.showLoadingDialog("Loading...");
 
                 if (this._aInvalidValueState.length > 0) {
@@ -823,27 +863,27 @@ sap.ui.define([
                     // _this.closeLoadingDialog();
                     return;
                 }
-                
-                var aNewRows = this.getView().getModel(arg).getData().results.filter(item => item.NEW === true);
-                var aEditedRows = this.getView().getModel(arg).getData().results.filter(item => item.EDITED === true);
-                
+
+                var aNewRows = this.getView().getModel(sModel).getData().results.filter(item => item.NEW === true);
+                var aEditedRows = this.getView().getModel(sModel).getData().results.filter(item => item.EDITED === true);
+
                 var aNewEditRows = aNewRows.length > 0 ? aNewRows : aEditedRows;
 
                 // console.log("onSave", aNewEditRows);
                 // Validate required field if has value.
                 var isValid = true;
                 var sInvalidMsg = "";
-                var aRequiredFields = this._aColumns[arg].filter(x => x.required).map(x => x.name);
-                
+                var aRequiredFields = this._aColumns[sModel].filter(x => x.required).map(x => x.name);
+
                 for (var i = 0; i < aRequiredFields.length; i++) {
                     var sRequiredField = aRequiredFields[i];
                     if (aNewEditRows.filter(x => !x[sRequiredField]).length > 0) {
                         isValid = false;
-                        sInvalidMsg = "\"" + this._aColumns[arg].filter(x => x.name == sRequiredField)[0].label + "\" is required."
+                        sInvalidMsg = "\"" + this._aColumns[sModel].filter(x => x.name == sRequiredField)[0].label + "\" is required."
                         break;
                     }
                 }
-                
+
                 if (!isValid) {
                     var bCompact = true;
                     sap.m.MessageBox.error(sInvalidMsg,
@@ -855,37 +895,37 @@ sap.ui.define([
                     // _this.closeLoadingDialog();
                     return;
                 }
-                
-                this.getView().getModel(arg).getData().results.forEach((item, idx) => {
+
+                this.getView().getModel(sModel).getData().results.forEach((item, idx) => {
                     if (item.NEW || item.EDITED) {
                         item.NEW = false;
                         item.EDITED = false
                     }
                 })
-                
+
                 var aData = {results: []};
-                var aDataAfterChange = jQuery.extend(true, {}, this.getView().getModel(arg).getData());
-                
+                var aDataAfterChange = jQuery.extend(true, {}, this.getView().getModel(sModel).getData());
+
                 _this._oDataBeforeChange.results.forEach(item => {
                     aData.results.push(item);
                 });
-                
+
                 aDataAfterChange.results.forEach(item => {
                     aData.results.push(item);
                 });
-                
-                _this.getView().getModel(arg).setProperty("/", aData);
+
+                _this.getView().getModel(sModel).setProperty("/", aData);
                 _this._oDataBeforeChange = {results: []};
 
-                this.byId(arg + "Tab").dataMode = "READ";
-                this.setControlEditMode(arg, false);
+                this.byId(sModel + "Tab").dataMode = "READ";
+                this.setControlEditMode(sModel, false);
                 _this._aInvalidValueState = [];
                 // _this.closeLoadingDialog();
             },
 
             setRowReadMode(arg) {
                 var oTable = this.byId(arg + "Tab");
-                oTable.getColumns().forEach((col, idx) => {                    
+                oTable.getColumns().forEach((col, idx) => {
                     this._aColumns[arg].filter(item => item.label === col.getLabel().getText())
                         .forEach(ci => {
                             if (ci.type === "STRING" || ci.type === "NUMBER" || ci.type === "DATETIME") {
@@ -902,7 +942,7 @@ sap.ui.define([
                             if (ci.required) {
                                 col.getLabel().removeStyleClass("requiredField");
                             }
-                        })  
+                        })
                 })
 
                 // Reapply filter
@@ -920,16 +960,16 @@ sap.ui.define([
                 if (aNewRows.length == 0) {
                     this._oDataBeforeChange = jQuery.extend(true, {}, this.getView().getModel(arg).getData());
                 }
-                
+
                 var oNewRow = {};
-                var oTable = this.byId(arg + "Tab");                
+                var oTable = this.byId(arg + "Tab");
                 oTable.getColumns().forEach((col, idx) => {
                     this._aColumns[arg].filter(item => item.label === col.getLabel().getText())
                         .forEach(ci => {
                             if (!ci.hideOnChange && ci.creatable) {
                                 if (ci.type === "BOOLEAN") {
-                                    col.setTemplate(new sap.m.CheckBox({selected: "{" + arg + ">" + ci.name + "}", 
-                                        select: this.onCheckBoxChange.bind(this),    
+                                    col.setTemplate(new sap.m.CheckBox({selected: "{" + arg + ">" + ci.name + "}",
+                                        select: this.onCheckBoxChange.bind(this),
                                         editable: true
                                     }));
                                 }
@@ -986,7 +1026,7 @@ sap.ui.define([
                                         }));
                                     }
                                 }
-                            } 
+                            }
 
                             if (ci.required) {
                                 col.getLabel().addStyleClass("requiredField");
@@ -996,8 +1036,8 @@ sap.ui.define([
                             //else if (ci.type === "NUMBER") oNewRow[ci.name] = "0";
                             else if (ci.type === "BOOLEAN") oNewRow[ci.name] = false;
                         })
-                }) 
-                
+                })
+
                 oNewRow["NEW"] = true;
 
                 if (arg == "detail") {
@@ -1030,8 +1070,8 @@ sap.ui.define([
                         .forEach(ci => {
                             if (!ci.hideOnChange && ci.updatable) {
                                 if (ci.type === "BOOLEAN") {
-                                    col.setTemplate(new sap.m.CheckBox({selected: "{" + arg + ">" + ci.name + "}", 
-                                        select: this.onCheckBoxChange.bind(this),    
+                                    col.setTemplate(new sap.m.CheckBox({selected: "{" + arg + ">" + ci.name + "}",
+                                        select: this.onCheckBoxChange.bind(this),
                                         editable: true
                                     }));
                                 }
@@ -1088,7 +1128,7 @@ sap.ui.define([
                                             liveChange: this.onInputLiveChange.bind(this)
                                         }));
                                     }
-                                }                                
+                                }
                             }
 
                             if (ci.required) {
@@ -1193,12 +1233,12 @@ sap.ui.define([
                     });
 
                     if (!_this._valueHelpDialog) {
-                    
+
                         _this._valueHelpDialog = sap.ui.xmlfragment(
                             "zuivendorpo.view.fragments.dialog.ValueHelpDialog",
                             _this
                         );
-    
+
                         _this._valueHelpDialog.setModel(
                             new JSONModel({
                                 items: _this.getView().getModel(listModel).getData().results,
@@ -1206,7 +1246,7 @@ sap.ui.define([
                                 table: sModel
                             })
                         )
-    
+
                         _this.getView().addDependent(_this._valueHelpDialog);
                     } else {
                         _this._valueHelpDialog.setModel(
@@ -1216,11 +1256,11 @@ sap.ui.define([
                                 table: sModel
                             })
                         )
-    
-                        _this.getView().addDependent(_this._valueHelpDialog); 
+
+                        _this.getView().addDependent(_this._valueHelpDialog);
                     }
-                    
-                    _this._valueHelpDialog.open();  
+
+                    _this._valueHelpDialog.open();
                 }
                 else {
                     var vCellPath = _this._inputField;
@@ -1245,7 +1285,7 @@ sap.ui.define([
                                 item.VHDesc = item[vItemDesc];
                                 item.VHSelected = (item[vItemValue] === _this._inputValue);
                             });
-   
+
                             // create value help dialog
                             if (!_this._valueHelpDialog) {
                                 _this._valueHelpDialog = sap.ui.xmlfragment(
@@ -1271,16 +1311,16 @@ sap.ui.define([
                                         table: sModel
                                     })
                                 )
-                            }                            
+                            }
 
                             _this._valueHelpDialog.open();
                         },
-                        error: function (err) { 
+                        error: function (err) {
                             _this.closeLoadingDialog();
                         }
                     })
                 }
-                
+
             },
 
             handleValueHelpSearch : function (oEvent) {
@@ -1296,22 +1336,22 @@ sap.ui.define([
 
                 oEvent.getSource().getBinding("items").filter([oFilter]);
             },
-    
-            handleValueHelpClose : function (oEvent) {               
-                if (oEvent.sId === "confirm") {                  
-                    var oSelectedItem = oEvent.getParameter("selectedItem");               
+
+            handleValueHelpClose : function (oEvent) {
+                if (oEvent.sId === "confirm") {
+                    var oSelectedItem = oEvent.getParameter("selectedItem");
                     //var sTable = this._oViewSettingsDialog["zuimattype3.view.fragments.ValueHelpDialog"].getModel().getData().table;
                     var sTable = this._valueHelpDialog.getModel().getData().table;
 
                     if (oSelectedItem) {
                         this._inputSource.setValue(oSelectedItem.getTitle());
-    
+
                         if (this._inputValue !== oSelectedItem.getTitle()) {
                             var sRowPath = this._inputSource.getBindingInfo("value").binding.oContext.sPath;
                             this.getView().getModel(sTable).setProperty(sRowPath + '/EDITED', true);
 
                             if (this._inputSource.mBindingInfos.value.parts[0].path == "UOM") {
-                                this.getView().getModel(sTable).setProperty(sRowPath + '/ORDERPRICEUNIT', 
+                                this.getView().getModel(sTable).setProperty(sRowPath + '/ORDERPRICEUNIT',
                                     oEvent.getParameters().selectedItem.mProperties.title);
                             }
                         }
@@ -1333,7 +1373,7 @@ sap.ui.define([
                     // this._inputSource.setValue(value);
 
                     // if (this._inputValue !== value) {
-                    //     var data = this.byId("headerTable").getBinding("items").oList;                           
+                    //     var data = this.byId("headerTable").getBinding("items").oList;
                     //     data.filter(item => item[this.inputField] === oSelectedItem.getTitle()).forEach(e => e.EDITED = true);
                     // }
                 }
@@ -1351,7 +1391,7 @@ sap.ui.define([
                             if (this._aInvalidValueState[i] == pId){
                                 this._aInvalidValueState.splice(i, 1)
                             }
-                            
+
                         }
                     }
                 }
@@ -1395,7 +1435,7 @@ sap.ui.define([
                             else _this.byId("cmbPurchPlant").setPlaceholder("No data for selected " + _oCaption.COMPANY);
                         }
                     },
-                    error: function (err) { 
+                    error: function (err) {
                         // console.log("getResources err", err )
                     }
                 })
@@ -1473,7 +1513,7 @@ sap.ui.define([
                     oTable.getColumns().forEach((col, idx) => {
                         if (col.getLabel().getText().includes("*")) {
                             col.getLabel().setText(col.getLabel().getText().replaceAll("*", ""));
-                        }   
+                        }
 
                         this._aColumns[pType].filter(item => item.label === col.getLabel().getText())
                             .forEach(ci => {
@@ -1486,6 +1526,8 @@ sap.ui.define([
             },
 
             setControlEditMode(pType, pEditable) {
+                if (sap.ushell.Container) sap.ushell.Container.setDirtyFlag(pEditable);
+
                 if (pType == "header") {
                     // Header
                     this.byId("btnCreateHeader").setVisible(!pEditable);
@@ -1569,8 +1611,8 @@ sap.ui.define([
                 if (!_this._LoadingDialog) {
                     _this._LoadingDialog = sap.ui.xmlfragment("zuivendorpo.view.fragments.dialog.LoadingDialog", _this);
                     _this.getView().addDependent(_this._LoadingDialog);
-                } 
-                
+                }
+
                 _this._LoadingDialog.setTitle(arg);
                 _this._LoadingDialog.open();
             },
@@ -1601,7 +1643,7 @@ sap.ui.define([
                     if (oTable.getBinding("rows").aIndices.length > 0) {
                         for (var i = iStartIndex; i < iLength; i++) {
                             var iDataIndex = oTable.getBinding("rows").aIndices.filter((fItem, fIndex) => fIndex === i);
-    
+
                             if (oData[iDataIndex].ACTIVE === "X") oTable.getRows()[iStartIndex === 0 ? i : i - iStartIndex].addStyleClass("activeRow");
                             else oTable.getRows()[iStartIndex === 0 ? i : i - iStartIndex].removeStyleClass("activeRow");
                         }
@@ -1651,7 +1693,7 @@ sap.ui.define([
 
             setActiveRowHighlight(arg) {
                 var oTable = this.byId(arg + "Tab");
-                
+
                 setTimeout(() => {
                     var iActiveRowIndex = oTable.getModel(arg).getData().results.findIndex(item => item.ACTIVE === "X");
 
@@ -1679,10 +1721,10 @@ sap.ui.define([
                     else if (oTable.getId().indexOf("packInstructTab") >= 0) {
                         sModel = "packInstruct";
                     }
-    
+
                     oTable.getModel(sModel).getData().results.forEach(row => row.ACTIVE = "");
-                    oTable.getModel(sModel).setProperty(sRowPath + "/ACTIVE", "X"); 
-                    
+                    oTable.getModel(sModel).setProperty(sRowPath + "/ACTIVE", "X");
+
                     oTable.getRows().forEach(row => {
                         if (row.getBindingContext(sModel) && row.getBindingContext(sModel).sPath.replace("/results/", "") === sRowPath.replace("/results/", "")) {
                             row.addStyleClass("activeRow");
@@ -1729,7 +1771,7 @@ sap.ui.define([
                 oDDTextParam.push({CODE: "INFO_EXECUTE_FAIL"});
                 oDDTextParam.push({CODE: "CONFIRM_PROCEED_EXECUTE"});
                 oDDTextParam.push({CODE: "CONFIRM_PROCEED_CLOSE"});
-                
+
                 oModel.create("/CaptionMsgSet", { CaptionMsgItems: oDDTextParam  }, {
                     method: "POST",
                     success: function(oData, oResponse) {
