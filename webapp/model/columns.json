@@ -94,5 +94,19 @@
     "VPOCond":[
         {"name": "PONO", "position": 0, "type": "Edm.String", "visible": true, "required": false, "width": "120px", "hideOnChange": false, "showable": true, "sort": "Ascending",
             "valueHelp": {"show": false, "source": "", "value": "", "desc": ""}}
+    ],
+    "VPOManualDtl":[
+        {"name": "UOM",
+            "valueHelp": {"show": true, "items": {"path": "/VPOManualUomRscSet", "value": "UOM", "text": "DESCRIP"},
+            "suggestionItems": {"path": "uom>/results", "text": "{uom>UOM}", "additionalText": "{uom>DESCRIP}", "maxSuggestionWidth": "350px"}}
+        },
+        {"name": "ORDERPRICEUNIT",
+            "valueHelp": {"show": true, "items": {"path": "/VPOManualUomRscSet", "value": "UOM", "text": "DESCRIP"},
+            "suggestionItems": {"path": "uom>/results", "text": "{uom>UOM}", "additionalText": "{uom>DESCRIP}", "maxSuggestionWidth": "350px"}}
+        },
+        {"name": "ORDERNO",
+            "valueHelp": {"show": true, "items": {"path": "/VPOManualOrderNoRscSet", "value": "IONO", "text": "IODESC"},
+            "suggestionItems": {"path": "orderNo>/results", "text": "{orderNo>IONO}", "additionalText": "{orderNo>IODESC}", "maxSuggestionWidth": "350px"}}
+        }
     ]
 }

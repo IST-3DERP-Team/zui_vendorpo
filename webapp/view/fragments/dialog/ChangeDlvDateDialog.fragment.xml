@@ -1,0 +1,35 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core"
+xmlns:f="sap.ui.layout.form">
+	<Dialog title="{/Title}" draggable= "true" escapeHandler=".onCancelChangeVPODelvDate" afterClose=".onCancelChangeVPODelvDate">
+		<Panel>
+            <f:Form editable="false" class="sapUiNoContentPadding">
+                <f:layout>
+                    <f:ResponsiveGridLayout columnsXL="6" columnsL="2" columnsM="1"/>
+                </f:layout>
+                <f:formContainers>
+                    <f:FormContainer ariaLabelledBy="Grp1" class="sapUiNoContentPadding" >
+                        <f:formElements>
+                            <f:FormElement label="{/POLabel}" visible="true">
+                                <f:fields>
+                                    <Input value="{/PONO}" editable="false" valueStateText="Required" 
+                                        change="onHeaderChange" liveChange="onHeaderChange">
+                                    </Input>
+                                </f:fields>
+                            </f:FormElement>
+                            <f:FormElement label="{/NewDlvDateLabel}" visible="true">
+                                <f:fields>
+                                    <DatePicker id="dtNewDlvDate" value="{/NewDlvDate}" editable="true" valueFormat="MM-dd-yyyy" displayFormat="short" 
+                                    valueStateText="Required" change=".onDatePickVPODelvDateChange"/>
+                                </f:fields>
+                            </f:FormElement>
+                        </f:formElements>
+                    </f:FormContainer>
+                </f:formContainers>
+            </f:Form>
+		</Panel>
+		<buttons>
+			<Button text="Save" press=".onSaveChangeVPODelvDate"/>
+            <Button text="Cancel" press=".onCancelChangeVPODelvDate"/>
+		</buttons>
+	</Dialog>
+</core:FragmentDefinition>

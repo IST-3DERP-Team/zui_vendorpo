@@ -1,0 +1,104 @@
+<core:FragmentDefinition 
+    xmlns:mvc="sap.ui.core.mvc" 
+    xmlns:c="zuivendorpo.control"
+    xmlns:core="sap.ui.core"
+    xmlns:uiL="sap.ui.layout"
+    xmlns:uiT="sap.ui.table"
+    xmlns:plugins="sap.ui.table.plugins"
+    xmlns="sap.m"
+    xmlns:f="sap.ui.layout.form" 
+    xmlns:semantic="sap.m.semantic"
+    xmlns:smartfilterbar="sap.ui.comp.smartfilterbar"
+    xmlns:fb="sap.ui.comp.filterbar" 
+    displayBlock="false"> 
+    <IconTabBar
+        id="vpoHeaderTxtIconTab"
+        headerMode="Inline"
+        expanded="{device>/isNoPhone}"
+        stretchContentHeight="true" 
+        applyContentPadding="false"
+        class="sapUiResponsivePadding" 
+        expandable="false">
+            <items>
+                <IconTabFilter
+                    text="REMARKS"
+                    key="itfDLVSCHED">
+                    <uiT:Table id="RemarksTbl"
+                        class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
+                        visibleRowCountMode="Auto"
+                        showColumnVisibilityMenu="true"
+                        rows="{VPOHdr>/results}"
+                        enableColumnFreeze="true"
+                        selectionMode="MultiToggle"
+                        selectionBehavior="Row"
+                        rowSelectionChange=".onSelectionChange"
+                        sort="onSorted">
+                        <uiT:extension>
+                            <Toolbar>
+                                <Button id="vpoEditHdrTxtRemarks" 
+                                    icon="sap-icon://edit"
+                                    press=".onEditHdrTxt('Remarks')"
+                                    tooltip="Edit"
+                                    visible="true"/>
+                                <Button id="vpoDeleteHdrTxtRemarks" 
+                                    icon="sap-icon://delete"
+                                    press=".onDeleteEditHdrTxt('Remarks')"
+                                    tooltip="Delete"
+                                    visible="true"/>
+                                <Button id="vpoSaveHdrTxtRemarks" 
+                                    icon="sap-icon://save"
+                                    press=".onSaveEditHdrTxt('Remarks')" 
+                                    tooltip="Save"
+                                    visible="false" />
+                                <Button id="vpoCancelHdrTxtRemarks" 
+                                    icon="sap-icon://sys-cancel"
+                                    press=".onCancelEditHdrTxt('Remarks')" 
+                                    tooltip="Cancel"
+                                    visible="false" />
+                            </Toolbar>
+                        </uiT:extension>
+                    </uiT:Table>
+                </IconTabFilter>
+                <IconTabFilter
+                    text="PACKING INSTRUCTION"
+                    key="itfDLVSCHED">
+                    <uiT:Table id="PackingInstTbl"
+                        class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
+                        visibleRowCountMode="Auto"
+                        showColumnVisibilityMenu="true"
+                        rows="{VPOHdr>/results}"
+                        enableColumnFreeze="true"
+                        selectionMode="MultiToggle"
+                        selectionBehavior="Row"
+                        rowSelectionChange=".onSelectionChange"
+                        sort="onSorted">
+                        <uiT:extension>
+                            <Toolbar>
+                                <Button id="vpoEditHdrTxtPkgInst" 
+                                    icon="sap-icon://edit"
+                                    press=".onEditHdrTxt('PkgInst')"
+                                    tooltip="Edit"
+                                    visible="true"/>
+                                <Button id="vpoDeleteHdrTxtPkgInst" 
+                                    icon="sap-icon://delete"
+                                    press=".onDeleteEditHdrTxt('PkgInst')"
+                                    tooltip="Delete"
+                                    visible="true"/>
+                                <Button id="vpoSaveHdrTxtPkgInst" 
+                                    icon="sap-icon://save"
+                                    press=".onSaveEditHdrTxt('PkgInst')" 
+                                    tooltip="Save"
+                                    visible="false" />
+                                <Button id="vpoCancelHdrTxtPkgInst" 
+                                    icon="sap-icon://sys-cancel"
+                                    press=".onCancelEditHdrTxt('PkgInst')" 
+                                    tooltip="Cancel"
+                                    visible="false" />
+                            </Toolbar>
+                        </uiT:extension>
+                    </uiT:Table>
+                </IconTabFilter>
+            </items>
+    </IconTabBar>
+    
+</core:FragmentDefinition>

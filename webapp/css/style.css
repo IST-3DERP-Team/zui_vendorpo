@@ -72,6 +72,9 @@
 .marginTopNone {
     margin-top: 0 !important;
 }
+.activeRow {
+    background-color: #e1ebf3 !important;
+}
 
 /*.sapUiCompFilterBarNonPhone.sapUiRespGrid.sapUiRespGridHSpace0{*/
 .sapUiRespGrid{
@@ -79,4 +82,60 @@
     padding-bottom: 0rem !important;
     /*padding-right: 2rem;
     padding-left: 2rem;*/
+}
+
+/* sapUiRespGridSpanXL8 {
+    margin-bottom: 100px !important
+} */
+
+.requiredField {
+    color: red !important;
+}
+
+/* Configuration for Splitter */
+
+/* #__data27{
+    height: 85%;
+} */
+
+/* #container-zuivendorpo---main--itbDetail{
+    position: relative;
+} */
+
+.VBOXHdrSize{
+    height: 100%;
+}
+.VBOXHdrSize2{
+    height: 85%;
+}
+.vboxHeight > .sapMFlexItem {
+    height: 100%;
+}
+/* .sapMFlexItem{
+    height: 100%;
+} */
+.vboxHeight {
+    height: 85%;
+    padding-left: 0rem;
+    padding-right: 0rem;
+}
+.designSection2 {
+    position: relative;
+}
+
+#__splitter0-content-1{
+    display: flex;
+}
+.sapMFlexItem--poObjectHdr{
+    height: auto;
+}
+.formHdr1{
+    padding-top: 10px;
+}
+/* .sapUiSizeCompact .sapMInputBaseHeightMargin {
+    margin: 0rem 0 !important;
+} */
+.vpoDetSection{
+    position: relative;
+    height: 100%;
 }

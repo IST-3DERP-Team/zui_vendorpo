@@ -1,0 +1,343 @@
+<core:FragmentDefinition 
+    controllerName="zuivendorpo.controller.vendorpodetail"
+    xmlns:mvc="sap.ui.core.mvc" 
+    xmlns:c="zuivendorpo.control"
+    xmlns:core="sap.ui.core"
+    xmlns:uiL="sap.ui.layout"
+    xmlns:uiT="sap.ui.table"
+    xmlns:plugins="sap.ui.table.plugins"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:semantic="sap.m.semantic"
+    xmlns:smartfilterbar="sap.ui.comp.smartfilterbar"
+    xmlns:fb="sap.ui.comp.filterbar" 
+    displayBlock="true"> 
+        
+    <IconTabBar id="vpoDetailTab"
+        expanded="{device>/isNoPhone}" 
+        headerMode="Inline"
+        expandable="false" 
+        class="vpoDetSection" 
+        select="onSelectTab"
+        headerBackgroundDesign="Solid" 
+        stretchContentHeight="true" 
+        applyContentPadding="false">
+        <items>
+            <IconTabFilter text="Details">
+                <uiT:Table id="vpoDetailsTab"
+                    class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
+                    visibleRowCountMode="Auto"
+                    showColumnVisibilityMenu="true"
+                    enableColumnFreeze="true"
+                    selectionMode="MultiToggle"
+                    selectionBehavior="Row"
+                    sort="onSorted">
+                    <uiT:extension>
+                        <Toolbar>
+                            <Text text="PO No: {ui>/activePONo}" class="selHdrKeyFontStyle" />
+                            <ToolbarSpacer/>
+                            <SearchField
+                                id="vpoSearchFieldDetails"
+                                placeholder="Search"
+                                value=""
+                                search="filterGlobally"
+                                width="15rem"/>
+                            <Button id="vpoBtnAddPRtoPO" visible="true" text="Add PR to PO" press=".onAddPRtoPODtls" />
+                            <Button id="vpoBtnItemChanges" visible="true" text="Item Changes" />
+                            <Button id="vpoBtnRefreshDetails" 
+                                icon="sap-icon://refresh"
+                                press=".onRefresh"
+                                visible="true" />
+                            <Button id="vpoBtnEditDetails" 
+                                icon="sap-icon://edit"
+                                tooltip="Edit"
+                                visible="true"
+                                press=".onEditPODtls"/>
+                            <Button id="vpoBtnSaveDetails" 
+                                icon="sap-icon://save"
+                                press=".onSaveEditPODtls" 
+                                visible="false" />
+                            <Button id="vpoBtnCancelDetails" 
+                                icon="sap-icon://sys-cancel"
+                                press=".onCancelEditPODtls" 
+                                visible="false" />                                        
+                            <Button id="vpoBtnDeleteDetails" 
+                                icon="sap-icon://delete"
+                                press=".onDeletePODtls"
+                                visible="true"/>
+                            <!-- <Button id="vpoBtnSortDetails" 
+                                icon="sap-icon://sort"
+                                press=".onColSort"
+                                visible="true" />
+                            <Button id="vpoBtnFilterDetails" 
+                                icon="sap-icon://filter"
+                                press=".onColFilter"
+                                visible="true" />
+                            <Button id="vpobtnFullScreenDetails" 
+                                icon="sap-icon://full-screen"
+                                press="onTableResize('Details','Max')"
+                                visible="true" />
+                            <Button id="vpoBtnExitFullScreenDetails" 
+                                icon="sap-icon://exit-full-screen"
+                                press="onTableResize('Details','Min')"
+                                visible="false" /> -->
+                            <Button id="vpoBtnColPropDetails" 
+                                icon="sap-icon://table-column"
+                                press="onColumnProp"
+                                tooltip="Columns"
+                                visible="true" />
+                        </Toolbar>
+                    </uiT:extension>
+                    <uiT:layoutData>
+                        <FlexItemData growFactor="1" baseSize="0%"/>
+                    </uiT:layoutData>                        
+                </uiT:Table> 
+            </IconTabFilter>
+            <IconTabFilter text="Delivery Schedule">
+                <uiT:Table id="vpoDelSchedTab"
+                    class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
+                    visibleRowCountMode="Auto"
+                    showColumnVisibilityMenu="true"
+                    rows="{VPODelSched>/results}"
+                    enableColumnFreeze="true"
+                    selectionMode="MultiToggle"
+                    selectionBehavior="Row"
+                    sort="onSorted">
+                    <uiT:extension>
+                        <Toolbar>
+                            <Text text="PO No: {ui>/activePONo}," class="selHdrKeyFontStyle" />
+                            <Text text="Item: {ui>/activeItem}" class="selHdrKeyFontStyle" />
+                            <ToolbarSpacer/>
+                            <SearchField
+                                id="vpoSearchFieldDelSched"
+                                placeholder="Search"
+                                value=""
+                                search="filterGlobally"
+                                width="15rem"/>
+                            <Button id="vpoBtnLineSplit" visible="true" text="Line Split" />
+                            <Button id="vpoBtnEditDelSched" 
+                                icon="sap-icon://edit"
+                                press="onEditDelSched"
+                                tooltip="Edit"
+                                visible="true"/>
+                            <Button id="vpoBtnSaveDelSched" 
+                                icon="sap-icon://save"
+                                press=".onSave('DelSched')" 
+                                visible="false" />
+                            <Button id="vpoBtnCancelDelSched" 
+                                icon="sap-icon://sys-cancel"
+                                press="onCancelDelSched" 
+                                visible="false" />                                        
+                            <Button id="vpoBtnDeleteDelSched" 
+                                icon="sap-icon://delete"
+                                press=".onDeletePODelSched"
+                                visible="true"/>
+                            <Button id="vpoBtnRefresDelSched" 
+                                icon="sap-icon://refresh"
+                                press=".onRefresh"
+                                visible="true" />
+                            <!-- <Button id="vpoBtnSortDelSched" 
+                                icon="sap-icon://sort"
+                                press=".onColSort"
+                                visible="true" />
+                            <Button id="vpoBtnFilterDelSched" 
+                                icon="sap-icon://filter"
+                                press=".onColFilter"
+                                visible="true" />
+                            <Button id="vpoBtnFullScreenDelSched" 
+                                icon="sap-icon://full-screen"
+                                press="onTableResize('DelSched','Max')"
+                                visible="true" />
+                            <Button id="vpoBtnExitFullScreenDelSched" 
+                                icon="sap-icon://exit-full-screen"
+                                press="onTableResize('DelSched','Min')"
+                                visible="false" /> -->
+                            <Button id="vpoBtnColPropDelSched" 
+                                icon="sap-icon://table-column"
+                                press="onColumnProp"
+                                tooltip="Columns"
+                                visible="true" />
+                        </Toolbar>
+                    </uiT:extension>
+                    <uiT:layoutData>
+                        <FlexItemData growFactor="1" baseSize="0%"/>
+                    </uiT:layoutData>                        
+                </uiT:Table> 
+            </IconTabFilter>
+            <IconTabFilter text="Delivery/Invoice">
+                <uiT:Table id="vpoDelInvTab"
+                    class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
+                    visibleRowCountMode="Auto"
+                    showColumnVisibilityMenu="true"
+                    rows="{VPODelInv>/results}"
+                    enableColumnFreeze="true"
+                    selectionMode="MultiToggle"
+                    selectionBehavior="Row"
+                    sort="onSorted">
+                    <uiT:extension>
+                        <Toolbar>
+                            <Text text="PO No: {ui>/activePONo}," class="selHdrKeyFontStyle" />
+                            <Text text="Item: {ui>/activeItem}" class="selHdrKeyFontStyle" />
+                            <ToolbarSpacer/>
+                            <SearchField
+                                id="vpoSearchFieldDelInv"
+                                placeholder="Search"
+                                value=""
+                                search="filterGlobally"
+                                width="15rem"/>
+                            <Button id="vpoBtnRefresDelInv" 
+                                icon="sap-icon://refresh"
+                                press=".onRefresh"
+                                visible="true" />
+                            <Button id="vpoBtnEditDelInv" 
+                                icon="sap-icon://edit"
+                                press="onEditDelInv"
+                                tooltip="Edit"
+                                visible="true"/>
+                            <Button id="vpoBtnSaveDelInv" 
+                                icon="sap-icon://save"
+                                press=".onSave('DelInv')" 
+                                visible="false" />
+                            <Button id="vpoBtnCancelDelInv" 
+                                icon="sap-icon://sys-cancel"
+                                press="onCancelDelInv" 
+                                visible="false" />    
+                            <Button id="vpoBtnSortDelInv" 
+                                icon="sap-icon://sort"
+                                press=".onColSort"
+                                visible="true" />
+                            <Button id="vpoBtnFilterDelInv" 
+                                icon="sap-icon://filter"
+                                press=".onColFilter"
+                                visible="true" />
+                            <Button id="vpoBtnFullScreenDelInv" 
+                                icon="sap-icon://full-screen"
+                                press="onTableResize('DelInv','Max')"
+                                visible="true" />
+                            <Button id="vpoBtnExitFullScreenDelInv" 
+                                icon="sap-icon://exit-full-screen"
+                                press="onTableResize('DelInv','Min')"
+                                visible="false" />
+                            <Button id="vpoBtnColPropDelInv" 
+                                icon="sap-icon://table-column"
+                                press="onColumnProp"
+                                tooltip="Columns"
+                                visible="true" />
+                        </Toolbar>
+                    </uiT:extension>
+                    <uiT:layoutData>
+                        <FlexItemData growFactor="1" baseSize="0%"/>
+                    </uiT:layoutData>                        
+                </uiT:Table> 
+            </IconTabFilter>
+            <IconTabFilter text="PO History">
+                <uiT:Table id="vpoPoHistTab"
+                    class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
+                    visibleRowCountMode="Auto"
+                    showColumnVisibilityMenu="true"
+                    enableColumnFreeze="true"
+                    selectionMode="MultiToggle"
+                    selectionBehavior="Row"
+                    rows="{VPOPOHist>/results}"
+                    sort="onSorted">
+                    <uiT:extension>
+                        <Toolbar>
+                            <Text text="PO No: {ui>/activePONo}," class="selHdrKeyFontStyle" />
+                            <Text text="Item: {ui>/activeItem}" class="selHdrKeyFontStyle" />
+                            <ToolbarSpacer/>
+                            <SearchField
+                                id="vpoSearchFieldPOHistory"
+                                placeholder="Search"
+                                value=""
+                                search="filterGlobally"
+                                width="15rem"/>
+                            <Button id="vpoBtnRefresPOHistory" 
+                                icon="sap-icon://refresh"
+                                press=".onRefresh"
+                                visible="true" />
+                            <Button id="vpoBtnSortPOHistory" 
+                                icon="sap-icon://sort"
+                                press=".onColSort"
+                                visible="true" />
+                            <Button id="vpoBtnFilterPOHistory" 
+                                icon="sap-icon://filter"
+                                press=".onColFilter"
+                                visible="true" />
+                            <Button id="vpoBtnFullScreenPOHistory" 
+                                icon="sap-icon://full-screen"
+                                press="onTableResize('POHistory','Max')"
+                                visible="true" />
+                            <Button id="vpoBtnExitFullScreenPOHistory" 
+                                icon="sap-icon://exit-full-screen"
+                                press="onTableResize('POHistory','Min')"
+                                visible="false" />
+                            <Button id="vpoBtnColPropPOHistory" 
+                                icon="sap-icon://table-column"
+                                press="onColumnProp"
+                                tooltip="Columns"
+                                visible="true" />
+                        </Toolbar>
+                    </uiT:extension>
+                    <uiT:layoutData>
+                        <FlexItemData growFactor="1" baseSize="0%"/>
+                    </uiT:layoutData>                        
+                </uiT:Table> 
+            </IconTabFilter>
+            <IconTabFilter text="Conditions">
+                <uiT:Table id="vpoConditionsTab"
+                    class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
+                    visibleRowCountMode="Auto"
+                    showColumnVisibilityMenu="true"
+                    enableColumnFreeze="true"
+                    selectionMode="MultiToggle"
+                    selectionBehavior="Row"
+                    rows="{VPOCond>/results}"
+                    sort="onSorted">
+                    <uiT:extension>
+                        <Toolbar>
+                            <Text text="Condition Record: {ui>/activeCondRec}" class="selHdrKeyFontStyle" />
+                            <ToolbarSpacer/>
+                            <SearchField
+                                id="vpoSearchFieldConditions"
+                                placeholder="Search"
+                                value=""
+                                search="filterGlobally"
+                                width="15rem"/>
+                            <Button id="vpoBtnRefreshConditions" 
+                                icon="sap-icon://refresh"
+                                press=".onRefresh"
+                                visible="true" />
+                            <Button id="vpoBtnSortConditions" 
+                                icon="sap-icon://sort"
+                                press=".onColSort"
+                                visible="true" />
+                            <Button id="vpoBtnFilterConditions" 
+                                icon="sap-icon://filter"
+                                press=".onColFilter"
+                                visible="true" />
+                            <Button id="vpoBtnFullScreenConditions" 
+                                icon="sap-icon://full-screen"
+                                press="onTableResize('Conditions','Max')"
+                                visible="true" />
+                            <Button id="vpoBtnExitFullScreenConditions" 
+                                icon="sap-icon://exit-full-screen"
+                                press="onTableResize('Conditions','Min')"
+                                visible="false" />
+                            <Button id="vpoBtnColPropConditions" 
+                                icon="sap-icon://table-column"
+                                press="onColumnProp"
+                                tooltip="Columns"
+                                visible="true" />
+                        </Toolbar>
+                    </uiT:extension>
+                    <uiT:layoutData>
+                        <FlexItemData growFactor="1" baseSize="0%"/>
+                    </uiT:layoutData>                        
+                </uiT:Table>
+            </IconTabFilter>
+        </items>
+        <layoutData>
+            <FlexItemData growFactor="1" baseSize="0%"/>
+        </layoutData>
+    </IconTabBar>
+</core:FragmentDefinition>

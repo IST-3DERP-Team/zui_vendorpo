@@ -94,6 +94,26 @@
                 "sap.ushell": {}
             }
         },
+        "commands": {
+			"New": {
+				"shortcut": "Ctrl+I"
+			},
+            "Edit": {
+				"shortcut": "Ctrl+E"
+			},
+			"Delete": {
+				"shortcut": "Ctrl+D"
+			},
+			"Save": {
+				"shortcut": "Ctrl+S"
+			},
+            "Cancel": {
+				"shortcut": "Ctrl+X"
+			},
+            "Refresh": {
+				"shortcut": "Ctrl+R"
+			}            
+		},
         "contentDensities": {
             "compact": true,
             "cozy": true
@@ -108,7 +128,11 @@
             "": {
                 "dataSource": "mainService",
                 "preload": true,
-                "settings": {}
+                "settings": {
+                    "defaultBindingMode": "TwoWay",
+                    "defaultCountMode": "Inline",
+                    "refreshAfterChange": false
+                }
             },
             "ZVB_3DERP_VPO_FILTERS_CDS": {
                 "dataSource": "ZVB_3DERP_VPO_FILTERS_CDS",
@@ -153,7 +177,8 @@
                 "viewPath": "zuivendorpo.view",
                 "controlAggregation": "pages",
                 "controlId": "app",
-                "clearControlAggregation": false
+                "clearControlAggregation": false,
+                "clearTarget": false
             },
             "routes": [
                 {
@@ -161,6 +186,22 @@
                     "pattern": ":?query:",
                     "target": [
                         "Targetmain"
+                    ]
+                },
+                {
+                    "name": "RouteCreateManualPO",
+                    "pattern": "RouteCreateManualPO/{sbu}",
+                    "greedy": false,
+                    "target": [
+                        "TargetCreateManualPO"
+                    ]
+                },
+                {
+                    "name": "vendorpodetail",
+                    "pattern": "VPODet/{PONO}",
+                    "greedy": false,
+                    "target": [
+                        "TargetVPODetail"
                     ]
                 }
             ],
@@ -171,6 +212,20 @@
                     "clearControlAggregation": false,
                     "viewId": "main",
                     "viewName": "main"
+                },
+                "TargetCreateManualPO": {
+                    "viewType": "XML",
+                    "transition": "slide",
+                    "clearControlAggregation": false,
+                    "viewId": "manualcreate",
+                    "viewName": "manualcreate"
+                },
+                "TargetVPODetail": {
+                    "viewType": "XML",
+                    "transition": "slide",
+                    "clearControlAggregation": false,
+                    "viewId": "vendorpodetail",
+                    "viewName": "vendorpodetail"
                 }
             }
         },

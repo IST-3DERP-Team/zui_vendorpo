@@ -44,3 +44,11 @@ server:
             metadataXmlPath: ./webapp/localService/ZGW_3DERP_RFC_SRV/metadata.xml
             mockdataRootPath: ./webapp/localService/ZGW_3DERP_RFC_SRV/mockdata
             generateMockData: true
+          - urlPath: /sap/opu/odata/sap/ZGW_3DERP_COMMON_SRV/
+            metadataXmlPath: ./webapp/localService/ZGW_3DERP_COMMON_SRV/metadata.xml
+            mockdataRootPath: ./webapp/localService/ZGW_3DERP_COMMON_SRV/mockdata
+            generateMockData: true
+          - urlPath: /sap/opu/odata/sap/ZGW_3DERP_RFC_SRV
+            metadataXmlPath: ./webapp/localService/ZGW_3DERP_RFC_SRV/metadata.xml
+            mockdataRootPath: ./webapp/localService/ZGW_3DERP_RFC_SRV/mockdata
+            generateMockData: true
