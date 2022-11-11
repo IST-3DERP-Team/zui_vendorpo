@@ -38,10 +38,6 @@ sap.ui.define([
                 this.closeLoadingDialog();
             },
 
-            onExit() {
-                console.log("onexit")
-            },
-
             _routePatternMatched: function (oEvent) {
                 _sbu = oEvent.getParameter("arguments").sbu; // "VER"; // temporary sbu
                 //console.log("_routePatternMatched", _sbu)
@@ -644,15 +640,17 @@ sap.ui.define([
             },
 
             navBack() {
-                var oHistory = sap.ui.core.routing.History.getInstance();
-                var sPreviousHash = oHistory.getPreviousHash();
+                var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+                oRouter.navTo("Routemain", {}, true);
+                // var oHistory = sap.ui.core.routing.History.getInstance();
+                // var sPreviousHash = oHistory.getPreviousHash();
 
-                if (sPreviousHash !== undefined) {
-                    window.history.go(-1);
-                } else {
-                    var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
-                    oRouter.navTo("Routemain", {}, true);
-                }
+                // if (sPreviousHash !== undefined) {
+                //     window.history.go(-1);
+                // } else {
+                //     var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
+                //     oRouter.navTo("Routemain", {}, true);
+                // }
             },
 
             onEditHeader() {
