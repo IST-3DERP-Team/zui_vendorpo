@@ -350,8 +350,10 @@ sap.ui.define([
                         showable: vShowable,
                         key: prop.Key === '' ? false : true,
                         maxLength: prop.Length,
-                        precision: prop.Decimal,
-                        scale: prop.Scale !== undefined ? prop.Scale : null
+                        precision: prop.Length,
+                        scale: prop.Decimal
+                        // precision: prop.Decimal,
+                        // scale: prop.Scale !== undefined ? prop.Scale : null
                     })
                 })
 
@@ -870,7 +872,7 @@ sap.ui.define([
 
                 var aNewEditRows = aNewRows.length > 0 ? aNewRows : aEditedRows;
 
-                // console.log("onSave", aNewEditRows);
+                console.log("onSave", aNewEditRows);
                 // Validate required field if has value.
                 var isValid = true;
                 var sInvalidMsg = "";
@@ -967,6 +969,7 @@ sap.ui.define([
                 oTable.getColumns().forEach((col, idx) => {
                     this._aColumns[arg].filter(item => item.label === col.getLabel().getText())
                         .forEach(ci => {
+                            console.log("setRowCreateMode", ci)
                             if (!ci.hideOnChange && ci.creatable) {
                                 if (ci.type === "BOOLEAN") {
                                     col.setTemplate(new sap.m.CheckBox({selected: "{" + arg + ">" + ci.name + "}",
@@ -1148,7 +1151,7 @@ sap.ui.define([
             },
 
             onNumberLiveChange: function(oEvent) {
-                console.log(oEvent.getParameters())
+                //console.log(oEvent.getParameters())
                 var oSource = oEvent.getSource();
                 var sRowPath = oSource.getBindingInfo("value").binding.oContext.sPath;
                 var sModel = oSource.getBindingInfo("value").parts[0].model;
