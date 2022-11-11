@@ -162,6 +162,11 @@ sap.ui.define([
                         filters: aFilters,
                         success: function (data, response) {
                             if (data.results.length > 0) {
+
+                                data.results.sort(function(a,b) {
+                                    return new Date(b.PODT) - new Date(a.PODT);
+                                });
+
                                 data.results.forEach(item => {
                                     item.PODT = dateFormat.format(item.PODT);
                                 })
