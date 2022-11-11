@@ -15,12 +15,12 @@ xmlns:f="sap.ui.layout.form" xmlns:uiT="sap.ui.table">
 					<ToolbarSpacer/>
 					<Button id="vpoAddPRToPOSaveBtn" 
 						icon="sap-icon://save"
-						press="." 
+						press=".onSaveAddPRtoPO" 
 						text = "Add PR To PO"
 						visible="true" />
 					<Button id="vpoAddPRToPOCancelBtn" 
 						icon="sap-icon://sys-cancel"
-						press="." 
+						press=".onCancelAddPRtoPO" 
 						visible="true" />
 					<Button id="vpoAddPRToPOSaveLayoutBtn" 
 						icon="sap-icon://table-column"

@@ -2492,7 +2492,6 @@ sap.ui.define([
             },
 
             onAddPRtoPODtls: async function(){
-                MessageToast.show("Add PR to PO Clicked");
                 var me = this;
                 var poNo = this._pono;
                 var bProceed = true;
@@ -2544,69 +2543,181 @@ sap.ui.define([
                     await _promiseResult;
                     
                     oModel.read("/VPOAddPRToPORscSet",{ 
-                    urlParameters: {
-                        "$filter": "VENDORCD eq '" + vendorCd + "' and PURCHORG eq '"+ purchOrg +"' and PURCHGRP eq '"+ purchGrp +"' and " +
-                                   "SHIPTOPLANT eq '"+ shipToPlant +"' and PURCHPLANT eq '"+ purchPlant +"' and DOCTYP eq '"+ docType +"'"
-                    },
-                    success: async function (oData, oResponse) {
-                        
-                        console.log(oData);
-                        addPRToPOData = {
-                            Title: "Add PR To PO"
-                        };
-                        prToPOJSONModel.setData(addPRToPOData);
+                        urlParameters: {
+                            // "$filter": "VENDORCD eq '" + vendorCd + "' and PURCHORG eq '"+ purchOrg +"' and PURCHGRP eq '"+ purchGrp +"' and " +
+                            //         "SHIPTOPLANT eq '"+ shipToPlant +"' and PURCHPLANT eq '"+ purchPlant +"' and DOCTYP eq '"+ docType +"'"
+                            "$filter": "VENDORCD eq '0003101604' and PURCHORG eq '1601' and PURCHGRP eq '601' and SHIPTOPLANT eq 'B601' and PURCHPLANT eq 'C600' and DOCTYP eq 'ZMRP'"
+                        },
+                        success: async function (oData, oResponse) {
+                            
+                            console.log(oData);
+                            addPRToPOData = {
+                                Title: "Add PR To PO"
+                            };
+                            prToPOJSONModel.setData(addPRToPOData);
 
+                            me.addPRToPODialog = sap.ui.xmlfragment(me.getView().getId(), "zuivendorpo.view.fragments.dialog.AddPRToPODialog", me);
+                            me.addPRToPODialog.setModel(prToPOJSONModel);
+                            me.getView().addDependent(me.addPRToPODialog);
 
-                        me.addPRToPODialog = sap.ui.xmlfragment(me.getView().getId(), "zuivendorpo.view.fragments.dialog.AddPRToPODialog", me);
-                        me.addPRToPODialog.setModel(prToPOJSONModel);
-                        me.getView().addDependent(me.addPRToPODialog);
+                            oJSONModel.setData(oData);
+                            me.getView().setModel(oJSONModel, "VPOAddPRtoPO");
 
-                        oJSONModel.setData(oData);
-                        me.getView().setModel(oJSONModel, "VPOAddPRtoPO");
+                            //Add PR To PO
+                            _promiseResult = new Promise((resolve, reject)=>{
+                                resolve(me.getDynamicColumns('VPOADDPRTOPO','ZDV_VPOADDPRTOPO'));
+                            });
+                            await _promiseResult;
 
-                        //Add PR To PO
-                        _promiseResult = new Promise((resolve, reject)=>{
-                            resolve(me.getDynamicColumns('VPOADDPRTOPO','ZDV_VPOADDPRTOPO'));
-                        });
-                        await _promiseResult;
-
-                        me.addPRToPODialog.open();
-                    },
-                    error: function () {
-                    }
-                });
+                            me.addPRToPODialog.open();
+                        },
+                        error: function () {
+                        }
+                    });
                 }
-                // oModel.read("/VPOAddPRToPORscSet",{ 
-                //     urlParameters: {
-                //         "$filter": "VENDORCD eq '" + '' + "' and PURCHORG eq '"+''+"' and PURCHGRP eq '"+''+"' and " +
-                //             +      "SHIPTOPLANT eq '"+''+"' and PURCHPLANT eq '"+''+"' and DOCTYP eq '"+''+"'"
-                //     },
-                //     success: function (oData, oResponse) {
-                //         // if (oData.PODT !== null)
-                //         //     oData.PODT = dateFormat.format(new Date(oData.PODT));
-                //         oJSONModel.setData(oData.results);
-                //         me.getView().setModel(oJSONModel, "VendorPOSelect");
+            },
+            onSaveAddPRtoPO: async function(){
+                var me = this;
+                var poNo = this._pono;
 
-                //         changeVendorData = {
-                //             Title: "Change Vendor",
-                //             POLabel: "Purchase Order",
-                //             CurrVendorLabel: "Current Vendor",
-                //             NewVendorLabel: "New Vendor",
-                //             PONO: poNo,
-                //             CURRVENDOR: me._vendorCd,
-                //             NEWVENDOR: "",
-                //         }
+                var oTable = this.byId("vpoAddPRtoPOTbl");
+                var aSelIndices = oTable.getSelectedIndices();
+                var oTmpSelectedIndices = [];
+                var aData = oTable.getModel().getData().rows;
 
-                //         vendorSelJSONModel.setData(changeVendorData);
+                var headerPOArr = [];
 
-                //         me.changeVendorDialog = sap.ui.xmlfragment("zuivendorpo.view.fragments.dialog.ChangeVendorDialog", me);
-                //         me.changeVendorDialog.setModel(vendorSelJSONModel);
-                //         me.getView().addDependent(me.changeVendorDialog);
-                //         me.changeVendorDialog.open();
-                //     },
-                //     error: function () {
-                //     }
-                // });
+                var oParamInitParam = {};
+                var oParamDataPO = [];
+                var oParam;
+
+                var rfcModel = this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
+                var oModel = this.getOwnerComponent().getModel();
+
+                var message;
+                var bProceed = true
+
+                var poItemArr = [];
+                var poItemLastCnt = 0;
+
+                this.showLoadingDialog('Loading...')
+                
+                _promiseResult = new Promise((resolve, reject)=>{
+                    oModel.read("/mainSet(PONO='" + poNo + "')", {
+                        success: function (oData, oResponse) {
+                            if (oData.PODT !== null)
+                                oData.PODT = dateFormat.format(new Date(oData.PODT));
+                            headerPOArr.push(oData);
+                            resolve();
+                        },
+                        error: function () {
+                            MessageBox.error("Error Encountered.")
+                            bProceed = false;
+                            resolve();
+                        }
+                    });
+                });
+                await _promiseResult;
+
+                if(aSelIndices.length === 0 && bProceed){
+                    MessageBox.error("No Selected Record!")
+                    bProceed = false;
+                }
+                if(bProceed){
+                    _promiseResult = new Promise((resolve, reject)=>{
+                        resolve(me.getPODetails2(poNo));
+                    });
+                    await _promiseResult;
+
+                    var poDtlsSet = this.getView().getModel("VPODtlsVPODet").getProperty('/results');  
+
+                    for(var x = 0; x < poDtlsSet.length; x++){
+                        poItemArr.push(poDtlsSet[x].ITEM);
+                    }
+
+                    poItemArr.sort(function(a, b){return b - a});
+                    poItemLastCnt = poItemArr[0];
+
+                    poItemLastCnt = String(parseInt(poItemLastCnt) + 10);
+
+                    if(poItemLastCnt != "" || poItemLastCnt != null){
+                        while(poItemLastCnt.length < 5) poItemLastCnt = "0" + poItemLastCnt.toString();
+                        
+                    }
+                    
+                    aSelIndices.forEach(item => {
+                        oTmpSelectedIndices.push(oTable.getBinding("rows").aIndices[item])
+                    });
+                    aSelIndices = oTmpSelectedIndices;
+                    aSelIndices.forEach((item, index) => {
+                        oParamInitParam = {
+                            IPoNumber: poNo,
+                            IDoDownload: "",
+                            IChangeonlyHdrplants: "",
+                        };
+                        oParamDataPO.push({
+                            Bedat     : sapDateFormat.format(new Date(headerPOArr[0].PODT)) + "T00:00:00", //PODocDt
+                            Bsart     : headerPOArr[0].DOCTYPE, //PODocTyp
+                            Banfn     : aData.at(item).PRNO, //PR
+                            Bnfpo     : aData.at(item).PRITM, //PRITM
+                            Ebeln     : poNo, //PONO
+                            Ebelp     : poItemLastCnt, //POITM
+                            Bukrs     : headerPOArr[0].COMPANY,//COCD
+                            Werks     : headerPOArr[0].PURCHPLANT,//PLANTCD
+                            Unsez     : "",//
+                            Txz01     : "",//ShortText
+                            Menge     : aData.at(item).QTY,//OrdQTY
+                            Meins     : aData.at(item).UOM,//UOM
+                            // Netpr     : resultExtendPop[0][x].NETPR,//NET ORD PRICE/
+                            // Peinh     : resultExtendPop[0][x].PEINH,//NET UOM/
+                            // Bprme     : resultExtendPop[0][x].BPRME,//ORD UOM/
+                            // Repos     : resultExtendPop[0][x].REPOS,//INV RCPT/
+                            // Webre     : resultExtendPop[0][x].WEBRE,//GR IND /
+                            // Eindt     : sapDateFormat.format(new Date(delDt)) + "T00:00:00", //Delivery Date /
+                            // Evers     : resultExtendPop[0][x].EVERS,//SHIPPINGINST /
+                            // Uebto     : resultExtendPop[0][x].UEBTO,//OVERTOL /
+                            // Untto     : resultExtendPop[0][x].UNTTO,//UNDERTOL /
+                            // Uebtk     : resultExtendPop[0][x].UEBTK,//UNLIMITED /
+                            // Elikz     : resultExtendPop[0][x].ELIKZ,//DLVCOMPLETE /
+                            // DeleteRec : resultExtendPop[0][x].LOEKZ //DELETE /
+                        });
+
+                        poItemLastCnt = String(parseInt(poItemLastCnt) + 10);
+
+                        if(poItemLastCnt != "" || poItemLastCnt != null){
+                            while(poItemLastCnt.length < 5) poItemLastCnt = "0" + poItemLastCnt.toString();
+                            
+                        }
+                        
+                    });
+
+                    oParam = oParamInitParam;
+                    oParam['N_ChangePOItemParam'] = oParamDataPO;
+                    oParam['N_ChangePOReturn'] = [];
+
+                    _promiseResult = new Promise((resolve, reject)=>{
+                        rfcModel.create("/ChangePOSet", oParam, {
+                            method: "POST",
+                            success: function(oData, oResponse){
+                                if(oData.N_ChangePOReturn.results.length > 0){
+                                    message = oData.N_ChangePOReturn.results[0].Msgv1;
+                                    MessageBox.information(message);
+                                    resolve()
+                                }else{
+                                    MessageBox.error("Error, No Data Changed");
+                                    resolve()
+                                }
+                            },error: function(error){
+                                MessageBox.error("Error, No Data Changed");
+                                resolve()
+                            }
+                        })
+                    });
+                    await _promiseResult;
+                }
+                    
+                this.closeLoadingDialog(that);
+                
             },
             onCancelAddPRtoPO: async function(){
                 this.addPRToPODialog.destroy(true);
