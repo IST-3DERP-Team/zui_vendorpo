@@ -24,7 +24,7 @@ xmlns:f="sap.ui.layout.form" xmlns:uiT="sap.ui.table">
 						visible="true" />
 					<Button id="vpoAddPRToPOSaveLayoutBtn" 
 						icon="sap-icon://table-column"
-						press="."
+						press=".onSaveTableLayout('vpoAddPRtoPOTbl')"
 						tooltip="Columns"
 						visible="true" />
 				</Toolbar>
