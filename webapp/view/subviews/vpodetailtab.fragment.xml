@@ -23,68 +23,56 @@
         stretchContentHeight="true" 
         applyContentPadding="false">
         <items>
-            <IconTabFilter text="Details">
+            <IconTabFilter text="{captionMsg>/DETAILS}">
                 <uiT:Table id="vpoDetailsTab"
                     class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
                     visibleRowCountMode="Auto"
                     showColumnVisibilityMenu="true"
                     enableColumnFreeze="true"
                     selectionMode="MultiToggle"
-                    selectionBehavior="Row"
+                    cellClick=".onCellClick"
                     sort="onSorted">
                     <uiT:extension>
                         <Toolbar>
-                            <Text text="PO No: {ui>/activePONo}" class="selHdrKeyFontStyle" />
+                            <Text text="{captionMsg>/PONO}: {ui>/activePONo}" class="selHdrKeyFontStyle" />
                             <ToolbarSpacer/>
-                            <SearchField
+                            <!-- <SearchField
                                 id="vpoSearchFieldDetails"
                                 placeholder="Search"
                                 value=""
                                 search="filterGlobally"
-                                width="15rem"/>
-                            <Button id="vpoBtnAddPRtoPO" visible="true" text="Add PR to PO" press=".onAddPRtoPODtls" />
-                            <Button id="vpoBtnItemChanges" visible="true" text="Item Changes" />
+                                width="15rem"/> -->
+                            <Button id="vpoBtnAddPRtoPO" visible="true" text="{captionMsg>/ADDPRTOPO}" press=".onAddPRtoPODtls" />
+                            <Button id="vpoBtnItemChanges" visible="true" text="{captionMsg>/ITEMCHANGES}" />
                             <Button id="vpoBtnRefreshDetails" 
                                 icon="sap-icon://refresh"
                                 press=".onRefresh"
+                                tooltip="{captionMsg>/REFRESH}"
                                 visible="true" />
                             <Button id="vpoBtnEditDetails" 
                                 icon="sap-icon://edit"
-                                tooltip="Edit"
+                                tooltip="{captionMsg>/EDIT}"
                                 visible="true"
                                 press=".onEditPODtls"/>
                             <Button id="vpoBtnSaveDetails" 
                                 icon="sap-icon://save"
+                                tooltip="{captionMsg>/SAVE}"
                                 press=".onSaveEditPODtls" 
                                 visible="false" />
                             <Button id="vpoBtnCancelDetails" 
                                 icon="sap-icon://sys-cancel"
+                                tooltip="{captionMsg>/CANCEL}"
                                 press=".onCancelEditPODtls" 
                                 visible="false" />                                        
                             <Button id="vpoBtnDeleteDetails" 
                                 icon="sap-icon://delete"
+                                tooltip="{captionMsg>/DELETE}"
                                 press=".onDeletePODtls"
                                 visible="true"/>
-                            <!-- <Button id="vpoBtnSortDetails" 
-                                icon="sap-icon://sort"
-                                press=".onColSort"
-                                visible="true" />
-                            <Button id="vpoBtnFilterDetails" 
-                                icon="sap-icon://filter"
-                                press=".onColFilter"
-                                visible="true" />
-                            <Button id="vpobtnFullScreenDetails" 
-                                icon="sap-icon://full-screen"
-                                press="onTableResize('Details','Max')"
-                                visible="true" />
-                            <Button id="vpoBtnExitFullScreenDetails" 
-                                icon="sap-icon://exit-full-screen"
-                                press="onTableResize('Details','Min')"
-                                visible="false" /> -->
-                            <Button id="vpoBtnColPropDetails" 
+                            <Button id="vpoBtnSaveLayoutDetails" 
                                 icon="sap-icon://table-column"
-                                press="onColumnProp"
-                                tooltip="Columns"
+                                press=".onSaveTableLayout('vpoDetailsTab')"
+                                tooltip="{captionMsg>/SAVELAYOUT}"
                                 visible="true" />
                         </Toolbar>
                     </uiT:extension>
@@ -93,7 +81,7 @@
                     </uiT:layoutData>                        
                 </uiT:Table> 
             </IconTabFilter>
-            <IconTabFilter text="Delivery Schedule">
+            <IconTabFilter text="{captionMsg>/DELSCHED}">
                 <uiT:Table id="vpoDelSchedTab"
                     class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
                     visibleRowCountMode="Auto"
@@ -101,61 +89,49 @@
                     rows="{VPODelSched>/results}"
                     enableColumnFreeze="true"
                     selectionMode="MultiToggle"
-                    selectionBehavior="Row"
+                    cellClick=".onCellClick"
                     sort="onSorted">
                     <uiT:extension>
                         <Toolbar>
-                            <Text text="PO No: {ui>/activePONo}," class="selHdrKeyFontStyle" />
-                            <Text text="Item: {ui>/activeItem}" class="selHdrKeyFontStyle" />
+                            <Text text="{captionMsg>/PONO}: {ui>/activePONo}," class="selHdrKeyFontStyle" />
+                            <Text text="{captionMsg>/POITEM}: {ui>/activePOItem}" class="selHdrKeyFontStyle" />
                             <ToolbarSpacer/>
-                            <SearchField
+                            <!-- <SearchField
                                 id="vpoSearchFieldDelSched"
                                 placeholder="Search"
                                 value=""
                                 search="filterGlobally"
-                                width="15rem"/>
-                            <Button id="vpoBtnLineSplit" visible="true" text="Line Split" />
+                                width="15rem"/> -->
+                            <Button id="vpoBtnLineSplit" visible="true" text="{captionMsg>/LINESPLIT}" />
                             <Button id="vpoBtnEditDelSched" 
                                 icon="sap-icon://edit"
                                 press="onEditDelSched"
-                                tooltip="Edit"
+                                tooltip="{captionMsg>/EDIT}"
                                 visible="true"/>
                             <Button id="vpoBtnSaveDelSched" 
                                 icon="sap-icon://save"
                                 press=".onSave('DelSched')" 
+                                tooltip="{captionMsg>/SAVE}"
                                 visible="false" />
                             <Button id="vpoBtnCancelDelSched" 
                                 icon="sap-icon://sys-cancel"
                                 press="onCancelDelSched" 
+                                tooltip="{captionMsg>/CANCEL}"
                                 visible="false" />                                        
                             <Button id="vpoBtnDeleteDelSched" 
                                 icon="sap-icon://delete"
                                 press=".onDeletePODelSched"
+                                tooltip="{captionMsg>/DELETE}"
                                 visible="true"/>
                             <Button id="vpoBtnRefresDelSched" 
                                 icon="sap-icon://refresh"
                                 press=".onRefresh"
+                                tooltip="{captionMsg>/REFRESH}"
                                 visible="true" />
-                            <!-- <Button id="vpoBtnSortDelSched" 
-                                icon="sap-icon://sort"
-                                press=".onColSort"
-                                visible="true" />
-                            <Button id="vpoBtnFilterDelSched" 
-                                icon="sap-icon://filter"
-                                press=".onColFilter"
-                                visible="true" />
-                            <Button id="vpoBtnFullScreenDelSched" 
-                                icon="sap-icon://full-screen"
-                                press="onTableResize('DelSched','Max')"
-                                visible="true" />
-                            <Button id="vpoBtnExitFullScreenDelSched" 
-                                icon="sap-icon://exit-full-screen"
-                                press="onTableResize('DelSched','Min')"
-                                visible="false" /> -->
-                            <Button id="vpoBtnColPropDelSched" 
+                            <Button id="vpoBtnSaveLayoutDelSched" 
                                 icon="sap-icon://table-column"
-                                press="onColumnProp"
-                                tooltip="Columns"
+                                press=".onSaveTableLayout('vpoDelSchedTab')"
+                                tooltip="{captionMsg>/SAVELAYOUT}"
                                 visible="true" />
                         </Toolbar>
                     </uiT:extension>
@@ -164,7 +140,7 @@
                     </uiT:layoutData>                        
                 </uiT:Table> 
             </IconTabFilter>
-            <IconTabFilter text="Delivery/Invoice">
+            <IconTabFilter text="{captionMsg>/DELIVERY}/{captionMsg>/INVOICE}">
                 <uiT:Table id="vpoDelInvTab"
                     class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
                     visibleRowCountMode="Auto"
@@ -172,56 +148,43 @@
                     rows="{VPODelInv>/results}"
                     enableColumnFreeze="true"
                     selectionMode="MultiToggle"
-                    selectionBehavior="Row"
+                    cellClick=".onCellClick"
                     sort="onSorted">
                     <uiT:extension>
                         <Toolbar>
-                            <Text text="PO No: {ui>/activePONo}," class="selHdrKeyFontStyle" />
-                            <Text text="Item: {ui>/activeItem}" class="selHdrKeyFontStyle" />
+                            <Text text="{captionMsg>/PONO}: {ui>/activePONo}," class="selHdrKeyFontStyle" />
+                            <Text text="{captionMsg>/POITEM}: {ui>/activePOItem}" class="selHdrKeyFontStyle" />
                             <ToolbarSpacer/>
-                            <SearchField
+                            <!-- <SearchField
                                 id="vpoSearchFieldDelInv"
                                 placeholder="Search"
                                 value=""
                                 search="filterGlobally"
-                                width="15rem"/>
+                                width="15rem"/> -->
                             <Button id="vpoBtnRefresDelInv" 
                                 icon="sap-icon://refresh"
                                 press=".onRefresh"
+                                tooltip="{captionMsg>/REFRESH}"
                                 visible="true" />
                             <Button id="vpoBtnEditDelInv" 
                                 icon="sap-icon://edit"
                                 press="onEditDelInv"
-                                tooltip="Edit"
+                                tooltip="{captionMsg>/EDIT}"
                                 visible="true"/>
                             <Button id="vpoBtnSaveDelInv" 
                                 icon="sap-icon://save"
                                 press=".onSave('DelInv')" 
+                                tooltip="{captionMsg>/SAVE}"
                                 visible="false" />
                             <Button id="vpoBtnCancelDelInv" 
                                 icon="sap-icon://sys-cancel"
                                 press="onCancelDelInv" 
-                                visible="false" />    
-                            <Button id="vpoBtnSortDelInv" 
-                                icon="sap-icon://sort"
-                                press=".onColSort"
-                                visible="true" />
-                            <Button id="vpoBtnFilterDelInv" 
-                                icon="sap-icon://filter"
-                                press=".onColFilter"
-                                visible="true" />
-                            <Button id="vpoBtnFullScreenDelInv" 
-                                icon="sap-icon://full-screen"
-                                press="onTableResize('DelInv','Max')"
-                                visible="true" />
-                            <Button id="vpoBtnExitFullScreenDelInv" 
-                                icon="sap-icon://exit-full-screen"
-                                press="onTableResize('DelInv','Min')"
+                                tooltip="{captionMsg>/CANCEL}"
                                 visible="false" />
-                            <Button id="vpoBtnColPropDelInv" 
+                            <Button id="vpoBtnSaveLayoutDelInv" 
                                 icon="sap-icon://table-column"
-                                press="onColumnProp"
-                                tooltip="Columns"
+                                press=".onSaveTableLayout('vpoDelInvTab')"
+                                tooltip="{captionMsg>/SAVELAYOUT}"
                                 visible="true" />
                         </Toolbar>
                     </uiT:extension>
@@ -230,51 +193,36 @@
                     </uiT:layoutData>                        
                 </uiT:Table> 
             </IconTabFilter>
-            <IconTabFilter text="PO History">
+            <IconTabFilter text="{captionMsg>/POHIST}">
                 <uiT:Table id="vpoPoHistTab"
                     class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
                     visibleRowCountMode="Auto"
                     showColumnVisibilityMenu="true"
                     enableColumnFreeze="true"
                     selectionMode="MultiToggle"
-                    selectionBehavior="Row"
+                    cellClick=".onCellClick"
                     rows="{VPOPOHist>/results}"
                     sort="onSorted">
                     <uiT:extension>
                         <Toolbar>
-                            <Text text="PO No: {ui>/activePONo}," class="selHdrKeyFontStyle" />
-                            <Text text="Item: {ui>/activeItem}" class="selHdrKeyFontStyle" />
+                            <Text text="{captionMsg>/PONO}: {ui>/activePONo}," class="selHdrKeyFontStyle" />
+                            <Text text="{captionMsg>/POITEM}: {ui>/activePOItem}" class="selHdrKeyFontStyle" />
                             <ToolbarSpacer/>
-                            <SearchField
+                            <!-- <SearchField
                                 id="vpoSearchFieldPOHistory"
                                 placeholder="Search"
                                 value=""
                                 search="filterGlobally"
-                                width="15rem"/>
+                                width="15rem"/> -->
                             <Button id="vpoBtnRefresPOHistory" 
                                 icon="sap-icon://refresh"
                                 press=".onRefresh"
+                                tooltip="{captionMsg>/REFRESH}"
                                 visible="true" />
-                            <Button id="vpoBtnSortPOHistory" 
-                                icon="sap-icon://sort"
-                                press=".onColSort"
-                                visible="true" />
-                            <Button id="vpoBtnFilterPOHistory" 
-                                icon="sap-icon://filter"
-                                press=".onColFilter"
-                                visible="true" />
-                            <Button id="vpoBtnFullScreenPOHistory" 
-                                icon="sap-icon://full-screen"
-                                press="onTableResize('POHistory','Max')"
-                                visible="true" />
-                            <Button id="vpoBtnExitFullScreenPOHistory" 
-                                icon="sap-icon://exit-full-screen"
-                                press="onTableResize('POHistory','Min')"
-                                visible="false" />
-                            <Button id="vpoBtnColPropPOHistory" 
+                            <Button id="vpoBtnSaveLayoutPOHistory" 
                                 icon="sap-icon://table-column"
-                                press="onColumnProp"
-                                tooltip="Columns"
+                                press=".onSaveTableLayout('vpoPoHistTab')"
+                                tooltip="{captionMsg>/SAVELAYOUT}"
                                 visible="true" />
                         </Toolbar>
                     </uiT:extension>
@@ -283,50 +231,35 @@
                     </uiT:layoutData>                        
                 </uiT:Table> 
             </IconTabFilter>
-            <IconTabFilter text="Conditions">
+            <IconTabFilter text="{captionMsg>/CONDITIONS}">
                 <uiT:Table id="vpoConditionsTab"
                     class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
                     visibleRowCountMode="Auto"
                     showColumnVisibilityMenu="true"
                     enableColumnFreeze="true"
                     selectionMode="MultiToggle"
-                    selectionBehavior="Row"
+                    cellClick=".onCellClick"
                     rows="{VPOCond>/results}"
                     sort="onSorted">
                     <uiT:extension>
                         <Toolbar>
-                            <Text text="Condition Record: {ui>/activeCondRec}" class="selHdrKeyFontStyle" />
+                            <Text text="{captionMsg>/CONDREC}: {ui>/activeCondRec}" class="selHdrKeyFontStyle" />
                             <ToolbarSpacer/>
-                            <SearchField
+                            <!-- <SearchField
                                 id="vpoSearchFieldConditions"
                                 placeholder="Search"
                                 value=""
                                 search="filterGlobally"
-                                width="15rem"/>
+                                width="15rem"/> -->
                             <Button id="vpoBtnRefreshConditions" 
                                 icon="sap-icon://refresh"
                                 press=".onRefresh"
+                                tooltip="{captionMsg>/REFRESH}"
                                 visible="true" />
-                            <Button id="vpoBtnSortConditions" 
-                                icon="sap-icon://sort"
-                                press=".onColSort"
-                                visible="true" />
-                            <Button id="vpoBtnFilterConditions" 
-                                icon="sap-icon://filter"
-                                press=".onColFilter"
-                                visible="true" />
-                            <Button id="vpoBtnFullScreenConditions" 
-                                icon="sap-icon://full-screen"
-                                press="onTableResize('Conditions','Max')"
-                                visible="true" />
-                            <Button id="vpoBtnExitFullScreenConditions" 
-                                icon="sap-icon://exit-full-screen"
-                                press="onTableResize('Conditions','Min')"
-                                visible="false" />
-                            <Button id="vpoBtnColPropConditions" 
+                            <Button id="vpoBtnSaveLayoutConditions" 
                                 icon="sap-icon://table-column"
-                                press="onColumnProp"
-                                tooltip="Columns"
+                                press=".onSaveTableLayout('vpoConditionsTab')"
+                                tooltip="{captionMsg>/SAVELAYOUT}"
                                 visible="true" />
                         </Toolbar>
                     </uiT:extension>

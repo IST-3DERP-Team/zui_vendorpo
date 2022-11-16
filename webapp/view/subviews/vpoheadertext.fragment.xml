@@ -21,7 +21,7 @@
         expandable="false">
             <items>
                 <IconTabFilter
-                    text="REMARKS"
+                    text="{captionMsg>/REMARKS}"
                     key="itfDLVSCHED">
                     <uiT:Table id="RemarksTbl"
                         class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
@@ -60,7 +60,7 @@
                     </uiT:Table>
                 </IconTabFilter>
                 <IconTabFilter
-                    text="PACKING INSTRUCTION"
+                    text="{captionMsg>/PACKINSTRUCT}"
                     key="itfDLVSCHED">
                     <uiT:Table id="PackingInstTbl"
                         class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"

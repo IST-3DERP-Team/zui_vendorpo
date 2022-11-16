@@ -119,6 +119,17 @@
     padding-left: 0rem;
     padding-right: 0rem;
 }
+.vboxHeightPODet > .sapMFlexItem {
+    height: 100%;
+}
+.vboxHeightPODet {
+    height: 100%;
+    padding-left: 0rem;
+    padding-right: 0rem;
+}
+.iconTabPOHdrFrag > .sapMITH {
+    height: 0px;
+}
 .designSection2 {
     position: relative;
 }

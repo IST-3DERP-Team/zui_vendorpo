@@ -16,7 +16,7 @@
             
             <smartfilterbar:SmartFilterBar id="smartFilterBar" entitySet="ZVB_3DERP_VPO_FILTERS" search="onSearch" persistencyKey="3DERP_StylesPKey" filterContainerWidth="15rem">
                 <smartfilterbar:controlConfiguration>
-                    <smartfilterbar:ControlConfiguration key="SBU" groupId="_BASIC" label="SBU" mandatory="mandatory" width="50px">
+                    <smartfilterbar:ControlConfiguration key="SBU" groupId="_BASIC" label="{captionMsg>/SBU}" mandatory="mandatory" width="50px">
                         <smartfilterbar:customControl>
                             <ComboBox id="cboxSBU"
                                 selectedKey="{ui>/sbu}"
@@ -30,18 +30,18 @@
                     </smartfilterbar:ControlConfiguration>
                 </smartfilterbar:controlConfiguration>
                 <smartfilterbar:controlConfiguration>
-                    <smartfilterbar:ControlConfiguration id="filterVendor" key="VENDOR" groupId="_BASIC" displayBehaviour="descriptionAndId"
+                    <smartfilterbar:ControlConfiguration id="filterVendor" label="{captionMsg>/VENDOR}" key="VENDOR" groupId="_BASIC" displayBehaviour="descriptionAndId"
                         preventInitialDataFetchInValueHelpDialog="false"> 
                     </smartfilterbar:ControlConfiguration>
                 </smartfilterbar:controlConfiguration>
                 <smartfilterbar:controlConfiguration>
-                    <smartfilterbar:ControlConfiguration key="DOCTYPE" label="Document Type" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false" />
+                    <smartfilterbar:ControlConfiguration key="DOCTYPE" label="{captionMsg>/DOCTYP}" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false" />
                 </smartfilterbar:controlConfiguration>
                 <smartfilterbar:controlConfiguration>
-                    <smartfilterbar:ControlConfiguration key="COMPANY" label="Company" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false" />
+                    <smartfilterbar:ControlConfiguration key="COMPANY" label="{captionMsg>/COMPANY}" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false" />
                 </smartfilterbar:controlConfiguration>
                 <smartfilterbar:controlConfiguration>
-                    <smartfilterbar:ControlConfiguration key="SHIPTOPLANT" label="Ship-To-Plant" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false" />
+                    <smartfilterbar:ControlConfiguration key="SHIPTOPLANT" label="{captionMsg>/SHIPTOPLANT}" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false" />
                 </smartfilterbar:controlConfiguration>
                 <smartfilterbar:layoutData>
                     <FlexItemData growFactor="0"/>
@@ -59,7 +59,6 @@
                                 rows="{VPOHdr>/results}"
                                 enableColumnFreeze="true"
                                 selectionMode="MultiToggle"
-                                selectionBehavior="Row"
                                 rowSelectionChange=".onSelectionChange"
                                 
                                 firstVisibleRowChanged=".onFirstVisibleRowChanged"
@@ -85,7 +84,7 @@
                                         <ToolbarSpacer/>
                                         <SearchField
                                             id="searchFieldMain"
-                                            placeholder="Search"
+                                            placeholder="{captionMsg>/SEARCH}"
                                             value=""
                                             search=".onSearchHeader"
                                             width="15rem"/>
@@ -123,10 +122,11 @@
                                         </MenuButton>
                                         <Button id="btnEdit"
                                             icon="sap-icon://edit" 
-                                            tooltip="{i18n>Edit}" 
+                                            tooltip="{captionMsg>/EDIT}" 
                                             press=".onClickEdit"/>
                                         <Button id="btnRefreshMain" 
                                                 icon="sap-icon://refresh"
+                                                tooltip="{captionMsg>/REFRESH}"
                                                 press=".onRefresh"
                                                 visible="true" />
                                         <!-- <Button id="btnSortMain" 
@@ -152,7 +152,7 @@
                                             visible="true" /> -->
                                         <Button id="btnTabLayout"
                                             icon="sap-icon://grid" 
-                                            tooltip="Savetablelayout" 
+                                            tooltip="{captionMsg>/SAVELAYOUT}" 
                                             press=".onSaveTableLayout('mainTab')"/>
                                     </Toolbar>
                                 </uiT:extension>
@@ -171,28 +171,29 @@
                                 stretchContentHeight="true" 
                                 applyContentPadding="false">
                                 <items>
-                                    <IconTabFilter text="Details">
+                                    <IconTabFilter text="{captionMsg>/DETAILS}">
                                         <uiT:Table id="detailsTab"
                                             class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
                                             visibleRowCountMode="Auto"
                                             showColumnVisibilityMenu="true"
                                             enableColumnFreeze="true"
                                             selectionMode="MultiToggle"
-                                            selectionBehavior="Row"
+                                            cellClick=".onCellClick"
                                             rows="{VPODtls>/results}"
                                             sort="onSorted">
                                             <uiT:extension>
                                                 <Toolbar>
-                                                    <Text text="PO No: {ui>/activePONo}" class="selHdrKeyFontStyle" />
+                                                    <Text text="{captionMsg>/PONO}: {ui>/activePONo}" class="selHdrKeyFontStyle" />
                                                     <ToolbarSpacer/>
                                                     <Button id="btnRefreshDetails" 
                                                         icon="sap-icon://refresh"
                                                         press=".onRefresh"
+                                                        tooltip="{captionMsg>/REFRESH}"
                                                         visible="true" />
                                                     <Button id="btnColPropDetails" 
                                                         icon="sap-icon://table-column"
                                                         press=".onSaveTableLayout('detailsTab')"
-                                                        tooltip="Savetablelayout"
+                                                        tooltip="{captionMsg>/SAVELAYOUT}"
                                                         visible="true" />
                                                 </Toolbar>
                                             </uiT:extension>
@@ -201,7 +202,7 @@
                                             </uiT:layoutData>                        
                                         </uiT:Table> 
                                     </IconTabFilter>
-                                    <IconTabFilter text="Delivery Schedule">
+                                    <IconTabFilter text="{captionMsg>/DELSCHED}">
                                         <uiT:Table id="delSchedTab"
                                             class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
                                             visibleRowCountMode="Auto"
@@ -209,21 +210,22 @@
                                             rows="{VPODelSched>/results}"
                                             enableColumnFreeze="true"
                                             selectionMode="MultiToggle"
-                                            selectionBehavior="Row"
+                                            cellClick=".onCellClick"
                                             sort="onSorted">
                                             <uiT:extension>
                                                 <Toolbar>
-                                                    <Text text="PO No: {ui>/activePONo}," class="selHdrKeyFontStyle" />
-                                                    <Text text="Item: {ui>/activeItem}" class="selHdrKeyFontStyle" />
+                                                    <Text text="{captionMsg>/PONO}: {ui>/activePONo}," class="selHdrKeyFontStyle" />
+                                                    <Text text="{captionMsg>/POITEM}: {ui>/activePOItem}" class="selHdrKeyFontStyle" />
                                                     <ToolbarSpacer/>
                                                     <Button id="btnRefresDelSched" 
                                                         icon="sap-icon://refresh"
                                                         press=".onRefresh"
+                                                        tooltip="{captionMsg>/REFRESH}"
                                                         visible="true" />
                                                     <Button id="btnColPropDelSched" 
                                                         icon="sap-icon://table-column"
                                                         press=".onSaveTableLayout('delSchedTab')"
-                                                        tooltip="Savetablelayout"
+                                                        tooltip="{captionMsg>/SAVELAYOUT}"
                                                         visible="true" />
                                                 </Toolbar>
                                             </uiT:extension>
@@ -232,7 +234,7 @@
                                             </uiT:layoutData>                        
                                         </uiT:Table> 
                                     </IconTabFilter>
-                                    <IconTabFilter text="Delivery/Invoice">
+                                    <IconTabFilter text="{captionMsg>/DELIVERY}/{captionMsg>/INVOICE}">
                                         <uiT:Table id="delInvTab"
                                             class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
                                             visibleRowCountMode="Auto"
@@ -240,21 +242,22 @@
                                             rows="{VPODelInv>/results}"
                                             enableColumnFreeze="true"
                                             selectionMode="MultiToggle"
-                                            selectionBehavior="Row"
+                                            cellClick=".onCellClick"
                                             sort="onSorted">
                                             <uiT:extension>
                                                 <Toolbar>
-                                                    <Text text="PO No: {ui>/activePONo}," class="selHdrKeyFontStyle" />
-                                                    <Text text="Item: {ui>/activeItem}" class="selHdrKeyFontStyle" />
+                                                    <Text text="{captionMsg>/PONO}: {ui>/activePONo}," class="selHdrKeyFontStyle" />
+                                                    <Text text="{captionMsg>/POITEM}: {ui>/activePOItem}" class="selHdrKeyFontStyle" />
                                                     <ToolbarSpacer/>
                                                     <Button id="btnRefresDelInv" 
                                                         icon="sap-icon://refresh"
                                                         press=".onRefresh"
+                                                        tooltip="{captionMsg>/REFRESH}"
                                                         visible="true" />
                                                     <Button id="btnColPropDelInv" 
                                                         icon="sap-icon://table-column"
                                                         press=".onSaveTableLayout('delInvTab')"
-                                                        tooltip="Savetablelayout"
+                                                        tooltip="{captionMsg>/SAVELAYOUT}"
                                                         visible="true" />
                                                 </Toolbar>
                                             </uiT:extension>
@@ -263,29 +266,30 @@
                                             </uiT:layoutData>                        
                                         </uiT:Table> 
                                     </IconTabFilter>
-                                    <IconTabFilter text="PO History">
+                                    <IconTabFilter text="{captionMsg>/POHIST}">
                                         <uiT:Table id="poHistTab"
                                             class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
                                             visibleRowCountMode="Auto"
                                             showColumnVisibilityMenu="true"
                                             enableColumnFreeze="true"
                                             selectionMode="MultiToggle"
-                                            selectionBehavior="Row"
+                                            cellClick=".onCellClick"
                                             rows="{VPOPOHist>/results}"
                                             sort="onSorted">
                                             <uiT:extension>
                                                 <Toolbar>
-                                                    <Text text="PO No: {ui>/activePONo}," class="selHdrKeyFontStyle" />
-                                                    <Text text="Item: {ui>/activeItem}" class="selHdrKeyFontStyle" />
+                                                    <Text text="{captionMsg>/PONO}: {ui>/activePONo}," class="selHdrKeyFontStyle" />
+                                                    <Text text="{captionMsg>/POITEM}: {ui>/activePOItem}" class="selHdrKeyFontStyle" />
                                                     <ToolbarSpacer/>
                                                     <Button id="btnRefresPOHistory" 
                                                         icon="sap-icon://refresh"
                                                         press=".onRefresh"
+                                                        tooltip="{captionMsg>/REFRESH}"
                                                         visible="true" />
                                                     <Button id="btnColPropPOHistory" 
                                                         icon="sap-icon://table-column"
                                                         press=".onSaveTableLayout('poHistTab')"
-                                                        tooltip="Savetablelayout"
+                                                        tooltip="{captionMsg>/SAVELAYOUT}"
                                                         visible="true" />
                                                 </Toolbar>
                                             </uiT:extension>
@@ -294,28 +298,29 @@
                                             </uiT:layoutData>                        
                                         </uiT:Table> 
                                     </IconTabFilter>
-                                    <IconTabFilter text="Conditions">
+                                    <IconTabFilter text="{captionMsg>/CONDITIONS}">
                                         <uiT:Table id="conditionsTab"
                                             class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
                                             visibleRowCountMode="Auto"
                                             showColumnVisibilityMenu="true"
                                             enableColumnFreeze="true"
                                             selectionMode="MultiToggle"
-                                            selectionBehavior="Row"
+                                            cellClick=".onCellClick"
                                             rows="{VPOCond>/results}"
                                             sort="onSorted">
                                             <uiT:extension>
                                                 <Toolbar>
-                                                    <Text text="Condition Record: {ui>/activeCondRec}" class="selHdrKeyFontStyle" />
+                                                    <Text text="{captionMsg>/CONDREC}: {ui>/activeCondRec}" class="selHdrKeyFontStyle" />
                                                     <ToolbarSpacer/>
                                                     <Button id="btnRefreshConditions" 
                                                         icon="sap-icon://refresh"
                                                         press=".onRefresh"
+                                                        tooltip="{captionMsg>/REFRESH}"
                                                         visible="true" />
                                                     <Button id="btnColPropConditions" 
                                                         icon="sap-icon://table-column"
                                                         press=".onSaveTableLayout('conditionsTab')"
-                                                        tooltip="Savetablelayout"
+                                                        tooltip="{captionMsg>/SAVELAYOUT}"
                                                         visible="true" />
                                                 </Toolbar>
                                             </uiT:extension>

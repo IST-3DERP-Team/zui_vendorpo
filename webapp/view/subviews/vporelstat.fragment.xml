@@ -17,7 +17,7 @@
         expanded="{device>/isNoPhone}"
         stretchContentHeight="true" 
         applyContentPadding="false"
-        class="sapUiResponsivePadding" 
+        class="sapUiResponsivePadding iconTabPOHdrFrag" 
         expandable="false">
             <content>
                 <f:Form id="PORelStatDetailForm1" editable="false" class="sapUiNoContentPadding formHdr1">
@@ -27,20 +27,20 @@
                     <f:formContainers>
                         <f:FormContainer ariaLabelledBy="Grp1" class="sapUiNoContentPadding" >
                             <f:formElements>
-                                <f:FormElement label="Release Group" visible="true">
+                                <f:FormElement label="{captionMsg>/RELGRP}" visible="true">
                                     <f:fields>
                                         <Input id="PORelSRelGrp" value="{relStratData>/RELGRP} {relStratData>/RELGRPDESC}" editable="false" valueStateText="Required" 
                                             change="onHeaderChange" liveChange="onHeaderChange">
                                         </Input>
                                     </f:fields>
                                 </f:FormElement>
-                                <f:FormElement label="Release Strategy" visible="true">
+                                <f:FormElement label="{captionMsg>/RELSTRAT}" visible="true">
                                     <f:fields>
                                         <Input id="PORelSRelStrat" value="{relStratData>/RELSTRAT} {relStratData>/RELSTRATDESC}" editable="false" valueStateText="Required" 
                                             change="onHeaderChange" liveChange="onHeaderChange"/>
                                     </f:fields>
                                 </f:FormElement>
-                                <f:FormElement label="Expected Release" visible="true">
+                                <f:FormElement label="{captionMsg>/EXPECTEDREL}" visible="true">
                                     <f:fields>
                                         <Input id="PORelSExpRel" value="{relStratData>/expectedRel}" editable="false" valueStateText="Required" 
                                             change="onHeaderChange" liveChange="onHeaderChange"/>
@@ -50,20 +50,20 @@
                         </f:FormContainer>
                         <f:FormContainer ariaLabelledBy="Grp2">
                             <f:formElements>
-                                <f:FormElement label="Release Code" visible="true">
+                                <f:FormElement label="{captionMsg>/RELCD}" visible="true">
                                     <f:fields>
                                         <Input id="PORelSRelCd" value="{headerData>/PONumber}" editable="false" valueStateText="Required" 
                                             change="onHeaderChange" liveChange="onHeaderChange">
                                         </Input>
                                     </f:fields>
                                 </f:FormElement>
-                                <f:FormElement label="Release Indicator" visible="true">
+                                <f:FormElement label="{captionMsg>/RELIND}" visible="true">
                                     <f:fields>
                                         <Input id="PORelSRelInd" value="{relStratData>/RELIND} {relStratData>/RELINDDESC}" editable="false" valueStateText="Required" 
                                             change="onHeaderChange" liveChange="onHeaderChange"/>
                                     </f:fields>
                                 </f:FormElement>
-                                <f:FormElement label="Release to Date" visible="true">
+                                <f:FormElement label="{captionMsg>/RELTODT}" visible="true">
                                     <f:fields>
                                         <Input id="PORelSRelDt" value="{relStratData>/relState}" editable="false" valueStateText="Required" 
                                             change="onHeaderChange" liveChange="onHeaderChange"/>

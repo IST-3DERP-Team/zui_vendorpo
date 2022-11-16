@@ -17,18 +17,19 @@
         expanded="{device>/isNoPhone}"
         stretchContentHeight="true" 
         applyContentPadding="false"
-        class="sapUiResponsivePadding" 
+        class="sapUiResponsivePadding iconTabPOHdrFrag" 
         expandable="false">
             <content>
                 <OverflowToolbar id="_ovfToolBarIO" design="Transparent" >
-                    <MenuButton id="vpoHdrMenuBtn" text="PO Actions">
+                    <ToolbarSpacer/>
+                    <MenuButton id="vpoHdrMenuBtn" text="{captionMsg>/POACTIONS}">
                         <menu>
                             <Menu id="vpoHdrMenu">
-                                <MenuItem id="_IDGenMenuItem_02_1" text="Change Del. Date" press=".onChangeVPODelvDate"/>
-                                <MenuItem id="_IDGenMenuItem_02_2" text="Change Vendor" press=".onChangeVendorVPOHeader"/>
-                                <MenuItem id="_IDGenMenuItem_02_3" text="Delete PO" press=".onDeleteVPO"/>
-                                <MenuItem id="_IDGenMenuItem_02_4" text="Cancel PO" press=".onCancelVPO" />
-                                <MenuItem id="_IDGenMenuItem_02_5" text="Split PO" />
+                                <MenuItem id="_IDGenMenuItem_02_1" text="{captionMsg>/CHANGEDELVDATE}" press=".onChangeVPODelvDate"/>
+                                <MenuItem id="_IDGenMenuItem_02_2" text="{captionMsg>/CHANGEVENDOR}" press=".onChangeVendorVPOHeader"/>
+                                <MenuItem id="_IDGenMenuItem_02_3" text="{captionMsg>/DELETEPO}" press=".onDeleteVPO"/>
+                                <MenuItem id="_IDGenMenuItem_02_4" text="{captionMsg>/CANCELPO}" press=".onCancelVPO" />
+                                <MenuItem id="_IDGenMenuItem_02_5" text="{captionMsg>/SPLITPO}" />
                             </Menu>
                         </menu>                    
                     </MenuButton>
@@ -48,26 +49,26 @@
                     <f:formContainers>
                         <f:FormContainer ariaLabelledBy="Grp1" class="sapUiNoContentPadding" >
                             <f:formElements>
-                                <f:FormElement label="PO Number" visible="true">
+                                <f:FormElement label="{captionMsg>/PONO}" visible="true">
                                     <f:fields>
                                         <Input id="f1PONo" value="{topHeaderData>/PONO}" editable="{topHeaderDataEdit>/PONO}" valueStateText="Required" 
                                             change="onHeaderInputChange" liveChange="onHeaderInputChange">
                                         </Input>
                                     </f:fields>
                                 </f:FormElement>
-                                <f:FormElement label="PO Date" visible="true">
+                                <f:FormElement label="{captionMsg>/PODATE}" visible="true">
                                     <f:fields>
                                         <Input id="f1PODT" value="{topHeaderData>/PODT}" editable="{topHeaderDataEdit>/PODT}" valueStateText="Required" 
                                             change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
                                     </f:fields>
                                 </f:FormElement>
-                                <f:FormElement label="Doc. Type" visible="true">
+                                <f:FormElement label="{captionMsg>/DOCTYP}" visible="true">
                                     <f:fields>
                                         <Input id="f1DocTyp" value="{topHeaderData>/DOCTYPE}" editable="{topHeaderDataEdit>/DOCTYPE}" valueStateText="Required" 
                                             change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
                                     </f:fields>
                                 </f:FormElement>
-                                <f:FormElement label="Vendor" visible="true">
+                                <f:FormElement label="{captionMsg>/VENDOR}" visible="true">
                                     <f:fields>
                                         <Input id="f1Vendor" value="{topHeaderData>/VENDOR}" editable="{topHeaderDataEdit>/VENDOR}" valueStateText="Required" 
                                             change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
@@ -77,32 +78,32 @@
                         </f:FormContainer>
                         <f:FormContainer ariaLabelledBy="Grp2">
                             <f:formElements>
-                                <f:FormElement label="Purch. Org" visible="true">
+                                <f:FormElement label="{captionMsg>/PURCHORG}" visible="true">
                                     <f:fields>
                                         <Input id="f1PurOrg" value="{topHeaderData>/PURCHORG}" editable="{topHeaderDataEdit>/PURCHORG}" valueStateText="Required" 
                                             change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
                                     </f:fields>
                                 </f:FormElement>
-                                <f:FormElement label="Pur. Grp." visible="true">
+                                <f:FormElement label="{captionMsg>/PURCHGRP}" visible="true">
                                     <f:fields>
                                         <Input id="f1PurGrp" value="{topHeaderData>/PURCHGRP}" editable="{topHeaderDataEdit>/PURCHGRP}" valueStateText="Required" 
                                             change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
                                     </f:fields>
                                 </f:FormElement>
-                                <f:FormElement label="Company" visible="true">
+                                <f:FormElement label="{captionMsg>/COMPANY}" visible="true">
                                     <f:fields>
                                         <Input id="f1Company" value="{topHeaderData>/COMPANY}" editable="{topHeaderDataEdit>/COMPANY}" valueStateText="Required" 
                                             change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
                                     </f:fields>
                                 </f:FormElement>
-                                <f:FormElement label="Purch. Plant" visible="true">
+                                <f:FormElement label="{captionMsg>/PURCHPLANT}" visible="true">
                                     <f:fields>
                                         <Input id="f1PurPlant" value="{topHeaderData>/PURCHPLANT}" editable="{topHeaderDataEdit>/PURCHPLANT}" valueStateText="Required" 
                                             change="onHeaderInputChange" liveChange="onHeaderInputChange">
                                         </Input>
                                     </f:fields>
                                 </f:FormElement>
-                                <f:FormElement label="Ship-to-Plant" visible="true">
+                                <f:FormElement label="{captionMsg>/SHIPTOPLANT}" visible="true">
                                     <f:fields>
                                         <ComboBox
                                             id="f1ShipToPlant"
@@ -123,13 +124,13 @@
                         </f:FormContainer>
                         <f:FormContainer ariaLabelledBy="Grp3">
                             <f:formElements>
-                                <f:FormElement label="Currency" visible="true">
+                                <f:FormElement label="{captionMsg>/CURRENCY}" visible="true">
                                     <f:fields>
                                         <Input id="f1Currency" value="{topHeaderData>/CURRENCY}" editable="{topHeaderDataEdit>/CURRENCY}" valueStateText="Required" 
                                             change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
                                     </f:fields>
                                 </f:FormElement>
-                                <f:FormElement label="Incoterms" visible="true">
+                                <f:FormElement label="{captionMsg>/INCOTERMS}" visible="true">
                                     <f:fields>
                                         <ComboBox
                                             id="f1Incoterms"
@@ -146,19 +147,19 @@
                                             change="onHeaderChange" liveChange="onHeaderChange"/> -->
                                     </f:fields>
                                 </f:FormElement>
-                                <f:FormElement label="Destination" visible="true">
+                                <f:FormElement label="{captionMsg>/DESTINATION}" visible="true">
                                     <f:fields>
                                         <Input id="f1Destination" value="{topHeaderData>/DEST}" editable="{topHeaderDataEdit>/DEST}" valueStateText="Required" 
                                             change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
                                     </f:fields>
                                 </f:FormElement>
-                                <f:FormElement label="Ship Mode" visible="true">
+                                <f:FormElement label="{captionMsg>/SHIPMODE}" visible="true">
                                     <f:fields>
                                         <Input id="f1ShipMode" value="{topHeaderData>/SHIPMODE}" editable="{topHeaderDataEdit>/SHIPMODE}" valueStateText="Required" 
                                             change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
                                     </f:fields>
                                 </f:FormElement>
-                                <f:FormElement label="Release Status" visible="true">
+                                <f:FormElement label="{captionMsg>/RELSTAT}" visible="true">
                                     <f:fields>
                                         <Input id="f1RelStat" value="{topHeaderData>/RELSTAT}" editable="{topHeaderDataEdit>/RELSTAT}" valueStateText="Required" 
                                             change="onHeaderInputChange" liveChange="onHeaderInputChange"/>

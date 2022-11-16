@@ -15,19 +15,19 @@
         titleLevel="H3" class="iodet" showNavButton="true"  
         navButtonPress="onNavBack">
         <content>
-            <ObjectHeader id="objectHeader" 
-                responsive="true" 
-                fullScreenOptimized="true"  
-                backgroundDesign="Solid" 
-                icon="sap-icon://multiselect-none"
-                class="sapUiResponsivePadding--header sapMFlexItem--poObjectHdr" 
-                title="PONO# {topHeaderData>/PONO}"
-                >
-                <layoutData>
-                    <FlexItemData growFactor="0" />
-                </layoutData>
-            </ObjectHeader>
-            <VBox id="_IDGenVBox1" fitContainer="true" class="sidePadding vboxHeight">
+            <!-- <ObjectHeader id="objectHeader"  -->
+                <!-- responsive="true"  -->
+                <!-- fullScreenOptimized="true"   -->
+                <!-- backgroundDesign="Solid"  -->
+                <!-- icon="sap-icon://multiselect-none" -->
+                <!-- class="sapUiResponsivePadding-!-header sapMFlexItem-!-poObjectHdr"  -->
+                <!-- title="PONO# {topHeaderData>/PONO}" -->
+                <!-- > -->
+                <!-- <layoutData> -->
+                    <!-- <FlexItemData growFactor="0" /> -->
+                <!-- </layoutData> -->
+            <!-- </ObjectHeader> -->
+            <VBox id="_IDGenVBox1" fitContainer="true" class="sidePadding vboxHeightPODet">
                 <uiL:ResponsiveSplitter defaultPane="default">
                     <uiL:PaneContainer orientation="Vertical">
                         <uiL:SplitPane  requiredParentWidth="800">
@@ -42,34 +42,34 @@
                                     <items>
                                         <!-- IO HEADER DETAILS ICON TAB BAR -->
                                         <IconTabFilter
-                                            text="HEADER"
+                                            text="{captionMsg>/HEADER}"
                                             key="itfIOHDR">
                                             <core:Fragment fragmentName="zuivendorpo.view.subviews.vpoheader" type="XML"/>
                                         </IconTabFilter>
 
                                         <!-- STYLE -->
                                         <IconTabFilter
-                                            text="RELEASE STRATEGY"
+                                            text="{captionMsg>/RELSTRAT}"
                                             key="itfSTYLE">
                                             <core:Fragment fragmentName="zuivendorpo.view.subviews.vporelstat" type="XML"/>                                 
                                         </IconTabFilter>
 
                                         <!-- DELIVERY SCHEDULE -->
                                         <IconTabFilter
-                                            text="CONDITIONS"
+                                            text="{captionMsg>/CONDITIONS}"
                                             key="itfDLVSCHED">
                                             <Text text="Conditions..." />
                                         </IconTabFilter>
                                             
                                         <!-- MATERIAL LIST -->
                                         <IconTabFilter
-                                            text="HEADER TEXT"
+                                            text="{captionMsg>/HEADERTEXT}"
                                             key="itfMATLIST">
                                             <core:Fragment fragmentName="zuivendorpo.view.subviews.vpoheadertext" type="XML"/>
                                         </IconTabFilter>
 
                                         <IconTabFilter
-                                            text="CHANGES"
+                                            text="{captionMsg>/CHANGES}"
                                             key="itfCOSTING">
                                             <Text text="Changes..." />
                                         </IconTabFilter>
