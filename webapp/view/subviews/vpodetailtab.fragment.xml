@@ -86,7 +86,6 @@
                     class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
                     visibleRowCountMode="Auto"
                     showColumnVisibilityMenu="true"
-                    rows="{VPODelSched>/results}"
                     enableColumnFreeze="true"
                     selectionMode="MultiToggle"
                     cellClick=".onCellClick"
@@ -201,7 +200,6 @@
                     enableColumnFreeze="true"
                     selectionMode="MultiToggle"
                     cellClick=".onCellClick"
-                    rows="{VPOPOHist>/results}"
                     sort="onSorted">
                     <uiT:extension>
                         <Toolbar>
@@ -239,7 +237,6 @@
                     enableColumnFreeze="true"
                     selectionMode="MultiToggle"
                     cellClick=".onCellClick"
-                    rows="{VPOCond>/results}"
                     sort="onSorted">
                     <uiT:extension>
                         <Toolbar>

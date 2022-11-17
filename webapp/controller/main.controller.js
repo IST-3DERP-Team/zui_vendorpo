@@ -281,6 +281,7 @@ sap.ui.define([
                 var me = this;
                 var tblChange = this._tblChange;
                 var oJSONModel = new sap.ui.model.json.JSONModel();
+                var objectData = [];
                 return new Promise((resolve, reject)=>{
                     oModel.read('/VPOHistSet', { 
                         urlParameters: {
@@ -291,6 +292,8 @@ sap.ui.define([
                                 data.results.forEach(item => {
                                     item.POSTDT = dateFormat.format(new Date(item.POSTDT));
                                 })
+                                objectData.push(data.results);
+                                objectData[0].sort((a,b) => (a.ITEM2 > b.ITEM2) ? 1 : ((b.ITEM2 > a.ITEM2) ? -1 : 0));
                                 oJSONModel.setData(data);
                             }
                             me.getView().setModel(oJSONModel, "VPOPOHist");
@@ -312,6 +315,7 @@ sap.ui.define([
                 var me = this;
                 var tblChange = this._tblChange;
                 var oJSONModel = new sap.ui.model.json.JSONModel();
+                var objectData = [];
                 return new Promise((resolve, reject)=>{
                     oModel.read('/VPODelInvSet', { 
                         urlParameters: {
@@ -319,6 +323,8 @@ sap.ui.define([
                         },
                         success: function (data, response) {
                             if (data.results.length > 0) {
+                                objectData.push(data.results);
+                                objectData[0].sort((a,b) => (a.ITEM > b.ITEM) ? 1 : ((b.ITEM > a.ITEM) ? -1 : 0));
                                 oJSONModel.setData(data);
                             }
                             me.getView().setModel(oJSONModel, "VPODelInv");
@@ -370,6 +376,7 @@ sap.ui.define([
                 var me = this;
                 var tblChange = this._tblChange;
                 var oJSONModel = new sap.ui.model.json.JSONModel();
+                var objectData = [];
                 return new Promise((resolve, reject)=>{
                     oModel.read('/VPODelSchedSet', { 
                         urlParameters: {
@@ -377,6 +384,12 @@ sap.ui.define([
                         },
                         success: function (data, response) {
                             if (data.results.length > 0) {
+                                data.results.forEach(item => {
+                                    item.DELDT = dateFormat.format(new Date(item.DELDT));
+                                })
+                                objectData.push(data.results);
+                                objectData[0].sort((a,b) => (a.ITEM > b.ITEM) ? 1 : ((b.ITEM > a.ITEM) ? -1 : 0));
+
                                 oJSONModel.setData(data);
                             }
                             me.getView().setModel(oJSONModel, "VPODelSched");
@@ -399,6 +412,7 @@ sap.ui.define([
                 var me = this;
                 var tblChange = this._tblChange;
                 var oJSONModel = new sap.ui.model.json.JSONModel();
+                var objectData = [];
                 return new Promise((resolve, reject)=>{
                     oModel.read('/VPODetailsSet', { 
                         urlParameters: {
@@ -406,6 +420,12 @@ sap.ui.define([
                         },
                         success: function (data, response) {
                             if (data.results.length > 0) {
+                                data.results.forEach(item => {
+                                    item.DELDT = dateFormat.format(new Date(item.DELDT));
+                                })
+                                objectData.push(data.results);
+                                objectData[0].sort((a,b) => (a.ITEM > b.ITEM) ? 1 : ((b.ITEM > a.ITEM) ? -1 : 0));
+                                
                                 oJSONModel.setData(data);
                             }
 
@@ -792,6 +812,20 @@ sap.ui.define([
                     });
                 }
                 if (sColumnId === "GRBASEDIVIND") { 
+                    //Manage button
+                    oColumnTemplate = new sap.m.CheckBox({
+                        selected: "{" + sColumnId + "}",
+                        editable: false
+                    });
+                }
+                if (sColumnId === "OVERDELTOL") { 
+                    //Manage button
+                    oColumnTemplate = new sap.m.CheckBox({
+                        selected: "{" + sColumnId + "}",
+                        editable: false
+                    });
+                }
+                if (sColumnId === "UNDERDELTOL") { 
                     //Manage button
                     oColumnTemplate = new sap.m.CheckBox({
                         selected: "{" + sColumnId + "}",

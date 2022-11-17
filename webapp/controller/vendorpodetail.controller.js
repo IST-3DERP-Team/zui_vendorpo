@@ -338,8 +338,10 @@ sap.ui.define([
 
             getPOHistory2: async function(PONO){
                 var oModel = this.getOwnerComponent().getModel();
-                var _this = this;
+                var me = this;
                 var vSBU = this._sbu;
+                var oJSONModel = new sap.ui.model.json.JSONModel();
+                var objectData = [];
                 return new Promise((resolve, reject)=>{
                     oModel.read('/VPOHistSet', { 
                         urlParameters: {
@@ -350,10 +352,11 @@ sap.ui.define([
                                 data.results.forEach(item => {
                                     item.POSTDT = dateFormat.format(new Date(item.POSTDT));
                                 })
-                                var oJSONModel = new sap.ui.model.json.JSONModel();
+                                objectData.push(data.results);
+                                objectData[0].sort((a,b) => (a.ITEM2 > b.ITEM2) ? 1 : ((b.ITEM2 > a.ITEM2) ? -1 : 0));
                                 oJSONModel.setData(data);
                             }
-                            _this.getView().setModel(oJSONModel, "VPOPOHistVPODet");
+                            me.getView().setModel(oJSONModel, "VPOPOHistVPODet");
                             resolve();
                         },
                         error: function (err) { }
@@ -362,8 +365,10 @@ sap.ui.define([
             },
             getDelInvoice2: async function(PONO){
                 var oModel = this.getOwnerComponent().getModel();
-                var _this = this;
+                var me = this;
                 var vSBU = this._sbu;
+                var oJSONModel = new sap.ui.model.json.JSONModel();
+                var objectData = [];
                 return new Promise((resolve, reject)=>{
                     oModel.read('/VPODelInvSet', { 
                         urlParameters: {
@@ -371,10 +376,11 @@ sap.ui.define([
                         },
                         success: function (data, response) {
                             if (data.results.length > 0) {
-                                var oJSONModel = new sap.ui.model.json.JSONModel();
+                                objectData.push(data.results);
+                                objectData[0].sort((a,b) => (a.ITEM > b.ITEM) ? 1 : ((b.ITEM > a.ITEM) ? -1 : 0));
                                 oJSONModel.setData(data);
                             }
-                            _this.getView().setModel(oJSONModel, "VPODelInvVPODet");
+                            me.getView().setModel(oJSONModel, "VPODelInvVPODet");
                             resolve();
                         },
                         error: function (err) { }
@@ -384,7 +390,7 @@ sap.ui.define([
             },
             getConditions2: async function(CONDREC){
                 var oModel = this.getOwnerComponent().getModel();
-                var _this = this;
+                var me = this;
                 var vSBU = this._sbu;
                 return new Promise((resolve, reject)=>{
                     oModel.read('/VPOConditionsSet', { 
@@ -396,7 +402,7 @@ sap.ui.define([
                                 var oJSONModel = new sap.ui.model.json.JSONModel();
                                 oJSONModel.setData(data);
                             }
-                            _this.getView().setModel(oJSONModel, "VPOCondVPODet");
+                            me.getView().setModel(oJSONModel, "VPOCondVPODet");
                             resolve();
                         },
                         error: function (err) { }
@@ -406,8 +412,10 @@ sap.ui.define([
             },
             getDelSchedule2: async function(PONO){
                 var oModel = this.getOwnerComponent().getModel();
-                var _this = this;
+                var me = this;
                 var vSBU = this._sbu;
+                var oJSONModel = new sap.ui.model.json.JSONModel();
+                var objectData = [];
                 return new Promise((resolve, reject)=>{
                     oModel.read('/VPODelSchedSet', { 
                         urlParameters: {
@@ -415,10 +423,15 @@ sap.ui.define([
                         },
                         success: function (data, response) {
                             if (data.results.length > 0) {
-                                var oJSONModel = new sap.ui.model.json.JSONModel();
+                                data.results.forEach(item => {
+                                    item.DELDT = dateFormat.format(new Date(item.DELDT));
+                                })
+                                objectData.push(data.results);
+                                objectData[0].sort((a,b) => (a.ITEM > b.ITEM) ? 1 : ((b.ITEM > a.ITEM) ? -1 : 0));
+
                                 oJSONModel.setData(data);
                             }
-                            _this.getView().setModel(oJSONModel, "VPODelSchedVPODet");
+                            me.getView().setModel(oJSONModel, "VPODelSchedVPODet");
                             resolve();
                         },
                         error: function (err) { }
@@ -428,8 +441,10 @@ sap.ui.define([
             },
             getPODetails2: async function(PONO){
                 var oModel = this.getOwnerComponent().getModel();
-                var _this = this;
+                var me = this;
                 var vSBU = this._sbu;
+                var oJSONModel = new sap.ui.model.json.JSONModel();
+                var objectData = [];
                 return new Promise((resolve, reject)=>{
                     oModel.read('/VPODetailsSet', { 
                         urlParameters: {
@@ -437,14 +452,19 @@ sap.ui.define([
                         },
                         success: function (data, response) {
                             if (data.results.length > 0) {
-                                var oJSONModel = new sap.ui.model.json.JSONModel();
+                                data.results.forEach(item => {
+                                    item.DELDT = dateFormat.format(new Date(item.DELDT));
+                                })
+                                objectData.push(data.results);
+                                objectData[0].sort((a,b) => (a.ITEM > b.ITEM) ? 1 : ((b.ITEM > a.ITEM) ? -1 : 0));
+                                
                                 oJSONModel.setData(data);
                             }
 
                             var poItem = data.results[0].ITEM;
-                            _this.getView().getModel("ui").setProperty("/activePOItem", poItem);
+                            me.getView().getModel("ui").setProperty("/activePOItem", poItem);
 
-                            _this.getView().setModel(oJSONModel, "VPODtlsVPODet");
+                            me.getView().setModel(oJSONModel, "VPODtlsVPODet");
                             resolve();
                         },
                         error: function (err) { }
@@ -697,7 +717,7 @@ sap.ui.define([
                             label: sColumnLabel,
                             template: me.columnTemplate(sColumnId),
                             width: sColumnWidth + "px",
-                            hAlign: "Left",
+                            hAlign: me.columnSize(sColumnId),
                             sortProperty: sColumnId,
                             filterProperty: sColumnId,
                             autoResizable: true,
@@ -712,23 +732,6 @@ sap.ui.define([
                             template: new sap.m.Text({ text: "{" + sColumnId + "}", wrapping: false, tooltip: "{" + sColumnId + "}" }), //default text
                             width: sColumnWidth + "px",
                             hAlign: "End",
-                            sortProperty: sColumnId,
-                            filterProperty: sColumnId,
-                            autoResizable: true,
-                            visible: sColumnVisible,
-                            sorted: sColumnSorted,
-                            sortOrder: ((sColumnSorted === true) ? sColumnSortOrder : "Ascending" )
-                        });
-                    } else if (sColumnId === "DELETED" ) {
-                        return new sap.ui.table.Column({
-                            id: model+"-"+sColumnId,
-                            label: sColumnLabel,
-                            template: new sap.m.CheckBox({
-                                selected: "{" + sColumnId + "}",
-                                editable: false
-                            }),
-                            width: sColumnWidth + "px",
-                            hAlign: "Center",
                             sortProperty: sColumnId,
                             filterProperty: sColumnId,
                             autoResizable: true,
@@ -782,8 +785,54 @@ sap.ui.define([
                         editable: false
                     });
                 }
+                if (sColumnId === "OVERDELTOL") { 
+                    //Manage button
+                    oColumnTemplate = new sap.m.CheckBox({
+                        selected: "{" + sColumnId + "}",
+                        editable: false
+                    });
+                }
+                if (sColumnId === "UNDERDELTOL") { 
+                    //Manage button
+                    oColumnTemplate = new sap.m.CheckBox({
+                        selected: "{" + sColumnId + "}",
+                        editable: false
+                    });
+                }
     
                 return oColumnTemplate;
+            },
+            columnSize: function(sColumnId){
+                var oColumnSize;
+                if (sColumnId === "DELETED") { 
+                    //Manage button
+                    oColumnSize = "Center";
+                }
+                if (sColumnId === "CLOSED") { 
+                    //Manage button
+                    oColumnSize = "Center";
+                }
+                if (sColumnId === "UNLIMITED") { 
+                    //Manage button
+                    oColumnSize = "Center";
+                }
+                if (sColumnId === "INVRCPTIND") { 
+                    //Manage button
+                    oColumnSize = "Center";
+                }
+                if (sColumnId === "GRBASEDIVIND") { 
+                    //Manage button
+                    oColumnSize = "Center";
+                }
+                if (sColumnId === "OVERDELTOL") { 
+                    //Manage button
+                    oColumnSize = "Center";
+                }
+                if (sColumnId === "UNDERDELTOL") { 
+                    //Manage button
+                    oColumnSize = "Center";
+                }
+                return oColumnSize;
             },
             
             loadReleaseStrategy: async function(){
