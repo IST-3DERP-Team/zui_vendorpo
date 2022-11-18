@@ -36,6 +36,11 @@
                         <uiT:extension>
                             <Toolbar>
                                 <ToolbarSpacer/>
+                                <Button id="vpoNewHdrTxtRemarks" 
+                                    icon="sap-icon://add-document"
+                                    press=".onNewHdrTxt('Remarks')"
+                                    tooltip="New"
+                                    visible="true"/>
                                 <Button id="vpoEditHdrTxtRemarks" 
                                     icon="sap-icon://edit"
                                     press=".onEditHdrTxt('Remarks')"
@@ -76,6 +81,11 @@
                         <uiT:extension>
                             <Toolbar>
                                 <ToolbarSpacer/>
+                                <Button id="vpoNewHdrTxtPkgInst" 
+                                    icon="sap-icon://add-document"
+                                    press=".onNewHdrTxt('PkgInst')"
+                                    tooltip="New"
+                                    visible="true"/>
                                 <Button id="vpoEditHdrTxtPkgInst" 
                                     icon="sap-icon://edit"
                                     press=".onEditHdrTxt('PkgInst')"

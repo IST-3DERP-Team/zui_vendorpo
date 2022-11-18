@@ -922,6 +922,7 @@ sap.ui.define([
                 var oParam = {};
                 var pono = this._pono
                 var oJSONModel = new sap.ui.model.json.JSONModel();
+                var itemLastCnt = 0;
                 
                 oParam = {
                     Client:     '888',
@@ -936,6 +937,12 @@ sap.ui.define([
                         method: "POST",
                         success: function(oResult, oResponse) {
                             if(oResult.N_Read_Text_Lines.results.length > 0){
+                                oResult.N_Read_Text_Lines.results.forEach(e=>{
+                                    if(isNaN(e.Tdformat)){
+                                        itemLastCnt = itemLastCnt + 1;
+                                        e.Tdformat = itemLastCnt.toString();
+                                    }
+                                })
                                 oJSONModel.setData(oResult.N_Read_Text_Lines.results);
                                 me.getView().setModel(oJSONModel, "remarksTblData");
                                 me.remarksSetTblColData();
@@ -956,6 +963,7 @@ sap.ui.define([
                 var oParam = {};
                 var pono = this._pono
                 var oJSONModel = new sap.ui.model.json.JSONModel();
+                var itemLastCnt = 0;
 
                 oParam = {
                     Client:     '888',
@@ -972,6 +980,12 @@ sap.ui.define([
                         method: "POST",
                         success: function(oResult, oResponse) {
                             if(oResult.N_Read_Text_Lines.results.length > 0){
+                                oResult.N_Read_Text_Lines.results.forEach(e=>{
+                                    if(isNaN(e.Tdformat)){
+                                        itemLastCnt = itemLastCnt + 1;
+                                        e.Tdformat = itemLastCnt.toString();
+                                    }
+                                })
                                 oJSONModel.setData(oResult.N_Read_Text_Lines.results);
                                 me.getView().setModel(oJSONModel, "pkngInstTblData");
                                 me.pkngInstSetTblColData();
@@ -985,7 +999,6 @@ sap.ui.define([
                     });
                 })
             },
-
             hdrTextLoadCol: async function(){
                 var sbu = this._sbu;
 
@@ -1094,7 +1107,6 @@ sap.ui.define([
                 //     }
                 // });
             },
-
             remarksSetTblColData(){
                 var oColumnsModel;
                 var oDataModel;
@@ -1264,6 +1276,595 @@ sap.ui.define([
 
                 //bind the data to the table
                 oTable.bindRows("/rows");
+            },
+            onNewHdrTxt: async function(type){
+
+                if(type === 'Remarks'){
+                    
+                    var remarksItemArr = [];
+                    var remarksItemLastCnt = 0;
+                    var remarksJSONModel = new JSONModel();
+
+                    var remarksItemObj = this.getView().getModel("remarksTblData").getProperty('/');  
+                    for(var x = 0; x < remarksItemObj.length; x++){
+                        remarksItemArr.push(remarksItemObj[x].Tdformat);
+                    }
+                    remarksItemArr.sort(function(a, b){return b - a});
+                    remarksItemLastCnt = isNaN(remarksItemArr[0]) ? 0 : remarksItemArr[0];
+                    
+                    remarksItemLastCnt = String(parseInt(remarksItemLastCnt) + 1);
+
+                    remarksItemObj.push({
+                        Tdformat: remarksItemLastCnt,
+                        Tdline: ""
+                    });
+
+                    remarksJSONModel.setData(remarksItemObj);
+                    this.getView().setModel(remarksJSONModel, "remarksTblData");
+                    this.remarksSetTblColData();
+
+                    this.byId("vpoNewHdrTxtRemarks").setVisible(true);
+                    this.byId("vpoEditHdrTxtRemarks").setVisible(false);
+                    this.byId("vpoDeleteHdrTxtRemarks").setVisible(false);
+                    this.byId("vpoSaveHdrTxtRemarks").setVisible(true);
+                    this.byId("vpoCancelHdrTxtRemarks").setVisible(true);
+                    this.onRowEditPO("RemarksTbl", "VPORemarksCol");
+                }
+                if(type === 'PkgInst'){
+                    var pkgInstItemArr = [];
+                    var pkgInstItemLastCnt = 0;
+                    var pkgInstJSONModel = new JSONModel();
+
+                    var pkgInstItemObj = this.getView().getModel("pkngInstTblData").getProperty('/');  
+                    for(var x = 0; x < pkgInstItemObj.length; x++){
+                        pkgInstItemArr.push(pkgInstItemObj[x].Tdformat);
+                    }
+                    pkgInstItemArr.sort(function(a, b){return b - a});
+                    pkgInstItemLastCnt = isNaN(pkgInstItemArr[0]) ? 0 : pkgInstItemArr[0];
+                    
+                    pkgInstItemLastCnt = String(parseInt(pkgInstItemLastCnt) + 1);
+                    
+                    pkgInstItemObj.push({
+                        Tdformat: pkgInstItemLastCnt,
+                        Tdline: ""
+                    });
+
+                    pkgInstJSONModel.setData(pkgInstItemObj);
+                    this.getView().setModel(pkgInstJSONModel, "pkngInstTblData");
+                    this.pkngInstSetTblColData();
+
+                    this.byId("vpoNewHdrTxtPkgInst").setVisible(true);
+                    this.byId("vpoEditHdrTxtPkgInst").setVisible(false);
+                    this.byId("vpoDeleteHdrTxtPkgInst").setVisible(false);
+                    this.byId("vpoSaveHdrTxtPkgInst").setVisible(true);
+                    this.byId("vpoCancelHdrTxtPkgInst").setVisible(true);
+                    this.onRowEditPO("PackingInstTbl", "VPOPkngInstsCol");
+                }
+            },
+            onEditHdrTxt: async function(type){
+                var me = this;
+                
+                _promiseResult = new Promise((resolve, reject)=>{
+                    resolve(me.validatePOChange());
+                })
+                await _promiseResult;
+
+                if(this._validPOChange != 1){
+                    MessageBox.information("PO is not editable.")
+                    return;
+                }
+                var me = this;
+                
+                _promiseResult = new Promise((resolve, reject)=>{
+                    resolve(me.validatePOChange());
+                })
+                await _promiseResult;
+
+                if(this._validPOChange != 1){
+                    MessageBox.information("PO is not editable.")
+                    return;
+                }
+                if(type === 'Remarks'){
+                    _promiseResult = new Promise((resolve, reject)=>{
+                        resolve(this.remarksTblLoad());
+                    })
+                    await _promiseResult;
+
+                    this.byId("vpoNewHdrTxtRemarks").setVisible(false);
+                    this.byId("vpoEditHdrTxtRemarks").setVisible(false);
+                    this.byId("vpoDeleteHdrTxtRemarks").setVisible(false);
+                    this.byId("vpoSaveHdrTxtRemarks").setVisible(true);
+                    this.byId("vpoCancelHdrTxtRemarks").setVisible(true);
+                    
+                    this.onRowEditPO("RemarksTbl", "VPORemarksCol");
+                }
+                if(type === 'PkgInst'){
+                    _promiseResult = new Promise((resolve, reject)=>{
+                        resolve(this.pkngInstTblLoad());
+                    })
+                    await _promiseResult;
+
+                    this.byId("vpoNewHdrTxtPkgInst").setVisible(false);
+                    this.byId("vpoEditHdrTxtPkgInst").setVisible(false);
+                    this.byId("vpoDeleteHdrTxtPkgInst").setVisible(false);
+                    this.byId("vpoSaveHdrTxtPkgInst").setVisible(true);
+                    this.byId("vpoCancelHdrTxtPkgInst").setVisible(true);
+                    
+                    this.onRowEditPO("PackingInstTbl", "VPOPkngInstsCol");
+                }
+            },
+            onSaveEditHdrTxt: async function(type){
+                var me = this;
+                var poNo = this._pono;
+
+                var oTable;;
+                var oSelectedIndices;
+                var oTmpSelectedIndices = [];
+                var aData;
+                var oParamInitParam = {}
+                var oParamDataPOHdr = [];
+                var oParamDataPOClose = [];
+                var oParam = {};
+                var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
+
+                var message;
+
+                if(type === 'Remarks'){
+                    this.showLoadingDialog('Loading...')
+                    oTable = this.byId("RemarksTbl");
+                    oSelectedIndices = oTable.getBinding("rows").aIndices;
+
+                    aData = oTable.getModel().getData().rows;
+                    oSelectedIndices.forEach(item => {
+                        oTmpSelectedIndices.push(oTable.getBinding("rows").aIndices[item])
+                    })
+                    oSelectedIndices = oTmpSelectedIndices;
+                    oSelectedIndices.forEach((item, index) => {
+                        if(aData.at(item).Tdline !== ""){
+                            oParamInitParam = {
+                                IPoNumber: poNo,
+                                IDoDownload: "N",
+                                IChangeonlyHdrplants: "N",
+                            }
+                            oParamDataPOHdr.push({
+                                PoNumber: poNo,
+                                PoItem: "00000",
+                                TextId: "F01",
+                                TextForm: "*",
+                                TextLine: aData.at(item).Tdline
+                            })
+                        }
+                        
+                    });
+
+                    if (oParamDataPOHdr.length > 0) {
+                        oParam = oParamInitParam;
+                        oParam['N_ChangePOHdrTextParam'] = oParamDataPOHdr;
+                        oParam['N_ChangePOReturn'] = [];
+                        console.log(oParam);
+                        _promiseResult = new Promise((resolve, reject)=>{
+                            oModel.create("/ChangePOSet", oParam, {
+                                method: "POST",
+                                success: function(oData, oResponse){
+                                    if(oData.N_ChangePOReturn.results.length > 0){
+                                        message = oData.N_ChangePOReturn.results[0].Msgv1;
+                                        MessageBox.information(message);
+                                        resolve()
+                                    }else{
+                                        MessageBox.information("No Details to be saved.");
+                                        resolve()
+                                    }
+                                },error: function(error){
+                                    MessageBox.error("Error Occured");
+                                    me.closeLoadingDialog(that);
+                                    resolve()
+                                }
+                            })
+                        });
+                        await _promiseResult;
+                    }
+
+                    _promiseResult = new Promise((resolve, reject)=>{
+                        me.byId("vpoNewHdrTxtRemarks").setVisible(true);
+                        me.byId("vpoEditHdrTxtRemarks").setVisible(true);
+                        me.byId("vpoDeleteHdrTxtRemarks").setVisible(true);
+                        me.byId("vpoSaveHdrTxtRemarks").setVisible(false);
+                        me.byId("vpoCancelHdrTxtRemarks").setVisible(false);
+                        
+                        resolve(me.loadAllData())
+                    });
+                    await _promiseResult;
+                    
+                    this.closeLoadingDialog(that);
+                }
+                if(type === 'PkgInst'){
+                    oTable = this.byId("PackingInstTbl");
+                    oSelectedIndices = oTable.getBinding("rows").aIndices;
+
+                    aData = oTable.getModel().getData().rows;
+                    oSelectedIndices.forEach(item => {
+                        oTmpSelectedIndices.push(oTable.getBinding("rows").aIndices[item])
+                    })
+                    oSelectedIndices = oTmpSelectedIndices;
+                    oSelectedIndices.forEach((item, index) => {
+                        if(aData.at(item).Tdline !== ""){
+                            oParamInitParam = {
+                                IPoNumber: poNo,
+                                IDoDownload: "N",
+                                IChangeonlyHdrplants: "N",
+                            }
+                            oParamDataPOHdr.push({
+                                PoNumber: poNo,
+                                PoItem: "00000",
+                                TextId: "F06",
+                                TextForm: "*",
+                                TextLine: aData.at(item).Tdline
+                            })
+                        }
+                    });
+
+                    if (oParamDataPOHdr.length > 0) {
+                        oParam = oParamInitParam;
+                        oParam['N_ChangePOHdrTextParam'] = oParamDataPOHdr;
+                        oParam['N_ChangePOReturn'] = [];
+                        console.log(oParam);
+                        _promiseResult = new Promise((resolve, reject)=>{
+                            oModel.create("/ChangePOSet", oParam, {
+                                method: "POST",
+                                success: function(oData, oResponse){
+                                    if(oData.N_ChangePOReturn.results.length > 0){
+                                        message = oData.N_ChangePOReturn.results[0].Msgv1;
+                                        MessageBox.information(message);
+                                        resolve()
+                                    }else{
+                                        MessageBox.information("No Details to be saved.");
+                                        resolve()
+                                    }
+                                },error: function(error){
+                                    MessageBox.error("Error Occured");
+                                    me.closeLoadingDialog(that);
+                                    resolve()
+                                }
+                            })
+                        });
+                        await _promiseResult;
+                    }
+
+                    _promiseResult = new Promise((resolve, reject)=>{
+                        me.byId("vpoNewHdrTxtPkgInst").setVisible(true);
+                        me.byId("vpoEditHdrTxtPkgInst").setVisible(true);
+                        me.byId("vpoDeleteHdrTxtPkgInst").setVisible(true);
+                        me.byId("vpoSaveHdrTxtPkgInst").setVisible(false);
+                        me.byId("vpoCancelHdrTxtPkgInst").setVisible(false);
+                        
+                        resolve(me.loadAllData());
+                    });
+                    await _promiseResult;
+                }
+            },
+            onDeleteEditHdrTxt: async function(type){
+                var me = this;
+                var poNo = this._pono;
+                
+                _promiseResult = new Promise((resolve, reject)=>{
+                    resolve(me.validatePOChange());
+                })
+                await _promiseResult;
+
+                if(this._validPOChange != 1){
+                    MessageBox.information("PO is not editable.")
+                    return;
+                }
+                
+                _promiseResult = new Promise((resolve, reject)=>{
+                    resolve(me.validatePOChange());
+                })
+                await _promiseResult;
+
+                if(this._validPOChange != 1){
+                    MessageBox.information("PO is not editable.")
+                    return;
+                }
+
+                var oTable;
+                var aSelIndices;
+                var indicesCol;
+                var diffIndeces;
+
+                var oTmpSelectedIndices = [];
+
+                var aData;
+                var aDataToNotDelete = [];
+                var iCounter = 0;
+
+                var oParamInitParam = {}
+                var oParamDataPOHdr = [];
+                var oParam = {};
+                var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
+
+                var message;
+
+                if(type === 'Remarks'){
+                    oTable = this.byId("RemarksTbl");
+                    aSelIndices = oTable.getSelectedIndices();
+                    oTmpSelectedIndices = [];
+                    aData = me._oDataRemarksBeforeChange.results !== undefined ? me._oDataRemarksBeforeChange.results : me.getView().getModel("remarksTblData").getData();
+                    aDataToNotDelete = [];
+                    iCounter = 0;
+                    
+                    indicesCol = oTable.getBinding("rows").aIndices;
+
+                    if (aSelIndices.length > 0) {
+
+                        diffIndeces = indicesCol.filter(function(obj) { return aSelIndices.indexOf(obj) == -1; });
+                        diffIndeces.forEach((item, index) => {
+                            aDataToNotDelete.push(aData.at(item))
+                        });
+                        if(aDataToNotDelete.length > 0){
+                            aDataToNotDelete.forEach(item=>{
+                                oParamInitParam = {
+                                    IPoNumber: poNo,
+                                    IDoDownload: "N",
+                                    IChangeonlyHdrplants: "N",
+                                }
+                                oParamDataPOHdr.push({
+                                    PoNumber: poNo,
+                                    PoItem: "00000",
+                                    TextId: "F01",
+                                    TextForm: "*",
+                                    TextLine: item.Tdline
+                                })
+                            });
+
+                            if (oParamDataPOHdr.length > 0) {
+                                this.showLoadingDialog('Loading...');
+                                oParam = oParamInitParam;
+                                oParam['N_ChangePOHdrTextParam'] = oParamDataPOHdr;
+                                oParam['N_ChangePOReturn'] = [];
+                                console.log(oParam);
+                                _promiseResult = new Promise((resolve, reject)=>{
+                                    oModel.create("/ChangePOSet", oParam, {
+                                        method: "POST",
+                                        success: function(oData, oResponse){
+                                            if(oData.N_ChangePOReturn.results.length > 0){
+                                                message = oData.N_ChangePOReturn.results[0].Msgv1;
+                                                MessageBox.information(message);
+                                                resolve()
+                                            }else{
+                                                MessageBox.information("No Details to be Deleted.");
+                                                resolve()
+                                            }
+                                        },error: function(error){
+                                            MessageBox.error("Error Occured");
+                                            me.closeLoadingDialog(that);
+                                            resolve()
+                                        }
+                                    })
+                                });
+                                await _promiseResult;
+                                
+                                _promiseResult = new Promise((resolve, reject)=>{
+                                    resolve(me.loadAllData())
+                                });
+                                await _promiseResult;
+                                this.closeLoadingDialog(that);
+                            }
+                        }
+                    }
+                    // if (aSelIndices.length > 0) {
+                    //     aSelIndices.forEach(item => {
+                    //         oTmpSelectedIndices.push(oTable.getBinding("rows").aIndices[item])
+                    //     });
+    
+                    //     aSelIndices = oTmpSelectedIndices;
+    
+                    //     aSelIndices.forEach((item, index) => {
+                    //         iCounter++;
+                    //         aDataToNotDelete.push(aData.at(item));
+                    //         if (aSelIndices.length === iCounter) {
+                    //             aDataToNotDelete.forEach(item=>{
+                    //                 oParamInitParam = {
+                    //                     IPoNumber: poNo,
+                    //                     IDoDownload: "N",
+                    //                     IChangeonlyHdrplants: "N",
+                    //                 }
+                    //                 oParamDataPOHdr.push({
+                    //                     PoNumber: poNo,
+                    //                     PoItem: "00000",
+                    //                     TextId: "F01",
+                    //                     TextForm: "*",
+                    //                     TextLine: item.Tdline
+                    //                 })
+                    //             });
+                    //         }
+                    //     })
+                    // }
+                    // if (oParamDataPOHdr.length > 0) {
+                    //     this.showLoadingDialog('Loading...');
+                    //     oParam = oParamInitParam;
+                    //     oParam['N_ChangePOHdrTextParam'] = oParamDataPOHdr;
+                    //     oParam['N_ChangePOReturn'] = [];
+                    //     console.log(oParam);
+                    //     _promiseResult = new Promise((resolve, reject)=>{
+                    //         oModel.create("/ChangePOSet", oParam, {
+                    //             method: "POST",
+                    //             success: function(oData, oResponse){
+                    //                 if(oData.N_ChangePOReturn.results.length > 0){
+                    //                     message = oData.N_ChangePOReturn.results[0].Msgv1;
+                    //                     MessageBox.information(message);
+                    //                     resolve()
+                    //                 }else{
+                    //                     MessageBox.information("No Details to be Deleted.");
+                    //                     resolve()
+                    //                 }
+                    //             },error: function(error){
+                    //                 MessageBox.error("Error Occured");
+                    //                 me.closeLoadingDialog(that);
+                    //                 resolve()
+                    //             }
+                    //         })
+                    //     });
+                    //     await _promiseResult;
+                        
+                    //     _promiseResult = new Promise((resolve, reject)=>{
+                    //         resolve(me.loadAllData())
+                    //     });
+                    //     await _promiseResult;
+                    //     this.closeLoadingDialog(that);
+                    // }
+                }
+                if(type === 'PkgInst'){
+                    oTable = this.byId("PackingInstTbl");
+                    aSelIndices = oTable.getSelectedIndices();
+                    oTmpSelectedIndices = [];
+                    aData = me._oDataPkgInstBeforeChange.results !== undefined ? me._oDataPkgInstBeforeChange.results : me.getView().getModel("pkngInstTblData").getData();
+                    aDataToNotDelete = [];
+                    iCounter = 0;
+                    
+                    indicesCol = oTable.getBinding("rows").aIndices;
+
+                    if (aSelIndices.length > 0) {
+
+                        diffIndeces = indicesCol.filter(function(obj) { return aSelIndices.indexOf(obj) == -1; });
+                        diffIndeces.forEach((item, index) => {
+                            aDataToNotDelete.push(aData.at(item))
+                        });
+                        if(aDataToNotDelete.length > 0){
+                            aDataToNotDelete.forEach(item=>{
+                                oParamInitParam = {
+                                    IPoNumber: poNo,
+                                    IDoDownload: "N",
+                                    IChangeonlyHdrplants: "N",
+                                }
+                                oParamDataPOHdr.push({
+                                    PoNumber: poNo,
+                                    PoItem: "00000",
+                                    TextId: "F06",
+                                    TextForm: "*",
+                                    TextLine: item.Tdline
+                                })
+                            });
+
+                            if (oParamDataPOHdr.length > 0) {
+                                this.showLoadingDialog('Loading...');
+                                oParam = oParamInitParam;
+                                oParam['N_ChangePOHdrTextParam'] = oParamDataPOHdr;
+                                oParam['N_ChangePOReturn'] = [];
+                                console.log(oParam);
+                                _promiseResult = new Promise((resolve, reject)=>{
+                                    oModel.create("/ChangePOSet", oParam, {
+                                        method: "POST",
+                                        success: function(oData, oResponse){
+                                            if(oData.N_ChangePOReturn.results.length > 0){
+                                                message = oData.N_ChangePOReturn.results[0].Msgv1;
+                                                MessageBox.information(message);
+                                                resolve()
+                                            }else{
+                                                MessageBox.information("No Details to be Deleted.");
+                                                resolve()
+                                            }
+                                        },error: function(error){
+                                            MessageBox.error("Error Occured");
+                                            me.closeLoadingDialog(that);
+                                            resolve()
+                                        }
+                                    })
+                                });
+                                await _promiseResult;
+                                
+                                _promiseResult = new Promise((resolve, reject)=>{
+                                    resolve(me.loadAllData())
+                                });
+                                await _promiseResult;
+                                this.closeLoadingDialog(that);
+                            }
+                        }
+                    }
+
+                    // if (aSelIndices.length > 0) {
+                    //     aSelIndices.forEach(item => {
+                    //         oTmpSelectedIndices.push(oTable.getBinding("rows").aIndices[item])
+                    //     });
+    
+                    //     aSelIndices = oTmpSelectedIndices;
+    
+                    //     aSelIndices.forEach((item, index) => {
+                    //         iCounter++;
+                    //         aDataToNotDelete.push(aData.at(item));
+                    //         if (aSelIndices.length === iCounter) {
+                    //             aDataToNotDelete.forEach(item=>{
+                    //                 oParamInitParam = {
+                    //                     IPoNumber: poNo,
+                    //                     IDoDownload: "N",
+                    //                     IChangeonlyHdrplants: "N",
+                    //                 }
+                    //                 oParamDataPOHdr.push({
+                    //                     PoNumber: poNo,
+                    //                     PoItem: "00000",
+                    //                     TextId: "F06",
+                    //                     TextForm: "*",
+                    //                     TextLine: item.Tdline
+                    //                 })
+                    //             });
+                    //         }
+                    //     })
+                    // }
+                    // if (oParamDataPOHdr.length > 0) {
+                    //     this.showLoadingDialog('Loading...');
+                    //     oParam = oParamInitParam;
+                    //     oParam['N_ChangePOHdrTextParam'] = oParamDataPOHdr;
+                    //     oParam['N_ChangePOReturn'] = [];
+                    //     console.log(oParam);
+                    //     _promiseResult = new Promise((resolve, reject)=>{
+                    //         oModel.create("/ChangePOSet", oParam, {
+                    //             method: "POST",
+                    //             success: function(oData, oResponse){
+                    //                 if(oData.N_ChangePOReturn.results.length > 0){
+                    //                     message = oData.N_ChangePOReturn.results[0].Msgv1;
+                    //                     MessageBox.information(message);
+                    //                     resolve()
+                    //                 }else{
+                    //                     MessageBox.information("No Details to be Deleted.");
+                    //                     resolve()
+                    //                 }
+                    //             },error: function(error){
+                    //                 MessageBox.error("Error Occured");
+                    //                 me.closeLoadingDialog(that);
+                    //                 resolve()
+                    //             }
+                    //         })
+                    //     });
+                    //     await _promiseResult;
+
+                    //     _promiseResult = new Promise((resolve, reject)=>{
+                    //         resolve(me.loadAllData())
+                    //     });
+                    //     await _promiseResult;
+                    //     this.closeLoadingDialog(that);
+                    // }
+                }
+                MessageToast.show("DELETE CLICKED");
+            },
+            onCancelEditHdrTxt: async function(type){
+
+                if(type === 'Remarks'){
+                    this.byId("vpoNewHdrTxtRemarks").setVisible(true);
+                    this.byId("vpoEditHdrTxtRemarks").setVisible(true);
+                    this.byId("vpoDeleteHdrTxtRemarks").setVisible(true);
+                    this.byId("vpoSaveHdrTxtRemarks").setVisible(false);
+                    this.byId("vpoCancelHdrTxtRemarks").setVisible(false);
+                }
+                if(type === 'PkgInst'){
+                    this.byId("vpoNewHdrTxtPkgInst").setVisible(true);
+                    this.byId("vpoEditHdrTxtPkgInst").setVisible(true);
+                    this.byId("vpoDeleteHdrTxtPkgInst").setVisible(true);
+                    this.byId("vpoSaveHdrTxtPkgInst").setVisible(false);
+                    this.byId("vpoCancelHdrTxtPkgInst").setVisible(false);
+                }
+                _promiseResult = new Promise((resolve, reject)=>{
+                    resolve(this.loadAllData());
+                });
+                await _promiseResult;
             },
 
             validatePOChange: async function(){
@@ -2890,522 +3491,6 @@ sap.ui.define([
                         }
                     }
                 );
-            },
-            onEditHdrTxt: async function(type){
-                var me = this;
-                
-                _promiseResult = new Promise((resolve, reject)=>{
-                    resolve(me.validatePOChange());
-                })
-                await _promiseResult;
-
-                if(this._validPOChange != 1){
-                    MessageBox.information("PO is not editable.")
-                    return;
-                }
-                var me = this;
-                
-                _promiseResult = new Promise((resolve, reject)=>{
-                    resolve(me.validatePOChange());
-                })
-                await _promiseResult;
-
-                if(this._validPOChange != 1){
-                    MessageBox.information("PO is not editable.")
-                    return;
-                }
-                if(type === 'Remarks'){
-                    _promiseResult = new Promise((resolve, reject)=>{
-                        resolve(this.remarksTblLoad());
-                    })
-                    await _promiseResult;
-
-                    this.byId("vpoEditHdrTxtRemarks").setVisible(false);
-                    this.byId("vpoDeleteHdrTxtRemarks").setVisible(false);
-                    this.byId("vpoSaveHdrTxtRemarks").setVisible(true);
-                    this.byId("vpoCancelHdrTxtRemarks").setVisible(true);
-                    
-                    this.onRowEditPO("RemarksTbl", "VPORemarksCol");
-                }
-                if(type === 'PkgInst'){
-                    _promiseResult = new Promise((resolve, reject)=>{
-                        resolve(this.pkngInstTblLoad());
-                    })
-                    await _promiseResult;
-
-                    this.byId("vpoEditHdrTxtPkgInst").setVisible(false);
-                    this.byId("vpoDeleteHdrTxtPkgInst").setVisible(false);
-                    this.byId("vpoSaveHdrTxtPkgInst").setVisible(true);
-                    this.byId("vpoCancelHdrTxtPkgInst").setVisible(true);
-                    
-                    this.onRowEditPO("PackingInstTbl", "VPOPkngInstsCol");
-                }
-            },
-            onSaveEditHdrTxt: async function(type){
-                var me = this;
-                var poNo = this._pono;
-
-                var oTable;;
-                var oSelectedIndices;
-                var oTmpSelectedIndices = [];
-                var aData;
-                var oParamInitParam = {}
-                var oParamDataPOHdr = [];
-                var oParamDataPOClose = [];
-                var oParam = {};
-                var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
-
-                var message;
-
-                this.showLoadingDialog('Loading...')
-                if(type === 'Remarks'){
-                    oTable = this.byId("RemarksTbl");
-                    oSelectedIndices = oTable.getBinding("rows").aIndices;
-
-                    aData = oTable.getModel().getData().rows;
-                    oSelectedIndices.forEach(item => {
-                        oTmpSelectedIndices.push(oTable.getBinding("rows").aIndices[item])
-                    })
-                    oSelectedIndices = oTmpSelectedIndices;
-                    oSelectedIndices.forEach((item, index) => {
-                        oParamInitParam = {
-                            IPoNumber: poNo,
-                            IDoDownload: "N",
-                            IChangeonlyHdrplants: "N",
-                        }
-                        oParamDataPOHdr.push({
-                            PoNumber: poNo,
-                            PoItem: "00000",
-                            TextId: "F01",
-                            TextForm: "*",
-                            TextLine: aData.at(item).Tdline
-                        })
-                        
-                    });
-
-                    if (oParamDataPOHdr.length > 0) {
-                        oParam = oParamInitParam;
-                        oParam['N_ChangePOHdrTextParam'] = oParamDataPOHdr;
-                        oParam['N_ChangePOReturn'] = [];
-                        console.log(oParam);
-                        _promiseResult = new Promise((resolve, reject)=>{
-                            oModel.create("/ChangePOSet", oParam, {
-                                method: "POST",
-                                success: function(oData, oResponse){
-                                    if(oData.N_ChangePOReturn.results.length > 0){
-                                        message = oData.N_ChangePOReturn.results[0].Msgv1;
-                                        MessageBox.information(message);
-                                        resolve()
-                                    }else{
-                                        MessageBox.information("No Details to be saved.");
-                                        resolve()
-                                    }
-                                },error: function(error){
-                                    MessageBox.error("Error Occured");
-                                    me.closeLoadingDialog(that);
-                                    resolve()
-                                }
-                            })
-                        });
-                        await _promiseResult;
-                    }
-
-                    _promiseResult = new Promise((resolve, reject)=>{
-                        me.byId("vpoEditHdrTxtRemarks").setVisible(true);
-                        me.byId("vpoDeleteHdrTxtRemarks").setVisible(true);
-                        me.byId("vpoSaveHdrTxtRemarks").setVisible(false);
-                        me.byId("vpoCancelHdrTxtRemarks").setVisible(false);
-                        
-                        resolve(me.loadAllData())
-                    });
-                    await _promiseResult;
-                }
-                if(type === 'PkgInst'){
-                    oTable = this.byId("PackingInstTbl");
-                    oSelectedIndices = oTable.getBinding("rows").aIndices;
-
-                    aData = oTable.getModel().getData().rows;
-                    oSelectedIndices.forEach(item => {
-                        oTmpSelectedIndices.push(oTable.getBinding("rows").aIndices[item])
-                    })
-                    oSelectedIndices = oTmpSelectedIndices;
-                    oSelectedIndices.forEach((item, index) => {
-                        oParamInitParam = {
-                            IPoNumber: poNo,
-                            IDoDownload: "N",
-                            IChangeonlyHdrplants: "N",
-                        }
-                        oParamDataPOHdr.push({
-                            PoNumber: poNo,
-                            PoItem: "00000",
-                            TextId: "F06",
-                            TextForm: "*",
-                            TextLine: aData.at(item).Tdline
-                        })
-                        
-                    });
-
-                    if (oParamDataPOHdr.length > 0) {
-                        oParam = oParamInitParam;
-                        oParam['N_ChangePOHdrTextParam'] = oParamDataPOHdr;
-                        oParam['N_ChangePOReturn'] = [];
-                        console.log(oParam);
-                        _promiseResult = new Promise((resolve, reject)=>{
-                            oModel.create("/ChangePOSet", oParam, {
-                                method: "POST",
-                                success: function(oData, oResponse){
-                                    if(oData.N_ChangePOReturn.results.length > 0){
-                                        message = oData.N_ChangePOReturn.results[0].Msgv1;
-                                        MessageBox.information(message);
-                                        resolve()
-                                    }else{
-                                        MessageBox.information("No Details to be saved.");
-                                        resolve()
-                                    }
-                                },error: function(error){
-                                    MessageBox.error("Error Occured");
-                                    me.closeLoadingDialog(that);
-                                    resolve()
-                                }
-                            })
-                        });
-                        await _promiseResult;
-                    }
-
-                    _promiseResult = new Promise((resolve, reject)=>{
-                        me.byId("vpoEditHdrTxtPkgInst").setVisible(true);
-                        me.byId("vpoDeleteHdrTxtPkgInst").setVisible(true);
-                        me.byId("vpoSaveHdrTxtPkgInst").setVisible(false);
-                        me.byId("vpoCancelHdrTxtPkgInst").setVisible(false);
-                        
-                        resolve(me.loadAllData());
-                    });
-                    await _promiseResult;
-                }
-                MessageToast.show(message);
-                this.closeLoadingDialog(that);
-            },
-            onDeleteEditHdrTxt: async function(type){
-                var me = this;
-                var poNo = this._pono;
-                
-                _promiseResult = new Promise((resolve, reject)=>{
-                    resolve(me.validatePOChange());
-                })
-                await _promiseResult;
-
-                if(this._validPOChange != 1){
-                    MessageBox.information("PO is not editable.")
-                    return;
-                }
-                
-                _promiseResult = new Promise((resolve, reject)=>{
-                    resolve(me.validatePOChange());
-                })
-                await _promiseResult;
-
-                if(this._validPOChange != 1){
-                    MessageBox.information("PO is not editable.")
-                    return;
-                }
-
-                var oTable;
-                var aSelIndices;
-                var indicesCol;
-                var diffIndeces;
-
-                var oTmpSelectedIndices = [];
-
-                var aData;
-                var aDataToNotDelete = [];
-                var iCounter = 0;
-
-                var oParamInitParam = {}
-                var oParamDataPOHdr = [];
-                var oParam = {};
-                var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
-
-                var message;
-
-                if(type === 'Remarks'){
-                    oTable = this.byId("RemarksTbl");
-                    aSelIndices = oTable.getSelectedIndices();
-                    oTmpSelectedIndices = [];
-                    aData = me._oDataRemarksBeforeChange.results !== undefined ? me._oDataRemarksBeforeChange.results : me.getView().getModel("remarksTblData").getData();
-                    aDataToNotDelete = [];
-                    iCounter = 0;
-                    
-                    indicesCol = oTable.getBinding("rows").aIndices;
-
-                    if (aSelIndices.length > 0) {
-
-                        diffIndeces = indicesCol.filter(function(obj) { return aSelIndices.indexOf(obj) == -1; });
-                        diffIndeces.forEach((item, index) => {
-                            aDataToNotDelete.push(aData.at(item))
-                        });
-                        if(aDataToNotDelete.length > 0){
-                            aDataToNotDelete.forEach(item=>{
-                                oParamInitParam = {
-                                    IPoNumber: poNo,
-                                    IDoDownload: "N",
-                                    IChangeonlyHdrplants: "N",
-                                }
-                                oParamDataPOHdr.push({
-                                    PoNumber: poNo,
-                                    PoItem: "00000",
-                                    TextId: "F01",
-                                    TextForm: "*",
-                                    TextLine: item.Tdline
-                                })
-                            });
-
-                            if (oParamDataPOHdr.length > 0) {
-                                this.showLoadingDialog('Loading...');
-                                oParam = oParamInitParam;
-                                oParam['N_ChangePOHdrTextParam'] = oParamDataPOHdr;
-                                oParam['N_ChangePOReturn'] = [];
-                                console.log(oParam);
-                                _promiseResult = new Promise((resolve, reject)=>{
-                                    oModel.create("/ChangePOSet", oParam, {
-                                        method: "POST",
-                                        success: function(oData, oResponse){
-                                            if(oData.N_ChangePOReturn.results.length > 0){
-                                                message = oData.N_ChangePOReturn.results[0].Msgv1;
-                                                MessageBox.information(message);
-                                                resolve()
-                                            }else{
-                                                MessageBox.information("No Details to be Deleted.");
-                                                resolve()
-                                            }
-                                        },error: function(error){
-                                            MessageBox.error("Error Occured");
-                                            me.closeLoadingDialog(that);
-                                            resolve()
-                                        }
-                                    })
-                                });
-                                await _promiseResult;
-                                
-                                _promiseResult = new Promise((resolve, reject)=>{
-                                    resolve(me.loadAllData())
-                                });
-                                await _promiseResult;
-                                this.closeLoadingDialog(that);
-                            }
-                        }
-                    }
-                    // if (aSelIndices.length > 0) {
-                    //     aSelIndices.forEach(item => {
-                    //         oTmpSelectedIndices.push(oTable.getBinding("rows").aIndices[item])
-                    //     });
-    
-                    //     aSelIndices = oTmpSelectedIndices;
-    
-                    //     aSelIndices.forEach((item, index) => {
-                    //         iCounter++;
-                    //         aDataToNotDelete.push(aData.at(item));
-                    //         if (aSelIndices.length === iCounter) {
-                    //             aDataToNotDelete.forEach(item=>{
-                    //                 oParamInitParam = {
-                    //                     IPoNumber: poNo,
-                    //                     IDoDownload: "N",
-                    //                     IChangeonlyHdrplants: "N",
-                    //                 }
-                    //                 oParamDataPOHdr.push({
-                    //                     PoNumber: poNo,
-                    //                     PoItem: "00000",
-                    //                     TextId: "F01",
-                    //                     TextForm: "*",
-                    //                     TextLine: item.Tdline
-                    //                 })
-                    //             });
-                    //         }
-                    //     })
-                    // }
-                    // if (oParamDataPOHdr.length > 0) {
-                    //     this.showLoadingDialog('Loading...');
-                    //     oParam = oParamInitParam;
-                    //     oParam['N_ChangePOHdrTextParam'] = oParamDataPOHdr;
-                    //     oParam['N_ChangePOReturn'] = [];
-                    //     console.log(oParam);
-                    //     _promiseResult = new Promise((resolve, reject)=>{
-                    //         oModel.create("/ChangePOSet", oParam, {
-                    //             method: "POST",
-                    //             success: function(oData, oResponse){
-                    //                 if(oData.N_ChangePOReturn.results.length > 0){
-                    //                     message = oData.N_ChangePOReturn.results[0].Msgv1;
-                    //                     MessageBox.information(message);
-                    //                     resolve()
-                    //                 }else{
-                    //                     MessageBox.information("No Details to be Deleted.");
-                    //                     resolve()
-                    //                 }
-                    //             },error: function(error){
-                    //                 MessageBox.error("Error Occured");
-                    //                 me.closeLoadingDialog(that);
-                    //                 resolve()
-                    //             }
-                    //         })
-                    //     });
-                    //     await _promiseResult;
-                        
-                    //     _promiseResult = new Promise((resolve, reject)=>{
-                    //         resolve(me.loadAllData())
-                    //     });
-                    //     await _promiseResult;
-                    //     this.closeLoadingDialog(that);
-                    // }
-                }
-                if(type === 'PkgInst'){
-                    oTable = this.byId("PackingInstTbl");
-                    aSelIndices = oTable.getSelectedIndices();
-                    oTmpSelectedIndices = [];
-                    aData = me._oDataPkgInstBeforeChange.results !== undefined ? me._oDataPkgInstBeforeChange.results : me.getView().getModel("pkngInstTblData").getData();
-                    aDataToNotDelete = [];
-                    iCounter = 0;
-                    
-                    indicesCol = oTable.getBinding("rows").aIndices;
-
-                    if (aSelIndices.length > 0) {
-
-                        diffIndeces = indicesCol.filter(function(obj) { return aSelIndices.indexOf(obj) == -1; });
-                        diffIndeces.forEach((item, index) => {
-                            aDataToNotDelete.push(aData.at(item))
-                        });
-                        if(aDataToNotDelete.length > 0){
-                            aDataToNotDelete.forEach(item=>{
-                                oParamInitParam = {
-                                    IPoNumber: poNo,
-                                    IDoDownload: "N",
-                                    IChangeonlyHdrplants: "N",
-                                }
-                                oParamDataPOHdr.push({
-                                    PoNumber: poNo,
-                                    PoItem: "00000",
-                                    TextId: "F06",
-                                    TextForm: "*",
-                                    TextLine: item.Tdline
-                                })
-                            });
-
-                            if (oParamDataPOHdr.length > 0) {
-                                this.showLoadingDialog('Loading...');
-                                oParam = oParamInitParam;
-                                oParam['N_ChangePOHdrTextParam'] = oParamDataPOHdr;
-                                oParam['N_ChangePOReturn'] = [];
-                                console.log(oParam);
-                                _promiseResult = new Promise((resolve, reject)=>{
-                                    oModel.create("/ChangePOSet", oParam, {
-                                        method: "POST",
-                                        success: function(oData, oResponse){
-                                            if(oData.N_ChangePOReturn.results.length > 0){
-                                                message = oData.N_ChangePOReturn.results[0].Msgv1;
-                                                MessageBox.information(message);
-                                                resolve()
-                                            }else{
-                                                MessageBox.information("No Details to be Deleted.");
-                                                resolve()
-                                            }
-                                        },error: function(error){
-                                            MessageBox.error("Error Occured");
-                                            me.closeLoadingDialog(that);
-                                            resolve()
-                                        }
-                                    })
-                                });
-                                await _promiseResult;
-                                
-                                _promiseResult = new Promise((resolve, reject)=>{
-                                    resolve(me.loadAllData())
-                                });
-                                await _promiseResult;
-                                this.closeLoadingDialog(that);
-                            }
-                        }
-                    }
-
-                    // if (aSelIndices.length > 0) {
-                    //     aSelIndices.forEach(item => {
-                    //         oTmpSelectedIndices.push(oTable.getBinding("rows").aIndices[item])
-                    //     });
-    
-                    //     aSelIndices = oTmpSelectedIndices;
-    
-                    //     aSelIndices.forEach((item, index) => {
-                    //         iCounter++;
-                    //         aDataToNotDelete.push(aData.at(item));
-                    //         if (aSelIndices.length === iCounter) {
-                    //             aDataToNotDelete.forEach(item=>{
-                    //                 oParamInitParam = {
-                    //                     IPoNumber: poNo,
-                    //                     IDoDownload: "N",
-                    //                     IChangeonlyHdrplants: "N",
-                    //                 }
-                    //                 oParamDataPOHdr.push({
-                    //                     PoNumber: poNo,
-                    //                     PoItem: "00000",
-                    //                     TextId: "F06",
-                    //                     TextForm: "*",
-                    //                     TextLine: item.Tdline
-                    //                 })
-                    //             });
-                    //         }
-                    //     })
-                    // }
-                    // if (oParamDataPOHdr.length > 0) {
-                    //     this.showLoadingDialog('Loading...');
-                    //     oParam = oParamInitParam;
-                    //     oParam['N_ChangePOHdrTextParam'] = oParamDataPOHdr;
-                    //     oParam['N_ChangePOReturn'] = [];
-                    //     console.log(oParam);
-                    //     _promiseResult = new Promise((resolve, reject)=>{
-                    //         oModel.create("/ChangePOSet", oParam, {
-                    //             method: "POST",
-                    //             success: function(oData, oResponse){
-                    //                 if(oData.N_ChangePOReturn.results.length > 0){
-                    //                     message = oData.N_ChangePOReturn.results[0].Msgv1;
-                    //                     MessageBox.information(message);
-                    //                     resolve()
-                    //                 }else{
-                    //                     MessageBox.information("No Details to be Deleted.");
-                    //                     resolve()
-                    //                 }
-                    //             },error: function(error){
-                    //                 MessageBox.error("Error Occured");
-                    //                 me.closeLoadingDialog(that);
-                    //                 resolve()
-                    //             }
-                    //         })
-                    //     });
-                    //     await _promiseResult;
-
-                    //     _promiseResult = new Promise((resolve, reject)=>{
-                    //         resolve(me.loadAllData())
-                    //     });
-                    //     await _promiseResult;
-                    //     this.closeLoadingDialog(that);
-                    // }
-                }
-                MessageToast.show("DELETE CLICKED");
-            },
-            onCancelEditHdrTxt: async function(type){
-
-                if(type === 'Remarks'){
-                    this.byId("vpoEditHdrTxtRemarks").setVisible(true);
-                    this.byId("vpoDeleteHdrTxtRemarks").setVisible(true);
-                    this.byId("vpoSaveHdrTxtRemarks").setVisible(false);
-                    this.byId("vpoCancelHdrTxtRemarks").setVisible(false);
-                }
-                if(type === 'PkgInst'){
-                    this.byId("vpoEditHdrTxtPkgInst").setVisible(true);
-                    this.byId("vpoDeleteHdrTxtPkgInst").setVisible(true);
-                    this.byId("vpoSaveHdrTxtPkgInst").setVisible(false);
-                    this.byId("vpoCancelHdrTxtPkgInst").setVisible(false);
-                }
-                _promiseResult = new Promise((resolve, reject)=>{
-                    resolve(this.loadAllData());
-                });
-                await _promiseResult;
             },
 
             onRefresh: async function(){
