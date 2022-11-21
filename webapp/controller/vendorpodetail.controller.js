@@ -1308,6 +1308,14 @@ sap.ui.define([
                     this.byId("vpoDeleteHdrTxtRemarks").setVisible(false);
                     this.byId("vpoSaveHdrTxtRemarks").setVisible(true);
                     this.byId("vpoCancelHdrTxtRemarks").setVisible(true);
+
+                    this.disableOtherTabs("idIconTabBarInlineMode");
+                    this.disableOtherTabs("vpoDetailTab");
+
+                    this.byId("vpoNewHdrTxtPkgInst").setEnabled(false);
+                    this.byId("vpoEditHdrTxtPkgInst").setEnabled(false);
+                    this.byId("vpoDeleteHdrTxtPkgInst").setEnabled(false);
+
                     this.onRowEditPO("RemarksTbl", "VPORemarksCol");
                 }
                 if(type === 'PkgInst'){
@@ -1338,6 +1346,14 @@ sap.ui.define([
                     this.byId("vpoDeleteHdrTxtPkgInst").setVisible(false);
                     this.byId("vpoSaveHdrTxtPkgInst").setVisible(true);
                     this.byId("vpoCancelHdrTxtPkgInst").setVisible(true);
+
+                    this.disableOtherTabs("idIconTabBarInlineMode");
+                    this.disableOtherTabs("vpoDetailTab");
+
+                    this.byId("vpoNewHdrTxtRemarks").setEnabled(false);
+                    this.byId("vpoEditHdrTxtRemarks").setEnabled(false);
+                    this.byId("vpoDeleteHdrTxtRemarks").setEnabled(false);
+                    
                     this.onRowEditPO("PackingInstTbl", "VPOPkngInstsCol");
                 }
             },
@@ -1375,6 +1391,13 @@ sap.ui.define([
                     this.byId("vpoDeleteHdrTxtRemarks").setVisible(false);
                     this.byId("vpoSaveHdrTxtRemarks").setVisible(true);
                     this.byId("vpoCancelHdrTxtRemarks").setVisible(true);
+
+                    this.disableOtherTabs("idIconTabBarInlineMode");
+                    this.disableOtherTabs("vpoDetailTab");
+
+                    this.byId("vpoNewHdrTxtPkgInst").setEnabled(false);
+                    this.byId("vpoEditHdrTxtPkgInst").setEnabled(false);
+                    this.byId("vpoDeleteHdrTxtPkgInst").setEnabled(false);
                     
                     this.onRowEditPO("RemarksTbl", "VPORemarksCol");
                 }
@@ -1389,6 +1412,13 @@ sap.ui.define([
                     this.byId("vpoDeleteHdrTxtPkgInst").setVisible(false);
                     this.byId("vpoSaveHdrTxtPkgInst").setVisible(true);
                     this.byId("vpoCancelHdrTxtPkgInst").setVisible(true);
+
+                    this.disableOtherTabs("idIconTabBarInlineMode");
+                    this.disableOtherTabs("vpoDetailTab");
+
+                    this.byId("vpoNewHdrTxtRemarks").setEnabled(false);
+                    this.byId("vpoEditHdrTxtRemarks").setEnabled(false);
+                    this.byId("vpoDeleteHdrTxtRemarks").setEnabled(false);
                     
                     this.onRowEditPO("PackingInstTbl", "VPOPkngInstsCol");
                 }
@@ -1470,6 +1500,13 @@ sap.ui.define([
                         me.byId("vpoDeleteHdrTxtRemarks").setVisible(true);
                         me.byId("vpoSaveHdrTxtRemarks").setVisible(false);
                         me.byId("vpoCancelHdrTxtRemarks").setVisible(false);
+
+                        me.enableOtherTabs("idIconTabBarInlineMode");
+                        me.enableOtherTabs("vpoDetailTab");
+
+                        me.byId("vpoNewHdrTxtPkgInst").setEnabled(true);
+                        me.byId("vpoEditHdrTxtPkgInst").setEnabled(true);
+                        me.byId("vpoDeleteHdrTxtPkgInst").setEnabled(true);
                         
                         resolve(me.loadAllData())
                     });
@@ -1478,6 +1515,7 @@ sap.ui.define([
                     this.closeLoadingDialog(that);
                 }
                 if(type === 'PkgInst'){
+                    this.showLoadingDialog('Loading...')
                     oTable = this.byId("PackingInstTbl");
                     oSelectedIndices = oTable.getBinding("rows").aIndices;
 
@@ -1536,10 +1574,19 @@ sap.ui.define([
                         me.byId("vpoDeleteHdrTxtPkgInst").setVisible(true);
                         me.byId("vpoSaveHdrTxtPkgInst").setVisible(false);
                         me.byId("vpoCancelHdrTxtPkgInst").setVisible(false);
+
+                        me.enableOtherTabs("idIconTabBarInlineMode");
+                        me.enableOtherTabs("vpoDetailTab");
+
+                        me.byId("vpoNewHdrTxtRemarks").setEnabled(true);
+                        me.byId("vpoEditHdrTxtRemarks").setEnabled(true);
+                        me.byId("vpoDeleteHdrTxtRemarks").setEnabled(true);
                         
                         resolve(me.loadAllData());
                     });
                     await _promiseResult;
+
+                    this.closeLoadingDialog(that);
                 }
             },
             onDeleteEditHdrTxt: async function(type){
@@ -1853,6 +1900,13 @@ sap.ui.define([
                     this.byId("vpoDeleteHdrTxtRemarks").setVisible(true);
                     this.byId("vpoSaveHdrTxtRemarks").setVisible(false);
                     this.byId("vpoCancelHdrTxtRemarks").setVisible(false);
+
+                    this.enableOtherTabs("idIconTabBarInlineMode");
+                    this.enableOtherTabs("vpoDetailTab");
+
+                    this.byId("vpoNewHdrTxtPkgInst").setEnabled(true);
+                    this.byId("vpoEditHdrTxtPkgInst").setEnabled(true);
+                    this.byId("vpoDeleteHdrTxtPkgInst").setEnabled(true);
                 }
                 if(type === 'PkgInst'){
                     this.byId("vpoNewHdrTxtPkgInst").setVisible(true);
@@ -1860,6 +1914,13 @@ sap.ui.define([
                     this.byId("vpoDeleteHdrTxtPkgInst").setVisible(true);
                     this.byId("vpoSaveHdrTxtPkgInst").setVisible(false);
                     this.byId("vpoCancelHdrTxtPkgInst").setVisible(false);
+
+                    this.enableOtherTabs("idIconTabBarInlineMode");
+                    this.enableOtherTabs("vpoDetailTab");
+
+                    this.byId("vpoNewHdrTxtRemarks").setEnabled(true);
+                    this.byId("vpoEditHdrTxtRemarks").setEnabled(true);
+                    this.byId("vpoDeleteHdrTxtRemarks").setEnabled(true);
                 }
                 _promiseResult = new Promise((resolve, reject)=>{
                     resolve(this.loadAllData());
@@ -1932,6 +1993,12 @@ sap.ui.define([
                     this.byId("vpoBtnRefreshtHeader").setVisible(false);
                     this.byId("vpoBtnSaveHeader").setVisible(true);
                     this.byId("vpoBtnCancelHeader").setVisible(true);
+
+                    this.disableOtherTabs("idIconTabBarInlineMode");
+                    this.disableOtherTabs("vpoDetailTab");
+                    this.byId("vpoHdrMenuBtn").setEnabled(false);
+
+
                     oView.setModel(oJSONEdit, "topHeaderDataEdit");
                 }else{
                     MessageBox.information("PO is not valid to Edit.")
@@ -2054,6 +2121,11 @@ sap.ui.define([
                 this.byId("vpoBtnRefreshtHeader").setVisible(true);
                 this.byId("vpoBtnSaveHeader").setVisible(false);
                 this.byId("vpoBtnCancelHeader").setVisible(false);
+
+                this.enableOtherTabs("idIconTabBarInlineMode");
+                this.enableOtherTabs("vpoDetailTab");
+                this.byId("vpoHdrMenuBtn").setEnabled(true);
+
                 oView.setModel(oJSONEdit, "topHeaderDataEdit");
                 this.loadAllData()
 
@@ -2097,6 +2169,10 @@ sap.ui.define([
                         this.byId("vpoBtnRefreshtHeader").setVisible(true);
                         this.byId("vpoBtnSaveHeader").setVisible(false);
                         this.byId("vpoBtnCancelHeader").setVisible(false);
+
+                        this.enableOtherTabs("idIconTabBarInlineMode");
+                        this.enableOtherTabs("vpoDetailTab");
+                        this.byId("vpoHdrMenuBtn").setEnabled(true);
                         this.loadAllData();
                         oView.setModel(oJSONEdit, "topHeaderDataEdit");
 
@@ -2114,6 +2190,10 @@ sap.ui.define([
                     this.byId("vpoBtnRefreshtHeader").setVisible(true);
                     this.byId("vpoBtnSaveHeader").setVisible(false);
                     this.byId("vpoBtnCancelHeader").setVisible(false);
+
+                    this.enableOtherTabs("idIconTabBarInlineMode");
+                    this.enableOtherTabs("vpoDetailTab");
+                    this.byId("vpoHdrMenuBtn").setEnabled(true);
                     this.loadAllData();
                     oView.setModel(oJSONEdit, "topHeaderDataEdit");
                 }
@@ -2850,6 +2930,25 @@ sap.ui.define([
                                             me.byId("vpoBtnSaveLayoutDetails").setVisible(false);
                                             me.byId("vpoBtnSaveDetails").setVisible(true);
                                             me.byId("vpoBtnCancelDetails").setVisible(true);
+
+                                            me.disableOtherTabsChild("idIconTabBarInlineMode");
+                                            me.disableOtherTabsChild("vpoHeaderTxtIconTab");
+                                            me.byId("vpoDelSchedIconTab").setEnabled(false);
+                                            me.byId("vpoDelInvIconTab").setEnabled(false);
+                                            me.byId("vpoPoHistIconTab").setEnabled(false);
+                                            me.byId("vpoConditionsIconTab").setEnabled(false);
+
+                                            // me.byId("vpoNewHdrTxtRemarks").setEnabled(false);
+                                            // me.byId("vpoEditHdrTxtRemarks").setEnabled(false);
+                                            // me.byId("vpoDeleteHdrTxtRemarks").setEnabled(false);
+
+                                            // me.byId("vpoHdrMenuBtn").setEnabled(false);
+                                            // me.byId("vpoBtnEditHeader").setEnabled(false);
+                                            // me.byId("vpoBtnRefreshtHeader").setEnabled(false);
+
+                                            // me.byId("vpoNewHdrTxtPkgInst").setEnabled(false);
+                                            // me.byId("vpoEditHdrTxtPkgInst").setEnabled(false);
+                                            // me.byId("vpoDeleteHdrTxtPkgInst").setEnabled(false);
                                             
                                             
                                             me.onRowEditPO("vpoDetailsTab", "VPODTLSColumnsVPODet");
@@ -3053,6 +3152,24 @@ sap.ui.define([
                     me.byId("vpoBtnSaveLayoutDetails").setVisible(true)
                     me.byId("vpoBtnSaveDetails").setVisible(false)
                     me.byId("vpoBtnCancelDetails").setVisible(false)
+
+                    me.enableOtherTabsChild("idIconTabBarInlineMode");
+                    me.enableOtherTabsChild("vpoHeaderTxtIconTab");
+                    me.byId("vpoDelSchedIconTab").setEnabled(true);
+                    me.byId("vpoDelInvIconTab").setEnabled(true);
+                    me.byId("vpoPoHistIconTab").setEnabled(true);
+                    me.byId("vpoConditionsIconTab").setEnabled(true);
+                    // me.byId("vpoNewHdrTxtRemarks").setEnabled(true);
+                    // me.byId("vpoEditHdrTxtRemarks").setEnabled(true);
+                    // me.byId("vpoDeleteHdrTxtRemarks").setEnabled(true);
+
+                    // me.byId("vpoHdrMenuBtn").setEnabled(true);
+                    // me.byId("vpoBtnEditHeader").setEnabled(true);
+                    // me.byId("vpoBtnRefreshtHeader").setEnabled(true);
+
+                    // me.byId("vpoNewHdrTxtPkgInst").setEnabled(true);
+                    // me.byId("vpoEditHdrTxtPkgInst").setEnabled(true);
+                    // me.byId("vpoDeleteHdrTxtPkgInst").setEnabled(true);
                     me.loadAllData()
                     resolve()
                 });
@@ -3083,6 +3200,24 @@ sap.ui.define([
                     this.byId("vpoBtnSaveLayoutDetails").setVisible(true);
                     this.byId("vpoBtnSaveDetails").setVisible(false);
                     this.byId("vpoBtnCancelDetails").setVisible(false);
+
+                    this.enableOtherTabsChild("idIconTabBarInlineMode");
+                    this.enableOtherTabsChild("vpoHeaderTxtIconTab");
+                    this.byId("vpoDelSchedIconTab").setEnabled(true);
+                    this.byId("vpoDelInvIconTab").setEnabled(true);
+                    this.byId("vpoPoHistIconTab").setEnabled(true);
+                    this.byId("vpoConditionsIconTab").setEnabled(true);
+                    // this.byId("vpoNewHdrTxtRemarks").setEnabled(true);
+                    // this.byId("vpoEditHdrTxtRemarks").setEnabled(true);
+                    // this.byId("vpoDeleteHdrTxtRemarks").setEnabled(true);
+
+                    // this.byId("vpoHdrMenuBtn").setEnabled(true);
+                    // this.byId("vpoBtnEditHeader").setEnabled(true);
+                    // this.byId("vpoBtnRefreshtHeader").setEnabled(true);
+
+                    // this.byId("vpoNewHdrTxtPkgInst").setEnabled(true);
+                    // this.byId("vpoEditHdrTxtPkgInst").setEnabled(true);
+                    // this.byId("vpoDeleteHdrTxtPkgInst").setEnabled(true);
                     this.validationErrors = [];
 
                     _promiseResult = new Promise((resolve, reject)=>{
@@ -3745,5 +3880,29 @@ sap.ui.define([
                     }
                 });                
             },
+
+            disableOtherTabs: function (tabName) {
+                var oIconTabBar = this.byId(tabName);
+                oIconTabBar.getItems().filter(item => item.getProperty("key") !== oIconTabBar.getSelectedKey())
+                    .forEach(item => item.setProperty("enabled", false));
+
+            },
+            disableOtherTabsChild: function (tabName) {
+                var oIconTabBar = this.byId(tabName);
+                oIconTabBar.getItems().filter(item => item.getProperty("key"))
+                .forEach(item => item.setProperty("enabled", false));
+
+            },
+            enableOtherTabs: function (tabName) {
+                var oIconTabBar = this.byId(tabName);
+                oIconTabBar.getItems().forEach(item => item.setProperty("enabled", true));
+
+            },
+            enableOtherTabsChild: function (tabName) {
+                var oIconTabBar = this.byId(tabName);
+                oIconTabBar.getItems().filter(item => item.getProperty("key"))
+                .forEach(item => item.setProperty("enabled", true));
+
+            }
         });
     });

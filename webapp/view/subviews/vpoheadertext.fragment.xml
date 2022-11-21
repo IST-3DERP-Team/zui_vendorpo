@@ -21,6 +21,7 @@
         expandable="false">
             <items>
                 <IconTabFilter
+                    id="vpoHeaderTxtRemarksTab"
                     text="{captionMsg>/REMARKS}"
                     key="itfDLVSCHED">
                     <uiT:Table id="RemarksTbl"
@@ -66,6 +67,7 @@
                     </uiT:Table>
                 </IconTabFilter>
                 <IconTabFilter
+                    id="vpoHeaderTxtPkngInstTab"
                     text="{captionMsg>/PACKINSTRUCT}"
                     key="itfDLVSCHED">
                     <uiT:Table id="PackingInstTbl"

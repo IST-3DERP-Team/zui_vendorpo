@@ -42,33 +42,39 @@
                                     <items>
                                         <!-- IO HEADER DETAILS ICON TAB BAR -->
                                         <IconTabFilter
+                                            id="idHdrIconTabBar"
                                             text="{captionMsg>/HEADER}"
                                             key="itfIOHDR">
                                             <core:Fragment fragmentName="zuivendorpo.view.subviews.vpoheader" type="XML"/>
                                         </IconTabFilter>
 
-                                        <!-- STYLE -->
+                                        <!-- Rel Strat -->
                                         <IconTabFilter
+                                            id="idRelStratIconTabBar"
                                             text="{captionMsg>/RELSTRAT}"
                                             key="itfSTYLE">
                                             <core:Fragment fragmentName="zuivendorpo.view.subviews.vporelstat" type="XML"/>                                 
                                         </IconTabFilter>
 
-                                        <!-- DELIVERY SCHEDULE -->
+                                        <!-- Conditions -->
                                         <IconTabFilter
+                                            id="idCondIconTabBar"
                                             text="{captionMsg>/CONDITIONS}"
                                             key="itfDLVSCHED">
                                             <Text text="Conditions..." />
                                         </IconTabFilter>
                                             
-                                        <!-- MATERIAL LIST -->
+                                        <!-- Header Text -->
                                         <IconTabFilter
+                                            id="idHdrTxtIconTabBar"
                                             text="{captionMsg>/HEADERTEXT}"
                                             key="itfMATLIST">
                                             <core:Fragment fragmentName="zuivendorpo.view.subviews.vpoheadertext" type="XML"/>
                                         </IconTabFilter>
 
+                                        <!-- Changes -->
                                         <IconTabFilter
+                                            id="idChangesIconTabBar"
                                             text="{captionMsg>/CHANGES}"
                                             key="itfCOSTING">
                                             <Text text="Changes..." />
