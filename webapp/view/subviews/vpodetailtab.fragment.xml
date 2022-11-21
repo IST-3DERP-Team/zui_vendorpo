@@ -23,7 +23,7 @@
         stretchContentHeight="true" 
         applyContentPadding="false">
         <items>
-            <IconTabFilter text="{captionMsg>/DETAILS}">
+            <IconTabFilter id="vpoDetailsIconTab" text="{captionMsg>/DETAILS}">
                 <uiT:Table id="vpoDetailsTab"
                     class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
                     visibleRowCountMode="Auto"
@@ -81,7 +81,7 @@
                     </uiT:layoutData>                        
                 </uiT:Table> 
             </IconTabFilter>
-            <IconTabFilter text="{captionMsg>/DELSCHED}">
+            <IconTabFilter id="vpoDelSchedIconTab" text="{captionMsg>/DELSCHED}">
                 <uiT:Table id="vpoDelSchedTab"
                     class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
                     visibleRowCountMode="Auto"
@@ -139,7 +139,7 @@
                     </uiT:layoutData>                        
                 </uiT:Table> 
             </IconTabFilter>
-            <IconTabFilter text="{captionMsg>/DELIVERY}/{captionMsg>/INVOICE}">
+            <IconTabFilter id="vpoDelInvIconTab" text="{captionMsg>/DELIVERY}/{captionMsg>/INVOICE}">
                 <uiT:Table id="vpoDelInvTab"
                     class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
                     visibleRowCountMode="Auto"
@@ -192,7 +192,7 @@
                     </uiT:layoutData>                        
                 </uiT:Table> 
             </IconTabFilter>
-            <IconTabFilter text="{captionMsg>/POHIST}">
+            <IconTabFilter id="vpoPoHistIconTab" text="{captionMsg>/POHIST}">
                 <uiT:Table id="vpoPoHistTab"
                     class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
                     visibleRowCountMode="Auto"
@@ -229,7 +229,7 @@
                     </uiT:layoutData>                        
                 </uiT:Table> 
             </IconTabFilter>
-            <IconTabFilter text="{captionMsg>/CONDITIONS}">
+            <IconTabFilter id="vpoConditionsIconTab" text="{captionMsg>/CONDITIONS}">
                 <uiT:Table id="vpoConditionsTab"
                     class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
                     visibleRowCountMode="Auto"

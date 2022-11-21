@@ -21,6 +21,7 @@
         expandable="false">
             <items>
                 <IconTabFilter
+                    id="vpoHeaderTxtRemarksTab"
                     text="{captionMsg>/REMARKS}"
                     key="itfDLVSCHED">
                     <uiT:Table id="RemarksTbl"
@@ -36,6 +37,11 @@
                         <uiT:extension>
                             <Toolbar>
                                 <ToolbarSpacer/>
+                                <Button id="vpoNewHdrTxtRemarks" 
+                                    icon="sap-icon://add-document"
+                                    press=".onNewHdrTxt('Remarks')"
+                                    tooltip="New"
+                                    visible="true"/>
                                 <Button id="vpoEditHdrTxtRemarks" 
                                     icon="sap-icon://edit"
                                     press=".onEditHdrTxt('Remarks')"
@@ -61,6 +67,7 @@
                     </uiT:Table>
                 </IconTabFilter>
                 <IconTabFilter
+                    id="vpoHeaderTxtPkngInstTab"
                     text="{captionMsg>/PACKINSTRUCT}"
                     key="itfDLVSCHED">
                     <uiT:Table id="PackingInstTbl"
@@ -76,6 +83,11 @@
                         <uiT:extension>
                             <Toolbar>
                                 <ToolbarSpacer/>
+                                <Button id="vpoNewHdrTxtPkgInst" 
+                                    icon="sap-icon://add-document"
+                                    press=".onNewHdrTxt('PkgInst')"
+                                    tooltip="New"
+                                    visible="true"/>
                                 <Button id="vpoEditHdrTxtPkgInst" 
                                     icon="sap-icon://edit"
                                     press=".onEditHdrTxt('PkgInst')"
