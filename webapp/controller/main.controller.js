@@ -76,6 +76,12 @@ sap.ui.define([
                 var oComponent = this.getOwnerComponent();
                 this._router = oComponent.getRouter();
                 this.getView().setModel(new JSONModel({dataMode: 'NODATA',}), "ui");
+
+
+                this.updUnlock = 1;
+                this.zpoUnlock = 1
+                this.ediVendor; 
+
                 // this.getCols();
                 // this.getMain();
             },
@@ -420,6 +426,7 @@ sap.ui.define([
                         },
                         success: function (data, response) {
                             if (data.results.length > 0) {
+                                console.log(data);
                                 data.results.forEach(item => {
                                     item.DELDT = dateFormat.format(new Date(item.DELDT));
                                 })
@@ -818,14 +825,7 @@ sap.ui.define([
                         editable: false
                     });
                 }
-                if (sColumnId === "OVERDELTOL") { 
-                    //Manage button
-                    oColumnTemplate = new sap.m.CheckBox({
-                        selected: "{" + sColumnId + "}",
-                        editable: false
-                    });
-                }
-                if (sColumnId === "UNDERDELTOL") { 
+                if (sColumnId === "DELCOMPLETE") { 
                     //Manage button
                     oColumnTemplate = new sap.m.CheckBox({
                         selected: "{" + sColumnId + "}",
@@ -947,6 +947,48 @@ sap.ui.define([
                         sap.m.MessageBox.error(err);
                     }
                 });                
+            },
+            onSelectionChange: async function(oEvent){
+                var sRowPath = oEvent.getParameter("rowContext");
+                sRowPath = "/results/"+ sRowPath.getPath().split("/")[2];
+                console.log(sRowPath);
+
+                var oRow;
+                var oTable;
+                var PONo = this.getView().getModel("ui").getProperty("/activePONo")
+                var me = this;
+                if(oEvent.getParameters().id.includes("mainTab")){
+                    oRow = this.getView().getModel("VPOHdr").getProperty(sRowPath)
+                    oTable = this.byId("mainTab");
+                    this.getView().getModel("ui").setProperty("/activePONo", oRow.PONO);
+                    this.getView().getModel("ui").setProperty("/activeCondRec", oRow.CONDREC);
+
+                    PONo = this.getView().getModel("ui").getProperty("/activePONo");
+                    _promiseResult = new Promise((resolve,reject)=> {
+                        
+                        me._tblChange = true;
+                        me.getPODetails2(PONo)
+                        me.getDelSchedule2(PONo)
+                        me.getDelInvoice2(PONo)
+                        me.getPOHistory2(PONo)
+                        me.getConditions2(PONo)
+                        resolve();
+                    })
+                    await _promiseResult;;
+    
+                    _promiseResult = new Promise((resolve, reject)=>{
+                        oTable.getRows().forEach(row => {
+                            if(row.getBindingContext().sPath.replace("/rows/", "") === sRowPath.split("/")[2]){
+                                resolve(row.addStyleClass("activeRow"));
+                                oTable.setSelectedIndex(parseInt(sRowPath.split("/")[2]));
+                            }else{
+                                resolve(row.removeStyleClass("activeRow"));
+                            }
+                        });
+                    });
+                    await _promiseResult;
+                    this._tblChange = false;
+                }
             },
             // onSelectionChange: async function(oEvent){
             //     console.log(oEvent.getParameter("rowContext"));
@@ -1157,6 +1199,7 @@ sap.ui.define([
             onCellClick: async function(oEvent) {
                 var sRowPath = oEvent.getParameters().rowBindingContext.sPath;
                 sRowPath = "/results/"+ sRowPath.split("/")[2];
+                console.log(sRowPath);
                 var oRow;
                 var oTable;
                 var PONo = this.getView().getModel("ui").getProperty("/activePONo")

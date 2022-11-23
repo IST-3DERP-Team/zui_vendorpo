@@ -59,6 +59,7 @@
                                 rows="{VPOHdr>/results}"
                                 enableColumnFreeze="true"
                                 selectionMode="MultiToggle"
+                                selectionBehavior="RowSelector"
                                 rowSelectionChange=".onSelectionChange"
                                 
                                 firstVisibleRowChanged=".onFirstVisibleRowChanged"

@@ -230,6 +230,8 @@ sap.ui.define([
                 oDDTextParam.push({CODE: "YES"});
                 oDDTextParam.push({CODE: "CANCEL"});
 
+                oDDTextParam.push({CODE: "INFO_NO_DATA_EDIT"});
+                oDDTextParam.push({CODE: "INFO_NO_DATA_DELETE"});
                 
                 await oModel.create("/CaptionMsgSet", { CaptionMsgItems: oDDTextParam  }, {
                     method: "POST",
@@ -764,7 +766,7 @@ sap.ui.define([
                         editable: false
                     });
                 }
-                if (sColumnId === "UNLIMITED") { 
+                if (sColumnId === "UNLIMITED" || sColumnId === "OVERDELTOL" || sColumnId === "UNDERDELTOL") { 
                     //Manage button
                     oColumnTemplate = new sap.m.CheckBox({
                         selected: "{" + sColumnId + "}",
@@ -785,14 +787,7 @@ sap.ui.define([
                         editable: false
                     });
                 }
-                if (sColumnId === "OVERDELTOL") { 
-                    //Manage button
-                    oColumnTemplate = new sap.m.CheckBox({
-                        selected: "{" + sColumnId + "}",
-                        editable: false
-                    });
-                }
-                if (sColumnId === "UNDERDELTOL") { 
+                if (sColumnId === "DELCOMPLETE") { 
                     //Manage button
                     oColumnTemplate = new sap.m.CheckBox({
                         selected: "{" + sColumnId + "}",
@@ -1284,8 +1279,10 @@ sap.ui.define([
                     var remarksItemArr = [];
                     var remarksItemLastCnt = 0;
                     var remarksJSONModel = new JSONModel();
+                    var remarksItemObj = this.getView().getModel("remarksTblData").getProperty('/');
+                    
+                    remarksItemObj = remarksItemObj.length === undefined ? [] : remarksItemObj;
 
-                    var remarksItemObj = this.getView().getModel("remarksTblData").getProperty('/');  
                     for(var x = 0; x < remarksItemObj.length; x++){
                         remarksItemArr.push(remarksItemObj[x].Tdformat);
                     }
@@ -1322,8 +1319,9 @@ sap.ui.define([
                     var pkgInstItemArr = [];
                     var pkgInstItemLastCnt = 0;
                     var pkgInstJSONModel = new JSONModel();
+                    var pkgInstItemObj = this.getView().getModel("pkngInstTblData").getProperty('/');
 
-                    var pkgInstItemObj = this.getView().getModel("pkngInstTblData").getProperty('/');  
+                    pkgInstItemObj = pkgInstItemObj.length === undefined ? [] :pkgInstItemObj;
                     for(var x = 0; x < pkgInstItemObj.length; x++){
                         pkgInstItemArr.push(pkgInstItemObj[x].Tdformat);
                     }
@@ -1647,13 +1645,14 @@ sap.ui.define([
                         diffIndeces.forEach((item, index) => {
                             aDataToNotDelete.push(aData.at(item))
                         });
+
+                        oParamInitParam = {
+                            IPoNumber: poNo,
+                            IDoDownload: "N",
+                            IChangeonlyHdrplants: "N",
+                        }
                         if(aDataToNotDelete.length > 0){
                             aDataToNotDelete.forEach(item=>{
-                                oParamInitParam = {
-                                    IPoNumber: poNo,
-                                    IDoDownload: "N",
-                                    IChangeonlyHdrplants: "N",
-                                }
                                 oParamDataPOHdr.push({
                                     PoNumber: poNo,
                                     PoItem: "00000",
@@ -1662,41 +1661,48 @@ sap.ui.define([
                                     TextLine: item.Tdline
                                 })
                             });
-
-                            if (oParamDataPOHdr.length > 0) {
-                                this.showLoadingDialog('Loading...');
-                                oParam = oParamInitParam;
-                                oParam['N_ChangePOHdrTextParam'] = oParamDataPOHdr;
-                                oParam['N_ChangePOReturn'] = [];
-                                console.log(oParam);
-                                _promiseResult = new Promise((resolve, reject)=>{
-                                    oModel.create("/ChangePOSet", oParam, {
-                                        method: "POST",
-                                        success: function(oData, oResponse){
-                                            if(oData.N_ChangePOReturn.results.length > 0){
-                                                message = oData.N_ChangePOReturn.results[0].Msgv1;
-                                                MessageBox.information(message);
-                                                resolve()
-                                            }else{
-                                                MessageBox.information("No Details to be Deleted.");
-                                                resolve()
-                                            }
-                                        },error: function(error){
-                                            MessageBox.error("Error Occured");
-                                            me.closeLoadingDialog(that);
-                                            resolve()
-                                        }
-                                    })
-                                });
-                                await _promiseResult;
-                                
-                                _promiseResult = new Promise((resolve, reject)=>{
-                                    resolve(me.loadAllData())
-                                });
-                                await _promiseResult;
-                                this.closeLoadingDialog(that);
-                            }
+                        }else{
+                            oParamDataPOHdr.push({
+                                PoNumber: poNo,
+                                PoItem: "00000",
+                                TextId: "F01",
+                                TextForm: "",
+                                TextLine: ""
+                            })
                         }
+                        
+
+                        this.showLoadingDialog('Loading...');
+                        oParam = oParamInitParam;
+                        oParam['N_ChangePOHdrTextParam'] = oParamDataPOHdr;
+                        oParam['N_ChangePOReturn'] = [];
+                        console.log(oParam);
+                        _promiseResult = new Promise((resolve, reject)=>{
+                            oModel.create("/ChangePOSet", oParam, {
+                                method: "POST",
+                                success: function(oData, oResponse){
+                                    if(oData.N_ChangePOReturn.results.length > 0){
+                                        message = oData.N_ChangePOReturn.results[0].Msgv1;
+                                        MessageBox.information(message);
+                                        resolve()
+                                    }else{
+                                        MessageBox.information("No Details to be Deleted.");
+                                        resolve()
+                                    }
+                                },error: function(error){
+                                    MessageBox.error("Error Occured");
+                                    me.closeLoadingDialog(that);
+                                    resolve()
+                                }
+                            })
+                        });
+                        await _promiseResult;
+                        
+                        _promiseResult = new Promise((resolve, reject)=>{
+                            resolve(me.loadAllData())
+                        });
+                        await _promiseResult;
+                        this.closeLoadingDialog(that);
                     }
                     // if (aSelIndices.length > 0) {
                     //     aSelIndices.forEach(item => {
@@ -1776,13 +1782,14 @@ sap.ui.define([
                         diffIndeces.forEach((item, index) => {
                             aDataToNotDelete.push(aData.at(item))
                         });
+
+                        oParamInitParam = {
+                            IPoNumber: poNo,
+                            IDoDownload: "N",
+                            IChangeonlyHdrplants: "N",
+                        }
                         if(aDataToNotDelete.length > 0){
                             aDataToNotDelete.forEach(item=>{
-                                oParamInitParam = {
-                                    IPoNumber: poNo,
-                                    IDoDownload: "N",
-                                    IChangeonlyHdrplants: "N",
-                                }
                                 oParamDataPOHdr.push({
                                     PoNumber: poNo,
                                     PoItem: "00000",
@@ -1791,41 +1798,47 @@ sap.ui.define([
                                     TextLine: item.Tdline
                                 })
                             });
-
-                            if (oParamDataPOHdr.length > 0) {
-                                this.showLoadingDialog('Loading...');
-                                oParam = oParamInitParam;
-                                oParam['N_ChangePOHdrTextParam'] = oParamDataPOHdr;
-                                oParam['N_ChangePOReturn'] = [];
-                                console.log(oParam);
-                                _promiseResult = new Promise((resolve, reject)=>{
-                                    oModel.create("/ChangePOSet", oParam, {
-                                        method: "POST",
-                                        success: function(oData, oResponse){
-                                            if(oData.N_ChangePOReturn.results.length > 0){
-                                                message = oData.N_ChangePOReturn.results[0].Msgv1;
-                                                MessageBox.information(message);
-                                                resolve()
-                                            }else{
-                                                MessageBox.information("No Details to be Deleted.");
-                                                resolve()
-                                            }
-                                        },error: function(error){
-                                            MessageBox.error("Error Occured");
-                                            me.closeLoadingDialog(that);
-                                            resolve()
-                                        }
-                                    })
-                                });
-                                await _promiseResult;
-                                
-                                _promiseResult = new Promise((resolve, reject)=>{
-                                    resolve(me.loadAllData())
-                                });
-                                await _promiseResult;
-                                this.closeLoadingDialog(that);
-                            }
+                        }else{
+                            oParamDataPOHdr.push({
+                                PoNumber: poNo,
+                                PoItem: "00000",
+                                TextId: "F06",
+                                TextForm: "",
+                                TextLine: ""
+                            })
                         }
+
+                        this.showLoadingDialog('Loading...');
+                        oParam = oParamInitParam;
+                        oParam['N_ChangePOHdrTextParam'] = oParamDataPOHdr;
+                        oParam['N_ChangePOReturn'] = [];
+                        console.log(oParam);
+                        _promiseResult = new Promise((resolve, reject)=>{
+                            oModel.create("/ChangePOSet", oParam, {
+                                method: "POST",
+                                success: function(oData, oResponse){
+                                    if(oData.N_ChangePOReturn.results.length > 0){
+                                        message = oData.N_ChangePOReturn.results[0].Msgv1;
+                                        MessageBox.information(message);
+                                        resolve()
+                                    }else{
+                                        MessageBox.information("No Details to be Deleted.");
+                                        resolve()
+                                    }
+                                },error: function(error){
+                                    MessageBox.error("Error Occured");
+                                    me.closeLoadingDialog(that);
+                                    resolve()
+                                }
+                            })
+                        });
+                        await _promiseResult;
+                        
+                        _promiseResult = new Promise((resolve, reject)=>{
+                            resolve(me.loadAllData())
+                        });
+                        await _promiseResult;
+                        this.closeLoadingDialog(that);
                     }
 
                     // if (aSelIndices.length > 0) {
@@ -1890,7 +1903,6 @@ sap.ui.define([
                     //     this.closeLoadingDialog(that);
                     // }
                 }
-                MessageToast.show("DELETE CLICKED");
             },
             onCancelEditHdrTxt: async function(type){
 
@@ -2967,6 +2979,8 @@ sap.ui.define([
                         });
                     });
                     
+                }else{
+                    MessageBox.error(this.getView().getModel("captionMsg").getData()["INFO_NO_DATA_EDIT"]);
                 }
 
             },
@@ -3221,10 +3235,7 @@ sap.ui.define([
                     this.validationErrors = [];
 
                     _promiseResult = new Promise((resolve, reject)=>{
-                        setTimeout(() => {
-                            me.loadAllData();
-                            resolve();
-                        }, 500);
+                        resolve(me.loadAllData());
                     });
                     await _promiseResult;
                     // if (this.getView().getModel("ui").getData().dataMode === 'NEW') this.setFilterAfterCreate();
@@ -3296,67 +3307,71 @@ sap.ui.define([
 
                     var message;
 
-                    oSelectedIndices.forEach(item => {
-                        oTmpSelectedIndices.push(oTable.getBinding("rows").aIndices[item])
-                    })
-                    oSelectedIndices = oTmpSelectedIndices;
-                    oSelectedIndices.forEach((item, index) => {
-                        oParamInitParam = {
-                            IPoNumber: me._pono,
-                            IDoDownload: "N",
-                            IChangeonlyHdrplants: "N",
-                        }
-                        oParamDataPO.push({
-                            Banfn: aData.at(item).PRNO, //PRNO
-                            Bnfpo: aData.at(item).PRITM, //PRITM
-                            Ebeln: me._pono,//pono
-                            Ebelp: aData.at(item).ITEM,//poitem
-                            Txz01: aData.at(item).SHORTTEXT,//shorttext
-                            Menge: aData.at(item).QTY,//QTY
-                            Meins: aData.at(item).UOM,//UOM
-                            Netpr: aData.at(item).NETPRICE,//net price
-                            Peinh: aData.at(item).PER,//PER
-                            Bprme: aData.at(item).ORDERPRICEUOM, //Order Price Unit
-                            Repos: aData.at(item).INVRCPTIND, //IR Indicator
-                            Webre: aData.at(item).GRBASEDIVIND, //GR Based Ind
-                            Eindt: sapDateFormat.format(new Date(aData.at(item).DELDT)) + "T00:00:00", //DlvDt
-                            Uebtk: aData.at(item).UNLIMITED,//Unlimited
-                            Uebto: aData.at(item).OVERDELTOL,//OverDel Tol.
-                            Untto: aData.at(item).UNDERDELTOL,//UnderDel Tol.
-                            Zzmakt: aData.at(item).POADDTLDESC, //PO Addtl Desc
-                            DeleteRec: true//Delete
-                            
-                        });
-                        oParamDataPOClose.push({
-                            Banfn: aData.at(item).PRNO, //PRNO
-                            Bnfpo: aData.at(item).PRITM, //PRITM
-                            Ebakz: "" 
+                    if(oSelectedIndices.length > 0){
+                        oSelectedIndices.forEach(item => {
+                            oTmpSelectedIndices.push(oTable.getBinding("rows").aIndices[item])
                         })
-                    });
-
-                    if (oParamDataPO.length > 0) {
-                        oParam = oParamInitParam;
-                        oParam['N_ChangePOItemParam'] = oParamDataPO;
-                        oParam['N_ChangePOClosePRParam'] = oParamDataPOClose;
-                        oParam['N_ChangePOReturn'] = [];
-                        console.log(oParam);
-                        _promiseResult = new Promise((resolve, reject)=>{
-                            oModel.create("/ChangePOSet", oParam, {
-                                method: "POST",
-                                success: function(oData, oResponse){
-                                    if(oData.N_ChangePOReturn.results.length > 0){
-                                        message = oData.N_ChangePOReturn.results[0].Msgv1;
-                                        MessageBox.information(message);
-                                        resolve()
-                                    }else{
-                                        MessageBox.information("No Details to Delete.");
-                                    }
-                                },error: function(error){
-                                    MessageBox.error(error);
-                                }
+                        oSelectedIndices = oTmpSelectedIndices;
+                        oSelectedIndices.forEach((item, index) => {
+                            oParamInitParam = {
+                                IPoNumber: me._pono,
+                                IDoDownload: "N",
+                                IChangeonlyHdrplants: "N",
+                            }
+                            oParamDataPO.push({
+                                Banfn: aData.at(item).PRNO, //PRNO
+                                Bnfpo: aData.at(item).PRITM, //PRITM
+                                Ebeln: me._pono,//pono
+                                Ebelp: aData.at(item).ITEM,//poitem
+                                Txz01: aData.at(item).SHORTTEXT,//shorttext
+                                Menge: aData.at(item).QTY,//QTY
+                                Meins: aData.at(item).UOM,//UOM
+                                Netpr: aData.at(item).NETPRICE,//net price
+                                Peinh: aData.at(item).PER,//PER
+                                Bprme: aData.at(item).ORDERPRICEUOM, //Order Price Unit
+                                Repos: aData.at(item).INVRCPTIND, //IR Indicator
+                                Webre: aData.at(item).GRBASEDIVIND, //GR Based Ind
+                                Eindt: sapDateFormat.format(new Date(aData.at(item).DELDT)) + "T00:00:00", //DlvDt
+                                Uebtk: aData.at(item).UNLIMITED,//Unlimited
+                                Uebto: aData.at(item).OVERDELTOL,//OverDel Tol.
+                                Untto: aData.at(item).UNDERDELTOL,//UnderDel Tol.
+                                Zzmakt: aData.at(item).POADDTLDESC, //PO Addtl Desc
+                                DeleteRec: true//Delete
+                                
+                            });
+                            oParamDataPOClose.push({
+                                Banfn: aData.at(item).PRNO, //PRNO
+                                Bnfpo: aData.at(item).PRITM, //PRITM
+                                Ebakz: "" 
                             })
                         });
-                        await _promiseResult;
+
+                        if (oParamDataPO.length > 0) {
+                            oParam = oParamInitParam;
+                            oParam['N_ChangePOItemParam'] = oParamDataPO;
+                            oParam['N_ChangePOClosePRParam'] = oParamDataPOClose;
+                            oParam['N_ChangePOReturn'] = [];
+                            console.log(oParam);
+                            _promiseResult = new Promise((resolve, reject)=>{
+                                oModel.create("/ChangePOSet", oParam, {
+                                    method: "POST",
+                                    success: function(oData, oResponse){
+                                        if(oData.N_ChangePOReturn.results.length > 0){
+                                            message = oData.N_ChangePOReturn.results[0].Msgv1;
+                                            MessageBox.information(message);
+                                            resolve()
+                                        }else{
+                                            MessageBox.information("No Details to Delete.");
+                                        }
+                                    },error: function(error){
+                                        MessageBox.error(error);
+                                    }
+                                })
+                            });
+                            await _promiseResult;
+                        }
+                    }else{
+                        MessageBox.error(this.getView().getModel("captionMsg").getData()["INFO_NO_DATA_DELETE"]);
                     }
 
                     this.closeLoadingDialog(that);
