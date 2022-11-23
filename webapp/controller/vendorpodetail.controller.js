@@ -75,6 +75,10 @@ sap.ui.define([
                     activePOItem: '',
                     activeCondRec: ''
                 }), "ui");
+
+                this.updUnlock = 1;
+                this.zpoUnlock = 1
+                this.ediVendor; 
             },
             _routePatternMatched: async function (oEvent) {
                 var me = this;
@@ -287,7 +291,9 @@ sap.ui.define([
                             //get only editable fields
                             edditableFields[oDatas] = false;
                         }
-                            
+                        
+                        me.ediVendor = oData.EDIVENDOR;
+
                         oJSONEdit.setData(edditableFields);
                         // console.log(oView.getModel("topHeaderData"))
                         
@@ -329,11 +335,11 @@ sap.ui.define([
                     _this.getView().setModel(new JSONModel({
                         results: []
                     }), "VPOCondVPODet");
-                    resolve(_this.getPODetails2(poNo));
-                    resolve(_this.getDelSchedule2(poNo));
-                    resolve(_this.getDelInvoice2(poNo));
-                    resolve(_this.getPOHistory2(poNo));
-                    resolve(_this.getConditions2(condrec));
+                    _this.getPODetails2(poNo);
+                    _this.getDelSchedule2(poNo);
+                    _this.getDelInvoice2(poNo);
+                    _this.getPOHistory2(poNo);
+                    _this.getConditions2(condrec);
                     resolve();
                 });
             },
@@ -1273,9 +1279,7 @@ sap.ui.define([
                 oTable.bindRows("/rows");
             },
             onNewHdrTxt: async function(type){
-
                 if(type === 'Remarks'){
-                    
                     var remarksItemArr = [];
                     var remarksItemLastCnt = 0;
                     var remarksJSONModel = new JSONModel();
@@ -1378,47 +1382,62 @@ sap.ui.define([
                     MessageBox.information("PO is not editable.")
                     return;
                 }
+                var oTable;
+                var oSelectedIndices;
                 if(type === 'Remarks'){
-                    _promiseResult = new Promise((resolve, reject)=>{
-                        resolve(this.remarksTblLoad());
-                    })
-                    await _promiseResult;
+                    oTable = this.byId("RemarksTbl");
+                    oSelectedIndices = oTable.getBinding("rows").aIndices;
+                    if(oSelectedIndices.length > 0){
+                        _promiseResult = new Promise((resolve, reject)=>{
+                            resolve(this.remarksTblLoad());
+                        })
+                        await _promiseResult;
 
-                    this.byId("vpoNewHdrTxtRemarks").setVisible(false);
-                    this.byId("vpoEditHdrTxtRemarks").setVisible(false);
-                    this.byId("vpoDeleteHdrTxtRemarks").setVisible(false);
-                    this.byId("vpoSaveHdrTxtRemarks").setVisible(true);
-                    this.byId("vpoCancelHdrTxtRemarks").setVisible(true);
+                        this.byId("vpoNewHdrTxtRemarks").setVisible(false);
+                        this.byId("vpoEditHdrTxtRemarks").setVisible(false);
+                        this.byId("vpoDeleteHdrTxtRemarks").setVisible(false);
+                        this.byId("vpoSaveHdrTxtRemarks").setVisible(true);
+                        this.byId("vpoCancelHdrTxtRemarks").setVisible(true);
 
-                    this.disableOtherTabs("idIconTabBarInlineMode");
-                    this.disableOtherTabs("vpoDetailTab");
+                        this.disableOtherTabs("idIconTabBarInlineMode");
+                        this.disableOtherTabs("vpoDetailTab");
 
-                    this.byId("vpoNewHdrTxtPkgInst").setEnabled(false);
-                    this.byId("vpoEditHdrTxtPkgInst").setEnabled(false);
-                    this.byId("vpoDeleteHdrTxtPkgInst").setEnabled(false);
-                    
-                    this.onRowEditPO("RemarksTbl", "VPORemarksCol");
+                        this.byId("vpoNewHdrTxtPkgInst").setEnabled(false);
+                        this.byId("vpoEditHdrTxtPkgInst").setEnabled(false);
+                        this.byId("vpoDeleteHdrTxtPkgInst").setEnabled(false);
+                        
+                        this.onRowEditPO("RemarksTbl", "VPORemarksCol");
+                    }else{
+                        MessageBox.error(this.getView().getModel("captionMsg").getData()["INFO_NO_DATA_EDIT"]);
+                    }
                 }
                 if(type === 'PkgInst'){
-                    _promiseResult = new Promise((resolve, reject)=>{
-                        resolve(this.pkngInstTblLoad());
-                    })
-                    await _promiseResult;
-
-                    this.byId("vpoNewHdrTxtPkgInst").setVisible(false);
-                    this.byId("vpoEditHdrTxtPkgInst").setVisible(false);
-                    this.byId("vpoDeleteHdrTxtPkgInst").setVisible(false);
-                    this.byId("vpoSaveHdrTxtPkgInst").setVisible(true);
-                    this.byId("vpoCancelHdrTxtPkgInst").setVisible(true);
-
-                    this.disableOtherTabs("idIconTabBarInlineMode");
-                    this.disableOtherTabs("vpoDetailTab");
-
-                    this.byId("vpoNewHdrTxtRemarks").setEnabled(false);
-                    this.byId("vpoEditHdrTxtRemarks").setEnabled(false);
-                    this.byId("vpoDeleteHdrTxtRemarks").setEnabled(false);
+                    oTable = this.byId("PackingInstTbl");
+                    oSelectedIndices = oTable.getBinding("rows").aIndices;
+                    if(oSelectedIndices.length > 0){
+                        _promiseResult = new Promise((resolve, reject)=>{
+                            resolve(this.pkngInstTblLoad());
+                        })
+                        await _promiseResult;
+    
+                        this.byId("vpoNewHdrTxtPkgInst").setVisible(false);
+                        this.byId("vpoEditHdrTxtPkgInst").setVisible(false);
+                        this.byId("vpoDeleteHdrTxtPkgInst").setVisible(false);
+                        this.byId("vpoSaveHdrTxtPkgInst").setVisible(true);
+                        this.byId("vpoCancelHdrTxtPkgInst").setVisible(true);
+    
+                        this.disableOtherTabs("idIconTabBarInlineMode");
+                        this.disableOtherTabs("vpoDetailTab");
+    
+                        this.byId("vpoNewHdrTxtRemarks").setEnabled(false);
+                        this.byId("vpoEditHdrTxtRemarks").setEnabled(false);
+                        this.byId("vpoDeleteHdrTxtRemarks").setEnabled(false);
+                        
+                        this.onRowEditPO("PackingInstTbl", "VPOPkngInstsCol");
+                    }else{
+                        MessageBox.error(this.getView().getModel("captionMsg").getData()["INFO_NO_DATA_EDIT"]);
+                    }
                     
-                    this.onRowEditPO("PackingInstTbl", "VPOPkngInstsCol");
                 }
             },
             onSaveEditHdrTxt: async function(type){
@@ -1703,6 +1722,8 @@ sap.ui.define([
                         });
                         await _promiseResult;
                         this.closeLoadingDialog(that);
+                    }else{
+                        MessageBox.error(this.getView().getModel("captionMsg").getData()["INFO_NO_DATA_DELETE"]);
                     }
                     // if (aSelIndices.length > 0) {
                     //     aSelIndices.forEach(item => {
@@ -1839,6 +1860,8 @@ sap.ui.define([
                         });
                         await _promiseResult;
                         this.closeLoadingDialog(that);
+                    }else{
+                        MessageBox.error(this.getView().getModel("captionMsg").getData()["INFO_NO_DATA_DELETE"]);
                     }
 
                     // if (aSelIndices.length > 0) {
@@ -3432,9 +3455,9 @@ sap.ui.define([
                     
                     oModel.read("/VPOAddPRToPORscSet",{ 
                         urlParameters: {
-                            "$filter": "VENDORCD eq '" + vendorCd + "' and PURCHORG eq '"+ purchOrg +"' and PURCHGRP eq '"+ purchGrp +"' and " +
-                                    "SHIPTOPLANT eq '"+ shipToPlant +"' and PURCHPLANT eq '"+ purchPlant +"' and DOCTYP eq '"+ docType +"'"
-                            // "$filter": "VENDORCD eq '0003101604' and PURCHORG eq '1601' and PURCHGRP eq '601' and SHIPTOPLANT eq 'B601' and PURCHPLANT eq 'C600' and DOCTYP eq 'ZMRP'"
+                            // "$filter": "VENDORCD eq '" + vendorCd + "' and PURCHORG eq '"+ purchOrg +"' and PURCHGRP eq '"+ purchGrp +"' and " +
+                            //         "SHIPTOPLANT eq '"+ shipToPlant +"' and PURCHPLANT eq '"+ purchPlant +"' and DOCTYP eq '"+ docType +"'"
+                            "$filter": "VENDORCD eq '0003101604' and PURCHORG eq '1601' and PURCHGRP eq '601' and SHIPTOPLANT eq 'B601' and PURCHPLANT eq 'C600' and DOCTYP eq 'ZMRP'"
                         },
                         success: async function (oData, oResponse) {
                             
@@ -3911,7 +3934,6 @@ sap.ui.define([
             enableOtherTabs: function (tabName) {
                 var oIconTabBar = this.byId(tabName);
                 oIconTabBar.getItems().forEach(item => item.setProperty("enabled", true));
-
             },
             enableOtherTabsChild: function (tabName) {
                 var oIconTabBar = this.byId(tabName);
