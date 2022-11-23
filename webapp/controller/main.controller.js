@@ -37,13 +37,13 @@ sap.ui.define([
                         that.onKeyUp(oEvent);
                     }
                 };
+                
                 this.byId("mainTab").addEventDelegate(oDelegateKeyUp);
                 this.byId("detailsTab").addEventDelegate(oDelegateKeyUp);
                 this.byId("delSchedTab").addEventDelegate(oDelegateKeyUp);
                 this.byId("delInvTab").addEventDelegate(oDelegateKeyUp);
                 this.byId("poHistTab").addEventDelegate(oDelegateKeyUp);
                 this.byId("conditionsTab").addEventDelegate(oDelegateKeyUp);
-
 
                 this._sbuChange = false;
                 this._tblChange = false;
@@ -231,7 +231,6 @@ sap.ui.define([
                                 })
                                 
                                 /*data.results.sort((a,b) => (a.GMC > b.GMC ? 1 : -1));*/
-                                console.log(data.results[0])
                                 poNo = data.results[0].PONO;
                                 condrec = data.results[0].CONDREC;
                                 var oJSONModel = new sap.ui.model.json.JSONModel();
@@ -426,7 +425,6 @@ sap.ui.define([
                         },
                         success: function (data, response) {
                             if (data.results.length > 0) {
-                                console.log(data);
                                 data.results.forEach(item => {
                                     item.DELDT = dateFormat.format(new Date(item.DELDT));
                                 })
@@ -535,7 +533,6 @@ sap.ui.define([
                                     resolve();
                                 }
                                 if (modCode === 'VPODELINV') {
-                                    console.log(oData)
                                     oJSONColumnsModel.setData(oData.results);
                                     me.getView().setModel(oJSONColumnsModel, "VPODELINVColumns");
                                     me.setTableColumnsData(modCode);
@@ -652,6 +649,17 @@ sap.ui.define([
                     }
                     oColumnsData = oDataModel.getProperty('/');                 
                     this.addColumns("mainTab", oColumnsData, oData, "VPOHdr");
+
+                    //double click event
+                    this.byId("mainTab").attachBrowserEvent('dblclick',function(e){
+                        var PONo = me.getView().getModel("ui").getProperty("/activePONo");
+                        var CONDREC = me.getView().getModel("ui").getProperty("/activeCondRec");
+                        var SBU = me.getView().getModel("ui").getData().sbu;
+                        e.preventDefault();
+                        if(me.getView().getModel("ui").getData().dataMode === 'READ'){
+                            me.navToDetail(PONo, CONDREC, SBU); //navigate to detail page
+                        }
+                    });
                 }
                 if (modCode === 'VPODTLS') {
                     oColumnsModel = this.getView().getModel("VPODtls");  
@@ -762,23 +770,6 @@ sap.ui.define([
                             sorted: sColumnSorted,
                             sortOrder: ((sColumnSorted === true) ? sColumnSortOrder : "Ascending" )
                         });
-                    } else if (sColumnId === "DELETED" ) {
-                        return new sap.ui.table.Column({
-                            id: model+"-"+sColumnId,
-                            label: sColumnLabel,
-                            template: new sap.m.CheckBox({
-                                selected: "{" + sColumnId + "}",
-                                editable: false
-                            }),
-                            width: sColumnWidth + "px",
-                            hAlign: "Center",
-                            sortProperty: sColumnId,
-                            filterProperty: sColumnId,
-                            autoResizable: true,
-                            visible: sColumnVisible,
-                            sorted: sColumnSorted,
-                            sortOrder: ((sColumnSorted === true) ? sColumnSortOrder : "Ascending" )
-                        });
                     }
 
                 });
@@ -857,6 +848,7 @@ sap.ui.define([
                 var PONo = this.getView().getModel("ui").getProperty("/activePONo");
                 var CONDREC = this.getView().getModel("ui").getProperty("/activeCondRec");
                 var SBU = this.getView().getModel("ui").getData().sbu;
+                this.updUnlock = 0;
                 this.navToDetail(PONo, CONDREC, SBU);
                 
             },
@@ -939,7 +931,6 @@ sap.ui.define([
                 oModel.create("/TableLayoutSet", oParam, {
                     method: "POST",
                     success: function(data, oResponse) {
-                        console.log(data);
                         sap.m.MessageBox.information("Layout saved.");
                         //Common.showMessage(me._i18n.getText('t6'));
                     },
@@ -951,7 +942,6 @@ sap.ui.define([
             onSelectionChange: async function(oEvent){
                 var sRowPath = oEvent.getParameter("rowContext");
                 sRowPath = "/results/"+ sRowPath.getPath().split("/")[2];
-                console.log(sRowPath);
 
                 var oRow;
                 var oTable;
@@ -1199,7 +1189,6 @@ sap.ui.define([
             onCellClick: async function(oEvent) {
                 var sRowPath = oEvent.getParameters().rowBindingContext.sPath;
                 sRowPath = "/results/"+ sRowPath.split("/")[2];
-                console.log(sRowPath);
                 var oRow;
                 var oTable;
                 var PONo = this.getView().getModel("ui").getProperty("/activePONo")
