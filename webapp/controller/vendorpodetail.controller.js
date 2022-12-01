@@ -25,6 +25,13 @@ sap.ui.define([
 
             onInit: function () {
                 that = this;
+                
+                //Initialize router
+                var oComponent = this.getOwnerComponent();
+                this._router = oComponent.getRouter();
+                
+                this._router.getRoute("vendorpodetail").attachPatternMatched(this._routePatternMatched, this);
+
                 this._columnLoadError = false;
                 this._oDataBeforeChange = {}
                 this._oDataRemarksBeforeChange = {}
@@ -61,11 +68,6 @@ sap.ui.define([
                 this.byId("vpoPoHistTab").addEventDelegate(oDelegateKeyUp);
                 this.byId("vpoConditionsTab").addEventDelegate(oDelegateKeyUp);
 
-                //Initialize router
-                var oComponent = this.getOwnerComponent();
-                this._router = oComponent.getRouter();
-                
-                this._router.getRoute("vendorpodetail").attachPatternMatched(this._routePatternMatched, this);
                 
                 //Initialize translations
                 this._i18n = this.getOwnerComponent().getModel("i18n").getResourceBundle();
@@ -77,11 +79,14 @@ sap.ui.define([
                 }), "ui");
 
                 this.updUnlock = 1;
-                this.zpoUnlock = 1
+                this.zpoUnlock = 1;
                 this.ediVendor; 
+                this.mattyp = 0;
+                this.updateZERPPOUnlock();
             },
             _routePatternMatched: async function (oEvent) {
                 var me = this;
+                
                 this._pono = oEvent.getParameter("arguments").PONO;
                 this._condrec = oEvent.getParameter("arguments").CONDREC;
                 this._sbu = oEvent.getParameter("arguments").SBU;
@@ -315,7 +320,7 @@ sap.ui.define([
                 var poNo = this._pono;
                 var condrec = this._condrec;
 
-                return new Promise((resolve, reject) => {
+                return new Promise(async (resolve, reject) => {
                     _this.getView().setModel(new JSONModel({
                         results: []
                     }), "VPODtlsVPODet");
@@ -335,11 +340,11 @@ sap.ui.define([
                     _this.getView().setModel(new JSONModel({
                         results: []
                     }), "VPOCondVPODet");
-                    _this.getPODetails2(poNo);
-                    _this.getDelSchedule2(poNo);
-                    _this.getDelInvoice2(poNo);
-                    _this.getPOHistory2(poNo);
-                    _this.getConditions2(condrec);
+                    resolve(await _this.getPODetails2(poNo));
+                    resolve(await _this.getDelSchedule2(poNo));
+                    resolve(await _this.getDelInvoice2(poNo));
+                    resolve(await _this.getPOHistory2(poNo));
+                    resolve(await _this.getConditions2(condrec));
                     resolve();
                 });
             },
@@ -462,13 +467,13 @@ sap.ui.define([
                             if (data.results.length > 0) {
                                 data.results.forEach(item => {
                                     item.DELDT = dateFormat.format(new Date(item.DELDT));
+                                    item.DELETED = item.DELETED === "L" ? true : false;
                                 })
                                 objectData.push(data.results);
                                 objectData[0].sort((a,b) => (a.ITEM > b.ITEM) ? 1 : ((b.ITEM > a.ITEM) ? -1 : 0));
                                 
                                 oJSONModel.setData(data);
                             }
-
                             var poItem = data.results[0].ITEM;
                             me.getView().getModel("ui").setProperty("/activePOItem", poItem);
 
@@ -533,7 +538,6 @@ sap.ui.define([
                             if (oData.results.length > 0) {
                                 me._columnLoadError = false;
                                 if (modCode === 'VPODTLS') {
-                                    console.log(oResponse);
                                     oJSONColumnsModel.setData(oData.results);
                                     me.getView().setModel(oJSONColumnsModel, "VPODTLSColumnsVPODet");
                                     me.setTableColumnsData(modCode);
@@ -772,7 +776,7 @@ sap.ui.define([
                         editable: false
                     });
                 }
-                if (sColumnId === "UNLIMITED" || sColumnId === "OVERDELTOL" || sColumnId === "UNDERDELTOL") { 
+                if (sColumnId === "UNLIMITED" || sColumnId === "OVERDELTOL" || sColumnId === "UNDERDELTOL" || sColumnId === "GRIND") { 
                     //Manage button
                     oColumnTemplate = new sap.m.CheckBox({
                         selected: "{" + sColumnId + "}",
@@ -1488,7 +1492,6 @@ sap.ui.define([
                         oParam = oParamInitParam;
                         oParam['N_ChangePOHdrTextParam'] = oParamDataPOHdr;
                         oParam['N_ChangePOReturn'] = [];
-                        console.log(oParam);
                         _promiseResult = new Promise((resolve, reject)=>{
                             oModel.create("/ChangePOSet", oParam, {
                                 method: "POST",
@@ -1562,7 +1565,6 @@ sap.ui.define([
                         oParam = oParamInitParam;
                         oParam['N_ChangePOHdrTextParam'] = oParamDataPOHdr;
                         oParam['N_ChangePOReturn'] = [];
-                        console.log(oParam);
                         _promiseResult = new Promise((resolve, reject)=>{
                             oModel.create("/ChangePOSet", oParam, {
                                 method: "POST",
@@ -1695,7 +1697,6 @@ sap.ui.define([
                         oParam = oParamInitParam;
                         oParam['N_ChangePOHdrTextParam'] = oParamDataPOHdr;
                         oParam['N_ChangePOReturn'] = [];
-                        console.log(oParam);
                         _promiseResult = new Promise((resolve, reject)=>{
                             oModel.create("/ChangePOSet", oParam, {
                                 method: "POST",
@@ -1833,7 +1834,6 @@ sap.ui.define([
                         oParam = oParamInitParam;
                         oParam['N_ChangePOHdrTextParam'] = oParamDataPOHdr;
                         oParam['N_ChangePOReturn'] = [];
-                        console.log(oParam);
                         _promiseResult = new Promise((resolve, reject)=>{
                             oModel.create("/ChangePOSet", oParam, {
                                 method: "POST",
@@ -1975,16 +1975,64 @@ sap.ui.define([
                             "$filter":"PO_Number eq '"+ this._pono +"'"
                         },
                         success: async function (data, response) {
-                            if(data.results.WithGR != "X"){
-                                me._validPOChange = 1
-                                resolve()
+                            if(data.results[0].WithGR !== "X"){
+                                
+                                resolve(me._validPOChange = 1)
                             }else{
-                                me._validPOChange = 0
-                                resolve()
+                                
+                                resolve(me._validPOChange = 0)
                             }
                         },
                         error: function(error){
-                            me._validPOChange = 2
+                            
+                            resolve(me._validPOChange = 2)
+                        }
+                    })
+                })
+                await _promiseResult;
+            },
+            checkNetPriceIfEdittable: async function(mattyp){
+                this.mattyp = 0; //Init
+                var me = this;
+                var vSBU = this._sbu;
+                var oModel = this.getOwnerComponent().getModel();
+                var oEntitySet = "/VPOCheckNetPrSet"
+                _promiseResult = new Promise((resolve, reject)=>{
+                    oModel.read(oEntitySet, {
+                        urlParameters: {
+                            "$filter":"FIELD2 eq '"+ mattyp +"' and SBU eq '"+ vSBU +"'"
+                        },
+                        success: async function (data, response) {
+                            if(data.results.length){
+                                me.mattyp = 1;
+                                resolve();
+                            }else{
+                                me.mattyp = 0
+                                resolve();
+                            }
+                        },
+                        error: function(error){
+                            me.mattyp = 2
+                            resolve();
+                        }
+                    })
+                })
+                await _promiseResult;
+            },
+            updateZERPPOUnlock: async function(pono){
+                var me = this;
+                var oModel = this.getOwnerComponent().getModel();
+                var oEntitySet = "/VPOZPOUnlockSet(EBELN='7300001313')"
+
+                _promiseResult = new Promise((resolve, reject)=>{
+                    oModel.read(oEntitySet, {
+                        // urlParameters: {
+                        //     "$filter":"EBELN eq '7300001313'"
+                        // },
+                        success: async function (data, response) {
+                            resolve();
+                        },
+                        error: function(error){
                             resolve()
                         }
                     })
@@ -2010,11 +2058,10 @@ sap.ui.define([
                     
                     if(item.DELETED !== true && item.CLOSED !== true){
                         bProceed = true;
-                        console.log(bProceed)
                     }
                 })
                 if(bProceed){
-                    if(this._validPOChange != 1){
+                    if(me._validPOChange !== 1){
                         oDataEdit.SHIPTOPLANT = true;//ShipToPlant
                     }else{
                         oDataEdit.SHIPTOPLANT = true;//ShipToPlant
@@ -2131,6 +2178,9 @@ sap.ui.define([
                             success: function(oData, oResponse){
                                 if(oData.N_ChangePOReturn.results.length > 0){
                                     message = oData.N_ChangePOReturn.results[0].Msgv1;
+                                    if(me.ediVendor === "L" && me.zpoUnlock === 1){
+                                        me.updUnlock = 1;
+                                    }
                                     MessageBox.information(message);
                                     resolve()
                                 }else{
@@ -2163,6 +2213,9 @@ sap.ui.define([
 
                 oView.setModel(oJSONEdit, "topHeaderDataEdit");
                 this.loadAllData()
+                if(this.ediVendor === "L" && this.updUnlock === 1){
+                    //Update ZPOUnlock
+                }
 
                 this.getView().getModel("ui").setProperty("/dataMode", 'READ');
                 this.closeLoadingDialog(that);
@@ -2176,7 +2229,6 @@ sap.ui.define([
                 
                 var oDataEDitModel = this.getView().getModel("topHeaderDataEdit"); 
                 var oDataEdit = oDataEDitModel.getProperty('/');
-                console.log(this._headerIsEdited)
                 if (this._headerIsEdited) {
                     var bCompact = !!this.getView().$().closest(".sapUiSizeCompact").length;
                     _promiseResult = new Promise((resolve, reject) => {
@@ -2388,7 +2440,7 @@ sap.ui.define([
                             changeVendorParam ={
                                 "ev_lifnr": newVendorCd, 
                                 "ev_ebeln": poNo, 
-                                "ev_uname": "JFIRME", 
+                                "ev_uname": "", 
                                 "N_CT_BAPIRET2": [], 
                                 "N_CT_UASCOND": [], 
                                 "N_CT_UASPO": []
@@ -2537,13 +2589,11 @@ sap.ui.define([
                         oParam['N_ChangePOItemParam'] = oParamDataPO;
                         oParam['N_ChangePOClosePRParam'] = oParamDataPOClose;
                         oParam['N_ChangePOReturn'] = [];
-                        console.log(oParam);
                         _promiseResult = new Promise((resolve, reject)=>{
                             oModel.create("/ChangePOSet", oParam, {
                                 method: "POST",
                                 success: function(oData, oResponse){
                                     if(oData.N_ChangePOReturn.results.length > 0){
-                                        console.log(oData);
                                         if(oData.N_ChangePOReturn.results[0].Msgtyp === "E"){
                                             message = oData.N_ChangePOReturn.results[0].Msgv1;
                                             MessageBox.information(message);
@@ -2631,7 +2681,6 @@ sap.ui.define([
                             success: function (oData, oResponse) {
                                 // if (oData.PODT !== null)
                                 //     oData.PODT = dateFormat.format(new Date(oData.PODT));
-                                console.log(oData)
                                 frgke = oData.FRGKE
                                 resolve();
                             },
@@ -2706,13 +2755,11 @@ sap.ui.define([
                             oParam['N_ChangePOItemParam'] = oParamDataPO;
                             oParam['N_ChangePOClosePRParam'] = oParamDataPOClose;
                             oParam['N_ChangePOReturn'] = [];
-                            console.log(oParam);
                             _promiseResult = new Promise((resolve, reject)=>{
                                 rfcModel.create("/ChangePOSet", oParam, {
                                     method: "POST",
                                     success: function(oData, oResponse){
                                         if(oData.N_ChangePOReturn.results.length > 0){
-                                            console.log(oData);
                                             if(oData.N_ChangePOReturn.results[0].Msgtyp === "E"){
                                                 message = oData.N_ChangePOReturn.results[0].Msgv1;
                                                 MessageBox.information(message);
@@ -2790,7 +2837,6 @@ sap.ui.define([
                             success: function (oData, oResponse) {
                                 // if (oData.PODT !== null)
                                 //     oData.PODT = dateFormat.format(new Date(oData.PODT));
-                                console.log(oData)
                                 frgke = oData.FRGKE
                                 resolve();
                             },
@@ -2864,13 +2910,11 @@ sap.ui.define([
                             oParam['N_ChangePOItemParam'] = oParamDataPO;
                             oParam['N_ChangePOClosePRParam'] = oParamDataPOClose;
                             oParam['N_ChangePOReturn'] = [];
-                            console.log(oParam);
                             _promiseResult = new Promise((resolve, reject)=>{
                                 rfcModel.create("/ChangePOSet", oParam, {
                                     method: "POST",
                                     success: function(oData, oResponse){
                                         if(oData.N_ChangePOReturn.results.length > 0){
-                                            console.log(oData);
                                             if(oData.N_ChangePOReturn.results[0].Msgtyp === "E"){
                                                 message = oData.N_ChangePOReturn.results[0].Msgv1;
                                                 MessageBox.information(message);
@@ -2930,6 +2974,7 @@ sap.ui.define([
                 var aData = this._oDataBeforeChange.results != undefined? this._oDataBeforeChange.results : this.getView().getModel("VPODtlsVPODet").getData().results;
                 var aDataToEdit = [];
                 var iCounter = 0;
+                var vProceed = true;
 
                 if (aSelIndices.length > 0) {
                     aSelIndices.forEach(item => {
@@ -2948,52 +2993,68 @@ sap.ui.define([
                                 "$filter": "PONO eq '" + poNo + "'"
                             },
                             success: async function (data, response) {
-                                data.results.forEach(dataItem => {
+                                data.results.forEach(async dataItem => {
                                     if(aData.at(item).ITEM == dataItem.ITEM){
                                         iCounter++;
-                                        aDataToEdit.push(aData.at(item));
-                                        if (aSelIndices.length === iCounter) {
-                                            me._oDataBeforeChange = me.getView().getModel("VPODtlsVPODet").getData();
-                                            me.getView().getModel("VPODtlsVPODet").setProperty("/results", aDataToEdit);
-                                            me.setTableColumnsData("VPODTLS");
-                                            // me.byId("vpoSearchFieldDetails").setVisible(false);
-                                            me.byId("vpoBtnAddPRtoPO").setVisible(false);
-                                            me.byId("vpoBtnItemChanges").setVisible(false);
-                                            me.byId("vpoBtnRefreshDetails").setVisible(false);
-                                            me.byId("vpoBtnEditDetails").setVisible(false);
-                                            me.byId("vpoBtnDeleteDetails").setVisible(false);
-                                            me.byId("vpoBtnSaveLayoutDetails").setVisible(false);
-                                            me.byId("vpoBtnSaveDetails").setVisible(true);
-                                            me.byId("vpoBtnCancelDetails").setVisible(true);
+                                        if (aData.at(item).DELETED === false && (aData.at(item).CLOSED === false)) {
+                                            vProceed = true;
+                                            aDataToEdit.push(aData.at(item));
+                                            await me.checkNetPriceIfEdittable(aData.at(item).MATTYP);
+                                            if(me.mattyp == 1){
+                                                aDataToEdit[iCounter-1].NetPREdit = false;
+                                            }else if(me.mattyp == 0){
+                                                aDataToEdit[iCounter-1].NetPREdit = true;
+                                            }else if(me.mattyp == 2){
+                                                vProceed = false
+                                            }
+                                        }else{
+                                            vProceed = false;
+                                        }
+                                        
+                                        if(vProceed){
+                                            if (aSelIndices.length === iCounter) {
+                                                me._oDataBeforeChange = me.getView().getModel("VPODtlsVPODet").getData();
+                                                me.getView().getModel("VPODtlsVPODet").setProperty("/results", aDataToEdit);
+                                                me.setTableColumnsData("VPODTLS");
+                                                // me.byId("vpoSearchFieldDetails").setVisible(false);
+                                                me.byId("vpoBtnAddPRtoPO").setVisible(false);
+                                                me.byId("vpoBtnItemChanges").setVisible(false);
+                                                me.byId("vpoBtnRefreshDetails").setVisible(false);
+                                                me.byId("vpoBtnEditDetails").setVisible(false);
+                                                me.byId("vpoBtnDeleteDetails").setVisible(false);
+                                                me.byId("vpoBtnSaveLayoutDetails").setVisible(false);
+                                                me.byId("vpoBtnSaveDetails").setVisible(true);
+                                                me.byId("vpoBtnCancelDetails").setVisible(true);
 
-                                            me.disableOtherTabsChild("idIconTabBarInlineMode");
-                                            me.disableOtherTabsChild("vpoHeaderTxtIconTab");
-                                            me.byId("vpoDelSchedIconTab").setEnabled(false);
-                                            me.byId("vpoDelInvIconTab").setEnabled(false);
-                                            me.byId("vpoPoHistIconTab").setEnabled(false);
-                                            me.byId("vpoConditionsIconTab").setEnabled(false);
+                                                me.disableOtherTabsChild("idIconTabBarInlineMode");
+                                                me.disableOtherTabsChild("vpoHeaderTxtIconTab");
+                                                me.byId("vpoDelSchedIconTab").setEnabled(false);
+                                                me.byId("vpoDelInvIconTab").setEnabled(false);
+                                                me.byId("vpoPoHistIconTab").setEnabled(false);
+                                                me.byId("vpoConditionsIconTab").setEnabled(false);
 
-                                            // me.byId("vpoNewHdrTxtRemarks").setEnabled(false);
-                                            // me.byId("vpoEditHdrTxtRemarks").setEnabled(false);
-                                            // me.byId("vpoDeleteHdrTxtRemarks").setEnabled(false);
+                                                // me.byId("vpoNewHdrTxtRemarks").setEnabled(false);
+                                                // me.byId("vpoEditHdrTxtRemarks").setEnabled(false);
+                                                // me.byId("vpoDeleteHdrTxtRemarks").setEnabled(false);
 
-                                            // me.byId("vpoHdrMenuBtn").setEnabled(false);
-                                            // me.byId("vpoBtnEditHeader").setEnabled(false);
-                                            // me.byId("vpoBtnRefreshtHeader").setEnabled(false);
+                                                // me.byId("vpoHdrMenuBtn").setEnabled(false);
+                                                // me.byId("vpoBtnEditHeader").setEnabled(false);
+                                                // me.byId("vpoBtnRefreshtHeader").setEnabled(false);
 
-                                            // me.byId("vpoNewHdrTxtPkgInst").setEnabled(false);
-                                            // me.byId("vpoEditHdrTxtPkgInst").setEnabled(false);
-                                            // me.byId("vpoDeleteHdrTxtPkgInst").setEnabled(false);
-                                            
-                                            
-                                            me.onRowEditPO("vpoDetailsTab", "VPODTLSColumnsVPODet");
-                                            
-                                            me.getView().getModel("ui").setProperty("/dataMode", 'EDIT');
-                                            
+                                                // me.byId("vpoNewHdrTxtPkgInst").setEnabled(false);
+                                                // me.byId("vpoEditHdrTxtPkgInst").setEnabled(false);
+                                                // me.byId("vpoDeleteHdrTxtPkgInst").setEnabled(false);
+                                                
+                                                
+                                                me.onRowEditPO("vpoDetailsTab", "VPODTLSColumnsVPODet");
+                                                
+                                                me.getView().getModel("ui").setProperty("/dataMode", 'EDIT');
+                                                
+                                            }
+                                        }else{
+                                            MessageBox.information("PO is not valid to Edit.")
                                         }
                                     }
-                                    
-                                    
                                 });
                                 
                             },error: function(error){
@@ -3014,49 +3075,149 @@ sap.ui.define([
 
                 var oColumnsModel = this.getView().getModel(model);
                 var oColumnsData = oColumnsModel.getProperty('/');
-
-                oTable.getColumns().forEach((col, idx) => {
-                    oColumnsData.filter(item => item.ColumnName === col.sId.split("-")[1])
-                        .forEach(ci => {
-                            var sColumnType = ci.DataType;
-                            if (ci.Editable) {
-                                if (ci.ColumnName === "UNLIMITED") {
-                                    col.setTemplate(new sap.m.CheckBox({
-                                        selected: "{" + ci.ColumnName + "}",
-                                        editable: true,
-                                        // liveChange: this.onInputLiveChange.bind(this)
-                                    }));
-                                }else if (sColumnType === "STRING") {
-                                    col.setTemplate(new sap.m.Input({
-                                        // id: "ipt" + ci.name,
-                                        type: "Text",
-                                        value: "{path: '" + ci.ColumnName + "', mandatory: '"+ ci.Mandatory +"'}",
-                                        maxLength: +ci.Length,
-                                        liveChange: this.onInputLiveChange.bind(this)
-                                    }));
-                                }else if (sColumnType === "DATETIME"){
-                                    col.setTemplate(new sap.m.DatePicker({
-                                        // id: "ipt" + ci.name,
-                                        value: "{path: '" + ci.ColumnName + "', mandatory: '"+ ci.Mandatory +"'}",
-                                        displayFormat:"short",
-                                        change:"handleChange",
-                                    
-                                        liveChange: this.onInputLiveChange.bind(this)
-                                    }));
-                                }else if (sColumnType === "NUMBER"){
-                                    col.setTemplate(new sap.m.Input({
-                                        // id: "ipt" + ci.name,
-                                        type: sap.m.InputType.Number,
-                                        value: "{path:'" + ci.ColumnName + "', type:'sap.ui.model.type.Decimal', formatOptions:{ minFractionDigits:" + null + ", maxFractionDigits:" + null + " }, constraints:{ precision:" + ci.Decimal + ", scale:" + null + " }}",
+                
+                if(table === "vpoDetailsTab"){
+                    var oData =  this.getView().getModel("VPODtlsVPODet").getProperty('/results');
+                    
+                    oData.forEach((col, idx)=>{
+                        if(!col.NetPREdit){
+                            oTable.getColumns().forEach((col, idx) => {
+                                oColumnsData.filter(item => item.ColumnName === col.sId.split("-")[1])
+                                    .forEach(ci => {
+                                        var sColumnType = ci.DataType;
+                                        if(ci.ColumnName === "NETPRICE"){
+                                            ci.Editable = false;
+                                        }
+                                        if (ci.Editable) {
+                                            if (ci.ColumnName === "UNLIMITED") {
+                                                col.setTemplate(new sap.m.CheckBox({
+                                                    selected: "{" + ci.ColumnName + "}",
+                                                    editable: true,
+                                                    // liveChange: this.onInputLiveChange.bind(this)
+                                                }));
+                                            }else if (sColumnType === "STRING") {
+                                                col.setTemplate(new sap.m.Input({
+                                                    // id: "ipt" + ci.name,
+                                                    type: "Text",
+                                                    value: "{path: '" + ci.ColumnName + "', mandatory: '"+ ci.Mandatory +"'}",
+                                                    maxLength: +ci.Length,
+                                                    liveChange: this.onInputLiveChange.bind(this)
+                                                }));
+                                            }else if (sColumnType === "DATETIME"){
+                                                col.setTemplate(new sap.m.DatePicker({
+                                                    // id: "ipt" + ci.name,
+                                                    value: "{path: '" + ci.ColumnName + "', mandatory: '"+ ci.Mandatory +"'}",
+                                                    displayFormat:"short",
+                                                    change:"handleChange",
+                                                
+                                                    liveChange: this.onInputLiveChange.bind(this)
+                                                }));
+                                            }else if (sColumnType === "NUMBER"){
+                                                col.setTemplate(new sap.m.Input({
+                                                    // id: "ipt" + ci.name,
+                                                    type: sap.m.InputType.Number,
+                                                    value: "{path:'" + ci.ColumnName + "', type:'sap.ui.model.type.Decimal', formatOptions:{ minFractionDigits:" + null + ", maxFractionDigits:" + null + " }, constraints:{ precision:" + ci.Decimal + ", scale:" + null + " }}",
+                                                    
+                                                    maxLength: +ci.Length,
+                                                
+                                                    liveChange: this.onNumberLiveChange.bind(this)
+                                                }));
+                                            }
+                                        }
+                                    });
+                            });
+                        }else{
+                            oTable.getColumns().forEach((col, idx) => {
+                                oColumnsData.filter(item => item.ColumnName === col.sId.split("-")[1])
+                                    .forEach(ci => {
+                                        var sColumnType = ci.DataType;
+                                        if(ci.ColumnName === "NETPRICE"){
+                                            ci.Editable = true;
+                                        }
+                                        if (ci.Editable) {
+                                            if (ci.ColumnName === "UNLIMITED") {
+                                                col.setTemplate(new sap.m.CheckBox({
+                                                    selected: "{" + ci.ColumnName + "}",
+                                                    editable: true,
+                                                    // liveChange: this.onInputLiveChange.bind(this)
+                                                }));
+                                            }else if (sColumnType === "STRING") {
+                                                col.setTemplate(new sap.m.Input({
+                                                    // id: "ipt" + ci.name,
+                                                    type: "Text",
+                                                    value: "{path: '" + ci.ColumnName + "', mandatory: '"+ ci.Mandatory +"'}",
+                                                    maxLength: +ci.Length,
+                                                    liveChange: this.onInputLiveChange.bind(this)
+                                                }));
+                                            }else if (sColumnType === "DATETIME"){
+                                                col.setTemplate(new sap.m.DatePicker({
+                                                    // id: "ipt" + ci.name,
+                                                    value: "{path: '" + ci.ColumnName + "', mandatory: '"+ ci.Mandatory +"'}",
+                                                    displayFormat:"short",
+                                                    change:"handleChange",
+                                                
+                                                    liveChange: this.onInputLiveChange.bind(this)
+                                                }));
+                                            }else if (sColumnType === "NUMBER"){
+                                                col.setTemplate(new sap.m.Input({
+                                                    // id: "ipt" + ci.name,
+                                                    type: sap.m.InputType.Number,
+                                                    value: "{path:'" + ci.ColumnName + "', type:'sap.ui.model.type.Decimal', formatOptions:{ minFractionDigits:" + null + ", maxFractionDigits:" + null + " }, constraints:{ precision:" + ci.Decimal + ", scale:" + null + " }}",
+                                                    
+                                                    maxLength: +ci.Length,
+                                                
+                                                    liveChange: this.onNumberLiveChange.bind(this)
+                                                }));
+                                            }
+                                        }
+                                    });
+                            });
+                        }
+                    })
+                }else{
+                    oTable.getColumns().forEach((col, idx) => {
+                        oColumnsData.filter(item => item.ColumnName === col.sId.split("-")[1])
+                            .forEach(ci => {
+                                var sColumnType = ci.DataType;
+                                if (ci.Editable) {
+                                    if (ci.ColumnName === "UNLIMITED") {
+                                        col.setTemplate(new sap.m.CheckBox({
+                                            selected: "{" + ci.ColumnName + "}",
+                                            editable: true,
+                                            // liveChange: this.onInputLiveChange.bind(this)
+                                        }));
+                                    }else if (sColumnType === "STRING") {
+                                        col.setTemplate(new sap.m.Input({
+                                            // id: "ipt" + ci.name,
+                                            type: "Text",
+                                            value: "{path: '" + ci.ColumnName + "', mandatory: '"+ ci.Mandatory +"'}",
+                                            maxLength: +ci.Length,
+                                            liveChange: this.onInputLiveChange.bind(this)
+                                        }));
+                                    }else if (sColumnType === "DATETIME"){
+                                        col.setTemplate(new sap.m.DatePicker({
+                                            // id: "ipt" + ci.name,
+                                            value: "{path: '" + ci.ColumnName + "', mandatory: '"+ ci.Mandatory +"'}",
+                                            displayFormat:"short",
+                                            change:"handleChange",
                                         
-                                        maxLength: +ci.Length,
-                                    
-                                        liveChange: this.onNumberLiveChange.bind(this)
-                                    }));
+                                            liveChange: this.onInputLiveChange.bind(this)
+                                        }));
+                                    }else if (sColumnType === "NUMBER"){
+                                        col.setTemplate(new sap.m.Input({
+                                            // id: "ipt" + ci.name,
+                                            type: sap.m.InputType.Number,
+                                            value: "{path:'" + ci.ColumnName + "', type:'sap.ui.model.type.Decimal', formatOptions:{ minFractionDigits:" + null + ", maxFractionDigits:" + null + " }, constraints:{ precision:" + ci.Decimal + ", scale:" + null + " }}",
+                                            
+                                            maxLength: +ci.Length,
+                                        
+                                            liveChange: this.onNumberLiveChange.bind(this)
+                                        }));
+                                    }
                                 }
-                            }
-                        });
-                });
+                            });
+                    });
+                }
             },
             onInputLiveChange: function(oEvent){
                 if(oEvent.getSource().getBindingInfo("value").mandatory){
@@ -3114,7 +3275,6 @@ sap.ui.define([
                 
                 var message;
 
-                console.log(aData);
                 oSelectedIndices.forEach(item => {
                     oTmpSelectedIndices.push(oTable.getBinding("rows").aIndices[item])
                 })
@@ -3159,7 +3319,6 @@ sap.ui.define([
                     oParam['N_ChangePOItemParam'] = oParamDataPO;
                     oParam['N_ChangePOClosePRParam'] = oParamDataPOClose;
                     oParam['N_ChangePOReturn'] = [];
-                    console.log(oParam);
                     _promiseResult = new Promise((resolve, reject)=>{
                         oModel.create("/ChangePOSet", oParam, {
                             method: "POST",
@@ -3374,7 +3533,6 @@ sap.ui.define([
                             oParam['N_ChangePOItemParam'] = oParamDataPO;
                             oParam['N_ChangePOClosePRParam'] = oParamDataPOClose;
                             oParam['N_ChangePOReturn'] = [];
-                            console.log(oParam);
                             _promiseResult = new Promise((resolve, reject)=>{
                                 oModel.create("/ChangePOSet", oParam, {
                                     method: "POST",
@@ -3461,7 +3619,6 @@ sap.ui.define([
                         },
                         success: async function (oData, oResponse) {
                             
-                            console.log(oData);
                             addPRToPOData = {
                                 Title: "Add PR To PO"
                             };
@@ -3879,7 +4036,7 @@ sap.ui.define([
                 var ctr = 1;
                 var oTable = this.getView().byId(table);
                 var oColumns = oTable.getColumns();
-                var vSBU = this.getView().getModel("ui").getData().sbu;
+                var vSBU = this._sbu;
     
                 var oParam = {
                     "SBU": vSBU,
@@ -3909,7 +4066,6 @@ sap.ui.define([
                 oModel.create("/TableLayoutSet", oParam, {
                     method: "POST",
                     success: function(data, oResponse) {
-                        console.log(data);
                         sap.m.MessageBox.information("Layout saved.");
                         //Common.showMessage(me._i18n.getText('t6'));
                     },

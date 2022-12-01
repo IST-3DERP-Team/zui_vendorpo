@@ -77,7 +77,7 @@ sap.ui.define([
                 this._router = oComponent.getRouter();
                 this.getView().setModel(new JSONModel({dataMode: 'NODATA',}), "ui");
 
-
+                
                 this.updUnlock = 1;
                 this.zpoUnlock = 1
                 this.ediVendor; 
@@ -427,6 +427,7 @@ sap.ui.define([
                             if (data.results.length > 0) {
                                 data.results.forEach(item => {
                                     item.DELDT = dateFormat.format(new Date(item.DELDT));
+                                    item.DELETED = item.DELETED === "L" ? true : false;
                                 })
                                 objectData.push(data.results);
                                 objectData[0].sort((a,b) => (a.ITEM > b.ITEM) ? 1 : ((b.ITEM > a.ITEM) ? -1 : 0));
@@ -795,7 +796,7 @@ sap.ui.define([
                         editable: false
                     });
                 }
-                if (sColumnId === "UNLIMITED" || sColumnId === "OVERDELTOL" || sColumnId === "UNDERDELTOL") { 
+                if (sColumnId === "UNLIMITED" || sColumnId === "OVERDELTOL" || sColumnId === "UNDERDELTOL" || sColumnId === "GRIND") { 
                     //Manage button
                     oColumnTemplate = new sap.m.CheckBox({
                         selected: "{" + sColumnId + "}",
@@ -942,7 +943,7 @@ sap.ui.define([
             onSelectionChange: async function(oEvent){
                 var sRowPath = oEvent.getParameter("rowContext");
                 sRowPath = "/results/"+ sRowPath.getPath().split("/")[2];
-
+                var selPath = this.byId(oEvent.getParameters().id).mProperties.selectedIndex;
                 var oRow;
                 var oTable;
                 var PONo = this.getView().getModel("ui").getProperty("/activePONo")
@@ -970,7 +971,7 @@ sap.ui.define([
                         oTable.getRows().forEach(row => {
                             if(row.getBindingContext().sPath.replace("/rows/", "") === sRowPath.split("/")[2]){
                                 resolve(row.addStyleClass("activeRow"));
-                                oTable.setSelectedIndex(parseInt(sRowPath.split("/")[2]));
+                                oTable.setSelectedIndex(selPath);
                             }else{
                                 resolve(row.removeStyleClass("activeRow"));
                             }
