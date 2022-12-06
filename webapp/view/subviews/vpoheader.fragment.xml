@@ -29,7 +29,7 @@
                                 <MenuItem id="_IDGenMenuItem_02_2" text="{captionMsg>/CHANGEVENDOR}" press=".onChangeVendorVPOHeader"/>
                                 <MenuItem id="_IDGenMenuItem_02_3" text="{captionMsg>/DELETEPO}" press=".onDeleteVPO"/>
                                 <MenuItem id="_IDGenMenuItem_02_4" text="{captionMsg>/CANCELPO}" press=".onCancelVPO" />
-                                <MenuItem id="_IDGenMenuItem_02_5" text="{captionMsg>/SPLITPO}" />
+                                <MenuItem id="_IDGenMenuItem_02_5" text="{captionMsg>/SPLITPO}" press=".onSplitVPO"/>
                             </Menu>
                         </menu>                    
                     </MenuButton>
