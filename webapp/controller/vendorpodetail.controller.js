@@ -2365,7 +2365,7 @@ sap.ui.define([
                         }
                     });
                 }else{
-                    MessageBox.information("PO is not valid for Editing.")
+                    MessageBox.error("PO is not valid for Editing.")
                 }
             },
             onSaveVendorVPOHeader: async function(oEvent){
@@ -2487,6 +2487,7 @@ sap.ui.define([
                 this._newDlvDate = ""
 
                 var bProceed = true
+                var isValid = true
 
                 _promiseResult = new Promise((resolve, reject)=>{
                     resolve(me.validatePOChange());
@@ -2496,6 +2497,20 @@ sap.ui.define([
                 if(this._validPOChange != 1){
                     bProceed = false
                 }
+
+                this.getView().getModel("VPODtlsVPODet").getProperty("/results").forEach(item => {
+                    if(bProceed){
+                        if(isValid){
+                            if(item.DELETED !== true && item.CLOSED !== true){
+                                bProceed = true;
+                                isValid = true;
+                            }else{
+                                bProceed = false;
+                                isValid = false;
+                            }
+                        }
+                    }
+                })
 
                 var poNo = this._pono;
 
@@ -2516,7 +2531,7 @@ sap.ui.define([
                     this.getView().addDependent(this.changeDlvDateDialog);
                     this.changeDlvDateDialog.open();
                 }else{
-                    MessageBox.information("PO is not valid for Editing.")
+                    MessageBox.error("PO is not valid for Editing.")
                 }
             },
             onCancelChangeVPODelvDate: async function(){
@@ -2592,6 +2607,7 @@ sap.ui.define([
                             });
                         }
                     });
+
                     if (oParamDataPO.length > 0) {
                         oParam = oParamInitParam;
                         oParam['N_ChangePOItemParam'] = oParamDataPO;
@@ -2613,7 +2629,7 @@ sap.ui.define([
                                             resolve()
                                         }
                                     }else{
-                                        MessageBox.information("No Details to be saved.");
+                                        MessageBox.error("No Details to be saved.");
                                         resolve()
                                     }
                                 },error: function(error){
@@ -2644,6 +2660,7 @@ sap.ui.define([
                 var poNo = this._pono;
 
                 var bProceed = true
+                var isValid = true
 
                 _promiseResult = new Promise((resolve, reject)=>{
                     resolve(me.validatePOChange());
@@ -2652,6 +2669,25 @@ sap.ui.define([
 
                 if(this._validPOChange != 1){
                     bProceed = false
+                }
+
+                this.getView().getModel("VPODtlsVPODet").getProperty("/results").forEach(item => {
+                    if(bProceed){
+                        if(isValid){
+                            if(item.DELETED !== true && item.CLOSED !== true){
+                                bProceed = true;
+                                isValid = true;
+                            }else{
+                                bProceed = false;
+                                isValid = false;
+                            }
+                        }
+                    }
+                })
+
+                if(!isValid){
+                    MessageBox.error("PO is already Deleted.")
+                    return;
                 }
 
                 if(bProceed){
@@ -2720,7 +2756,7 @@ sap.ui.define([
                         
                         if(this._validPOChange != 1){
                             if(bProceed){
-                                MessageBox.information("PO is not valid to Delete.")
+                                MessageBox.error("PO is not valid to Delete.")
                                 bProceed = false;
                             }    
                         }
@@ -2790,7 +2826,7 @@ sap.ui.define([
                                                     resolve()
                                                 }
                                             }else{
-                                                MessageBox.information("No Details to Delete.");
+                                                MessageBox.error("No Details to Delete.");
                                                 resolve()
                                             }
                                         },error: function(error){
@@ -2804,18 +2840,19 @@ sap.ui.define([
                             this.loadAllData()
                             this.getView().getModel("ui").setProperty("/dataMode", 'READ');
                         }else{
-                            MessageBox.information("PO is not valid to Delete.")
+                            MessageBox.error("PO is not valid to Delete.")
                         }
                         
                         this.closeLoadingDialog(that);
                     }
                 }else{
-                   MessageBox.information("PO is not valid for Editing.")
+                   MessageBox.error("PO is not valid for Editing.")
                 }
             },
             onCancelVPO: async function(){
                 var me = this;
                 var actionSel;
+                var poNo = this._pono;
 
                 var bProceed = true
 
@@ -2845,7 +2882,6 @@ sap.ui.define([
                     })
                     await _promiseResult;
                     if(actionSel === "Cancel PO"){
-                        this.showLoadingDialog('Loading...')
                         var oParamInitParam = {}
                         var oParamDataPO = [];
                         var oParamDataPOClose = [];
@@ -2886,19 +2922,24 @@ sap.ui.define([
                         });
                         
                         await _promiseResult;
+                        
+                        if(this._validPOChange != 1){
+                            if(bProceed){
+                                MessageBox.error("PO is not valid to Cancel.")
+                                bProceed = false;
+                                return;
+                            }    
+                        }
 
                         if(frgke !== "G"){
                             MessageBox.error("PO is not yet released, use Delete PO instead.")
                             bProceed = false
-                        }
-                        if(this._validPOChange != 1){
-                            if(bProceed){
-                                MessageBox.information("PO is not valid to Cancel.")
-                                bProceed = false;
-                            }    
+                            return;
                         }
 
                         if(bProceed){
+                            
+                            this.showLoadingDialog('Loading...')
                             this.getView().getModel("ui").setProperty("/dataMode", 'CANCEL_PO');
                             oSelectedIndices.forEach(item => {
                                 oTmpSelectedIndices.push(oTable.getBinding("rows").aIndices[item])
@@ -2963,7 +3004,7 @@ sap.ui.define([
                                                     resolve()
                                                 }
                                             }else{
-                                                MessageBox.information("No Details to Cancel.");
+                                                MessageBox.error("No Details to Cancel.");
                                                 resolve()
                                             }
                                         },error: function(error){
@@ -2976,14 +3017,13 @@ sap.ui.define([
                             }
                             this.loadAllData()
                             this.getView().getModel("ui").setProperty("/dataMode", 'READ');
+                            this.closeLoadingDialog(that);
                         }else{
-                            MessageBox.information("PO is not valid to Cancel.")
+                            MessageBox.error("PO is not valid to Cancel.")
                         }
-                        
-                        this.closeLoadingDialog(that);
                     }
                 }else{
-                    MessageBox.information("PO is not valid for Editing.")
+                    MessageBox.error("PO is not valid for Editing.")
                 }
             },
             onSplitVPO: async function(){
@@ -3002,7 +3042,7 @@ sap.ui.define([
                 if(bProceed){
                     MessageToast.show("Split PO Function");
                 }else{
-                    MessageBox.information("PO is not valid for Editing.")
+                    MessageBox.error("PO is not valid for Editing.")
                 }
             },
             onEditPODtls: async function(){
@@ -3022,7 +3062,7 @@ sap.ui.define([
                 await _promiseResult;
 
                 if(this._validPOChange != 1){
-                    MessageBox.information("PO is not valid for Editing.")
+                    MessageBox.error("PO is not valid for Editing.")
                     return;
                 }
                 var oModel = this.getOwnerComponent().getModel();
@@ -3114,7 +3154,7 @@ sap.ui.define([
                                                 
                                             }
                                         }else{
-                                            MessageBox.information("PO already Closed or Deleted.")
+                                            MessageBox.error("PO already Closed or Deleted.")
                                         }
                                     }
                                 });
@@ -3390,7 +3430,7 @@ sap.ui.define([
                                     MessageBox.information(message);
                                     resolve()
                                 }else{
-                                    MessageBox.information("No Details to be saved.");
+                                    MessageBox.error("No Details to be saved.");
                                 }
                             },error: function(error){
                                 MessageBox.error(error);
@@ -3528,12 +3568,12 @@ sap.ui.define([
                 await _promiseResult;
 
                 if(this._validPOChange != 1){
-                    MessageBox.information("PO is not deletable.")
+                    MessageBox.error("PO is not deletable.")
                     bProceed = false;
                 }
                 this.getView().getModel("VPODtlsVPODet").getProperty("/results").forEach(item => {
                     if(item.DELETED || item.CLOSED){
-                        MessageBox.information("PO is already Closed or Deleted.")
+                        MessageBox.error("PO is already Closed or Deleted.")
                         bProceed = false;
                     }
                 });
@@ -3604,7 +3644,7 @@ sap.ui.define([
                                             MessageBox.information(message);
                                             resolve()
                                         }else{
-                                            MessageBox.information("No Details to Delete.");
+                                            MessageBox.error("No Details to Delete.");
                                         }
                                     },error: function(error){
                                         MessageBox.error(error);
@@ -3626,7 +3666,7 @@ sap.ui.define([
                 var me = this;
                 var poNo = this._pono;
                 var bProceed = true;
-                var isValid = false
+                // var isValid = false
 
                 var oModel = this.getOwnerComponent().getModel();
 
@@ -3647,21 +3687,23 @@ sap.ui.define([
                 await _promiseResult;
 
                 if(this._validPOChange != 1){
-                    MessageBox.information("PO is not valid for Add PR to PO.")
+                    MessageBox.error("PO is not valid for Editing.")
                     bProceed = false;
+                    return;
                 }
 
-                this.getView().getModel("VPODtlsVPODet").getProperty("/results").forEach(item => {
-                    if(!isValid){
-                        if(item.DELETED !== true && item.CLOSED !== true){
-                            bProceed = true;
-                            isValid = true;
-                        }else{
-                            bProceed = false;
-                        }
-                    }
-                })
-
+                // this.getView().getModel("VPODtlsVPODet").getProperty("/results").forEach(item => {
+                //     if(bProceed){
+                //         if(!isValid){
+                //             if(item.DELETED !== true && item.CLOSED !== true){
+                //                 bProceed = true;
+                //                 isValid = true;
+                //             }else{
+                //                 bProceed = false;
+                //             }
+                //         }
+                //     }
+                // })
                 if(bProceed){
                     _promiseResult = new Promise((resolve, reject)=>{
                         oModel.read("/mainSet(PONO='" + poNo + "')", {
@@ -3717,7 +3759,7 @@ sap.ui.define([
                         }
                     });
                 }else{
-                    MessageBox.information("PO is not valid for Add PR to PO.")
+                    MessageBox.error("PO is not valid for Add PR to PO.")
                 }
             },
             onSaveAddPRtoPO: async function(){
@@ -3876,13 +3918,13 @@ sap.ui.define([
                 await _promiseResult;
 
                 if(this._validPOChange != 1){
-                    MessageBox.information("PO is not valid for Editing.")
+                    MessageBox.error("PO is not valid for Editing.")
                     bProceed = false;
                     return;
                 }
                 this.getView().getModel("VPODtlsVPODet").getProperty("/results").forEach(item => {
                     if(item.DELETED || item.CLOSED){
-                        MessageBox.information("PO is already Closed or Deleted.")
+                        MessageBox.error("PO is already Closed or Deleted.")
                         bProceed = false;
                         return;
                     }
