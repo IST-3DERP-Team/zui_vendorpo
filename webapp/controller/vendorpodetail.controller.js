@@ -122,6 +122,17 @@ sap.ui.define([
 
                 this.getView().getModel("ui").setProperty("/dataMode", 'READ');
 
+                // var oTable = this.byId("vpoDetailsTab");
+                // _promiseResult = new Promise((resolve, reject)=>{
+                //     oTable.getRows().forEach(row => {
+                //         console.log(row.getBindingContext().sPath.replace("/rows/", ""))
+                //         if(row.getBindingContext().sPath.replace("/rows/", "") === "0"){
+                //             oTable.setSelectedIndex(parseInt(0));
+                //             // resolve(row.addStyleClass("activeRow"));
+                //         }
+                //     });
+                // });
+
                 // this.getColorsTable();
 
                 // //Load value helps
@@ -162,6 +173,17 @@ sap.ui.define([
                 await _promiseResult;
 
                 this.getView().getModel("ui").setProperty("/dataMode", 'READ');
+
+                // var oTable = this.byId("vpoDetailsTab");
+                // _promiseResult = new Promise((resolve, reject)=>{
+                //     oTable.getRows().forEach(row => {
+                //         console.log(row.getBindingContext().sPath.replace("/rows/", ""))
+                //         if(row.getBindingContext().sPath.replace("/rows/", "") === "0"){
+                //             oTable.setSelectedIndex(parseInt(0));
+                //         }
+                //     });
+                // });
+                // await _promiseResult;
 
                 return true;
             },
@@ -438,6 +460,13 @@ sap.ui.define([
                             if (data.results.length > 0) {
                                 data.results.forEach(item => {
                                     item.DELDT = dateFormat.format(new Date(item.DELDT));
+                                    item.ETD = dateFormat.format(new Date(item.ETD));
+                                    item.ETDPORT = dateFormat.format(new Date(item.ETDPORT));
+                                    item.ETAFTY = dateFormat.format(new Date(item.ETAFTY));
+                                    item.EXFTY = dateFormat.format(new Date(item.EXFTY));
+                                    item.CREATEDDT = dateFormat.format(new Date(item.CREATEDDT));
+                                    item.UPDATEDDT = dateFormat.format(new Date(item.UPDATEDDT));
+                                    item.DELETED = item.DELETED === "" ? false : true;
                                 })
                                 objectData.push(data.results);
                                 objectData[0].sort((a,b) => (a.ITEM > b.ITEM) ? 1 : ((b.ITEM > a.ITEM) ? -1 : 0));
@@ -723,7 +752,7 @@ sap.ui.define([
                     var sColumnSortOrder = context.getObject().SortOrder;
                     var sColumnWidth = context.getObject().ColumnWidth;
                     var sColumnWidth = context.getObject().ColumnWidth;
-                    if (sColumnType === "STRING" || sColumnType === "DATETIME") {
+                    if (sColumnType === "STRING" || sColumnType === "DATETIME"|| sColumnType === "BOOLEAN") {
                         return new sap.ui.table.Column({
                             id: model+"-"+sColumnId,
                             label: sColumnLabel,
@@ -817,7 +846,7 @@ sap.ui.define([
                     //Manage button
                     oColumnSize = "Center";
                 }
-                if (sColumnId === "UNLIMITED") { 
+                if (sColumnId === "UNLIMITED" || sColumnId === "INVRCPT" || sColumnId === "GRBASEDIV" || sColumnId === "GRIND") { 
                     //Manage button
                     oColumnSize = "Center";
                 }

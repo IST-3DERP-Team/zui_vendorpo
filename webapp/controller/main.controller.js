@@ -227,7 +227,7 @@ sap.ui.define([
                                 });
 
                                 data.results.forEach(item => {
-                                    item.PODT = dateFormat.format(item.PODT);
+                                    item.PODT = dateFormat.format(new Date(item.PODT));
                                 })
                                 
                                 /*data.results.sort((a,b) => (a.GMC > b.GMC ? 1 : -1));*/
@@ -391,6 +391,13 @@ sap.ui.define([
                             if (data.results.length > 0) {
                                 data.results.forEach(item => {
                                     item.DELDT = dateFormat.format(new Date(item.DELDT));
+                                    item.ETD = dateFormat.format(new Date(item.ETD));
+                                    item.ETDPORT = dateFormat.format(new Date(item.ETDPORT));
+                                    item.ETAFTY = dateFormat.format(new Date(item.ETAFTY));
+                                    item.EXFTY = dateFormat.format(new Date(item.EXFTY));
+                                    item.CREATEDDT = dateFormat.format(new Date(item.CREATEDDT));
+                                    item.UPDATEDDT = dateFormat.format(new Date(item.UPDATEDDT));
+                                    item.DELETED = item.DELETED === "" ? false : true;
                                 })
                                 objectData.push(data.results);
                                 objectData[0].sort((a,b) => (a.ITEM > b.ITEM) ? 1 : ((b.ITEM > a.ITEM) ? -1 : 0));
@@ -743,13 +750,13 @@ sap.ui.define([
                     var sColumnSorted = context.getObject().Sorted;
                     var sColumnSortOrder = context.getObject().SortOrder;
                     var sColumnWidth = context.getObject().ColumnWidth;
-                    if (sColumnType === "STRING" || sColumnType === "DATETIME") {
+                    if (sColumnType === "STRING" || sColumnType === "DATETIME"|| sColumnType === "BOOLEAN") {
                         return new sap.ui.table.Column({
                             id: model+"-"+sColumnId,
                             label: sColumnLabel,
                             template: me.columnTemplate(sColumnId), //default text
                             width: sColumnWidth + "px",
-                            hAlign: "Left",
+                            hAlign: me.columnSize(sColumnId),
                             sortProperty: sColumnId,
                             filterProperty: sColumnId,
                             autoResizable: true,
@@ -826,6 +833,38 @@ sap.ui.define([
                 }
     
                 return oColumnTemplate;
+            },
+            columnSize: function(sColumnId){
+                var oColumnSize;
+                if (sColumnId === "DELETED") { 
+                    //Manage button
+                    oColumnSize = "Center";
+                }
+                if (sColumnId === "CLOSED") { 
+                    //Manage button
+                    oColumnSize = "Center";
+                }
+                if (sColumnId === "UNLIMITED" || sColumnId === "INVRCPT" || sColumnId === "GRBASEDIV" || sColumnId === "GRIND") { 
+                    //Manage button
+                    oColumnSize = "Center";
+                }
+                if (sColumnId === "INVRCPTIND") { 
+                    //Manage button
+                    oColumnSize = "Center";
+                }
+                if (sColumnId === "GRBASEDIVIND") { 
+                    //Manage button
+                    oColumnSize = "Center";
+                }
+                if (sColumnId === "OVERDELTOL") { 
+                    //Manage button
+                    oColumnSize = "Center";
+                }
+                if (sColumnId === "UNDERDELTOL") { 
+                    //Manage button
+                    oColumnSize = "Center";
+                }
+                return oColumnSize;
             },
             onSBUChange: function(oEvent) {
                 this._sbuChange = true;
