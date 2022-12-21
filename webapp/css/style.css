@@ -150,3 +150,111 @@
     position: relative;
     height: 100%;
 }
+
+/* START: Spacing Between Forms */
+.sapUiRespGrid{
+
+    padding-top: 1rem !important;
+
+    padding-bottom: 1rem !important;
+
+}
+
+.sapMOHR{
+    padding-top: 0.5rem !important;
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+    padding-bottom: 0.5rem !important;    
+}
+
+.sapMOHRStates {
+    display: inline-block;
+    box-sizing: border-box;
+    vertical-align: top;
+    padding-top: 0.5rem !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+    padding-bottom: 0.5rem !important;  
+    width: 100%;
+    max-width: 95rem;
+    padding: 0;
+}   
+
+.sapMITBHead {
+    position: relative;
+    white-space: nowrap;
+    display: inline-block;
+    margin: 0.25rem 0.25rem 0 0.25rem;
+    margin-top: 0.25rem !important;
+    margin-right: 0.25rem !important;
+    margin-bottom: 0px !important;
+    margin-left: 0.25rem !important;
+    padding-top: 0.5rem !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+    padding-bottom: 0.5rem !important;  
+    vertical-align: top;
+    font-size: 0.25rem;
+}
+
+.sapMITH {
+    box-shadow: inherit;
+    border-top: 0.125rem solid #d1e0ee;
+    border-bottom: 0.125rem solid #d1e0ee;
+}
+
+.sapUiFormResGrid>div {
+    padding: 1rem 1rem !important;
+    box-sizing: border-box !important;
+}
+
+/*IO Header Form input Box minimized spacing*/
+.sapUiFormM:not(.sapUiFormEdit) .sapUiFormResGridCont>div {
+    padding-top: 3px !important;
+    padding-bottom: 3px !important;
+    font-size: 1px !important;
+}
+
+.sapUiSizeCompact .sapMInputBaseHeightMargin {
+    margin: 0rem 0 !important;
+}
+span[data-row-active-class=X] {
+    background-color: #c9fcd5 !important
+
+}
+/* IconTabBar spacing adjustment */
+.sapMITB.sapUiResponsiveContentPadding>.sapMITBContainerContent>.sapMITBContent {
+    padding: 0rem !important;
+    box-sizing: border-box;
+}
+
+/* Icon Filter Tab height adjustment */
+.sapMITBInLine .sapMITBFilter>.sapMITBText {
+    margin: 0.3em 0 0.1875rem 0 !important;
+}
+
+.sapMITBInLine.sapMITBTextOnly>.sapMITBVertical {
+    height: 1.6rem !important;
+}
+
+/*Icon Tab Filter : underline for selected Tab*/
+.sapMITBInLine.sapMITBTextOnly>.sapMITBVertical.sapMITBFilter>.sapMITBText + .sapMITBContentArrow {
+    height: 0.1rem;
+}
+
+.sapUiSizeCompact .sapMCb {
+    height: 1.5rem !important;
+    line-height: 1.5rem !important;
+    padding-left: 1.5rem !important;
+}
+
+.sapUiVlt.sapUiContentPadding {
+    padding: 0.2rem !important;
+    box-sizing: border-box;
+}
+
+.sapUiVlt.sapUiContentPadding>.sapuiVltCell:not(:last-child) {
+    padding-bottom: 0rem !important;
+    box-sizing: border-box;
+}
+/* END: Spacing Between Forms */
