@@ -3953,7 +3953,7 @@ sap.ui.define([
                 await _promiseResult;
 
                 if(this._validPOChange != 1){
-                    MessageBox.error("PO is not deletable.")
+                    MessageBox.error("PO line cannot be deleted.")
                     bProceed = false;
                 }
                 // this.getView().getModel("VPODtlsVPODet").getProperty("/results").forEach(item => {
