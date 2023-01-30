@@ -311,7 +311,6 @@ sap.ui.define([
                 var entitySet = "/mainSet(PONO='" + poNo + "')"
                 oModel.read(entitySet, {
                     success: function (oData, oResponse) {
-                       
                         if (oData.PODT !== null)
                             oData.PODT = dateFormat.format(new Date(oData.PODT));
                         
@@ -2011,7 +2010,6 @@ sap.ui.define([
                             "$filter":"PO_Number eq '"+ this._pono +"'"
                         },
                         success: async function (data, response) {
-                            console.log(data.results[0].WithGR);
                             if(data.results[0].WithGR !== "X"){
                                 resolve(me._validPOChange = 1)
                             }else{
@@ -2039,7 +2037,7 @@ sap.ui.define([
                             "$filter":"FIELD2 eq '"+ mattyp +"' and SBU eq '"+ vSBU +"'"
                         },
                         success: async function (data, response) {
-                            if(data.results.length){
+                            if(data.results.length > 0){
                                 me.mattyp = 1;
                                 resolve();
                             }else{
@@ -2083,33 +2081,87 @@ sap.ui.define([
                 var oJSONEdit = new sap.ui.model.json.JSONModel();
                 var oDataEDitModel = this.getView().getModel("topHeaderDataEdit"); 
                 var oDataEdit = oDataEDitModel.getProperty('/');
+                var bProceed = true
+                var isValid = true
 
-                _promiseResult = new Promise((resolve, reject)=>{
-                    resolve(me.validatePOChange());
+                var count = this.getView().getModel("VPODtlsVPODet").getProperty("/results").length;
+                var itemCount = 0;
+                var isDeletedObj = [];
+
+                this.getView().getModel("VPODtlsVPODet").getProperty("/results").forEach(item => {
+
+                    if(item.DELETED === true){
+                        isDeletedObj.push({
+                            Deleted: true
+                        });
+                        itemCount++
+                    }else{
+                        isDeletedObj.push({
+                            Deleted: false
+                        })
+                        itemCount++
+                    }
+                    if(itemCount === count){
+                        var result = isDeletedObj.find(item => item.Deleted === false)
+                        if(result != undefined){
+                            if(result.Deleted === false){
+                                bProceed = true;
+                                isValid = true;
+                            }else{
+                                bProceed = false;
+                                isValid = false;
+                            }
+                        }else{
+                            bProceed = false;
+                            isValid = false;
+                        }
+                    }
+
+                    // if(bProceed){
+                    //     if(isValid){
+                    //         if(item.DELETED !== true){
+                    //             bProceed = true;
+                    //             isValid = true;
+                    //         }else{
+                    //             bProceed = false;
+                    //             isValid = false;
+                    //         }
+                    //     }
+                    // }
                 })
-                await _promiseResult;
 
-                if(me._validPOChange !== 1){
-                    oDataEdit.SHIPTOPLANT = true;//ShipToPlant
-                }else{
-                    oDataEdit.SHIPTOPLANT = true;//ShipToPlant
-                    oDataEdit.PAYMNTTERMS = true;//Payment Terms
-                    oDataEdit.INCOTERMS = true;//IncoTerms
-                    oDataEdit.DEST = true;//Destination
+                if(!isValid){
+                    MessageBox.error("PO is already Deleted.")
+                    return;
                 }
-                oJSONEdit.setData(oDataEdit);
-            
-                this.byId("vpoBtnEditHeader").setVisible(false);
-                this.byId("vpoBtnRefreshtHeader").setVisible(false);
-                this.byId("vpoBtnSaveHeader").setVisible(true);
-                this.byId("vpoBtnCancelHeader").setVisible(true);
+                if(bProceed){
+                    _promiseResult = new Promise((resolve, reject)=>{
+                        resolve(me.validatePOChange());
+                    })
+                    await _promiseResult;
 
-                this.disableOtherTabs("idIconTabBarInlineMode");
-                this.disableOtherTabs("vpoDetailTab");
-                this.byId("vpoHdrMenuBtn").setEnabled(false);
+                    if(me._validPOChange !== 1){
+                        oDataEdit.SHIPTOPLANT = true;//ShipToPlant
+                    }else{
+                        oDataEdit.SHIPTOPLANT = true;//ShipToPlant
+                        oDataEdit.PAYMNTTERMS = true;//Payment Terms
+                        oDataEdit.INCOTERMS = true;//IncoTerms
+                        oDataEdit.DEST = true;//Destination
+                    }
+                    oJSONEdit.setData(oDataEdit);
+                
+                    this.byId("vpoBtnEditHeader").setVisible(false);
+                    this.byId("vpoBtnRefreshtHeader").setVisible(false);
+                    this.byId("vpoBtnSaveHeader").setVisible(true);
+                    this.byId("vpoBtnCancelHeader").setVisible(true);
+
+                    this.disableOtherTabs("idIconTabBarInlineMode");
+                    this.disableOtherTabs("vpoDetailTab");
+                    this.byId("vpoHdrMenuBtn").setEnabled(false);
 
 
-                oView.setModel(oJSONEdit, "topHeaderDataEdit");
+                    oView.setModel(oJSONEdit, "topHeaderDataEdit");
+                }
             },
             onHeaderInputChange: async function(oEvent){
                 if(oEvent.getParameters().value === oEvent.getSource().getBindingInfo("value").binding.oValue){
@@ -2143,6 +2195,7 @@ sap.ui.define([
                 var shipToPlant = this.byId("f1ShipToPlant").getSelectedKey();
                 var incoTerms = this.byId("f1Incoterms").getSelectedKey();
                 var destination = this.byId("f1Destination").getValue();
+                var shipMode = this.byId("f1ShipMode").getValue();
 
                 var validPOItem
 
@@ -2168,9 +2221,10 @@ sap.ui.define([
                     Unsez: shipToPlant, //shipToPlant
                     Inco1: incoTerms, // Incoterms
                     Inco2: destination, //Destination
+                    Evers: shipMode, //ShipMode
                     Ebelp: aData.at(validPOItem).ITEM,//poitem
                     Txz01: aData.at(validPOItem).SHORTTEXT,//shorttext
-                    Menge: aData.at(validPOItem).QTY,//QTY
+                    Menge: aData.at(validPOItem).POQTY,//QTY
                     Meins: aData.at(validPOItem).UOM,//UOM
                     Netpr: aData.at(validPOItem).NETPRICE,//net price
                     Peinh: aData.at(validPOItem).PER,//PER
@@ -2461,7 +2515,6 @@ sap.ui.define([
                             rfcModel.create("/GetInfoRecordSet", oParam, {
                                 method: "POST",
                                 success: function(oData, oResponse) {
-                                    console.log(oData)
                                     resolve();
                                 },
                                 error: function(err){
@@ -3142,9 +3195,11 @@ sap.ui.define([
                                             //Check if Net Price is Editable
                                             await me.checkNetPriceIfEdittable(aData.at(item).MATTYP);
                                             if(me.mattyp == 1){
-                                                aDataToEdit[iCounter-1].NetPREdit = false;
-                                            }else if(me.mattyp == 0){
                                                 aDataToEdit[iCounter-1].NetPREdit = true;
+                                                aDataToEdit[iCounter-1].Per = true;
+                                            }else if(me.mattyp == 0){
+                                                aDataToEdit[iCounter-1].NetPREdit = false;
+                                                aDataToEdit[iCounter-1].Per = false;
                                             }else if(me.mattyp == 2){
                                                 bProceed = false
                                             }
@@ -3264,6 +3319,9 @@ sap.ui.define([
                                     .forEach(ci => {
                                         var sColumnType = ci.DataType;
                                         if(ci.ColumnName === "NETPRICE"){
+                                            ci.Editable = false;
+                                        }
+                                        if(ci.ColumnName === "PER"){
                                             ci.Editable = false;
                                         }
                                         if (ci.Editable) {
@@ -3497,6 +3555,10 @@ sap.ui.define([
                 var oParam = {};
                 var rfcModel = this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
                 var bProceed = true;
+                var shipToPlant = this.byId("f1ShipToPlant").getValue();
+                var incoTerms = this.byId("f1Incoterms").getValue();
+                var destination = this.byId("f1Destination").getValue();
+                var shipMode = this.byId("f1ShipMode").getValue();
             
                 if (this.validationErrors.length != 0){
                     MessageBox.error("Required Field Empty!");
@@ -3521,9 +3583,13 @@ sap.ui.define([
                             Banfn: aData.at(item).PRNO, //PRNO
                             Bnfpo: aData.at(item).PRITM, //PRITM
                             Ebeln: me._pono,//pono
+                            Unsez: shipToPlant, //shipToPlant
+                            Inco1: incoTerms, // Incoterms
+                            Inco2: destination, //Destination
+                            Evers: shipMode, //ShipMode
                             Ebelp: aData.at(item).ITEM,//poitem
                             Txz01: aData.at(item).SHORTTEXT,//shorttext
-                            Menge: aData.at(item).QTY,//QTY
+                            Menge: aData.at(item).POQTY,//QTY
                             Meins: aData.at(item).UOM,//UOM
                             Netpr: aData.at(item).NETPRICE,//net price
                             Peinh: aData.at(item).PER,//PER
@@ -3555,8 +3621,12 @@ sap.ui.define([
                             rfcModel.create("/ChangePOSet", oParam, {
                                 method: "POST",
                                 success: function(oData, oResponse){
+                                    message = ""
                                     if(oData.N_ChangePOReturn.results.length > 0){
-                                        message = oData.N_ChangePOReturn.results[0].Msgv1;
+                                        for(var errCount = 0; errCount <= oData.N_ChangePOReturn.results.length - 1; errCount++){
+                                            message =+ oData.N_ChangePOReturn.results[errCount] === undefined ? "": oData.N_ChangePOReturn.results[errCount].Msgv1;
+                                        }
+                                        // message = oData.N_ChangePOReturn.results[0].Msgv1;
                                         MessageBox.information(message);
                                         resolve()
                                     }else{
@@ -3640,7 +3710,6 @@ sap.ui.define([
                         success: function (oData, oResponse) {
                             // if (oData.PODT !== null)
                             //     oData.PODT = dateFormat.format(new Date(oData.PODT));
-                            console.log(oData)
                             vendorCd= oData.VENDOR; 
                             docType= oData.DOCTYPE;
                             purchOrg = oData.PURCHORG;
@@ -3688,7 +3757,7 @@ sap.ui.define([
                 resultGETPOTOL.forEach(async (poTolItem, poTolIndex) => {
                     selectedRow.forEach(async (selRowItem, selRowIndex) => {
                         if(dataRow.at(poTolIndex).PRNO === dataRow.at(selRowItem).PRNO && dataRow.at(poTolIndex).PRITM === dataRow.at(selRowItem).PRITM){
-                            console.log(resultGETPOTOL[selRowItem].RETURN);
+                            // console.log(resultGETPOTOL[selRowItem].RETURN);
                             if(resultGETPOTOL[poTolIndex].RETURN !== 4){//Not Tested
                                 oParamPODATA = {};
                                 oParamPODATA  = {
@@ -3705,7 +3774,6 @@ sap.ui.define([
                                     UEBTOMAX:       resultGETPOTOL.at(selRowItem).EV_UEBTOMAX,
                                 }
                                 //exec ZERP_PODATA
-                                console.log(resultGETPOTOL);
                                 var resultPODataSet = [];
                                 oModel.create("/PODATASet", oParamPODATA, modelParameter);
                                 _promiseResult = new Promise((resolve, reject)=>{
@@ -3741,10 +3809,9 @@ sap.ui.define([
                                             "$filter": "SBU eq '" + vSBU + "'"
                                         },
                                         success: function (oData, oResponse) {
-                                            console.log(oData.results)
                                             oData.results.forEach(async item => {
                                                 if(dataRow.at(selRowItem).MATTYP !== item.FIELD2){
-                                                    oParamPODATA.push({
+                                                    oParamPODATA = {
                                                         EBELN:          "",
                                                         EBELP:          "",
                                                         WEMNG:          "0",
@@ -3756,7 +3823,7 @@ sap.ui.define([
                                                         UNTTOMAX:       "0",
                                                         UEBTOMIN:       "0",
                                                         UEBTOMAX:       "0",
-                                                    })         
+                                                    }       
                                                     //exec ZERP_PODATA
                                                     oModel.create("/PODATASet", oParamPODATA, modelParameter);
                                                     _promiseResult = new Promise((resolve, reject)=>{
@@ -3784,12 +3851,10 @@ sap.ui.define([
                                                         Plant: ""
                                                     });
                                                     infoRecMainParam["N_GetInfoRecMatParam"] = oParamInfoRec;
-                                                    console.log(infoRecMainParam)
                                                     _promiseResult = new Promise((resolve, reject)=>{
                                                         rfcModel.create("/GetInfoRecordSet", infoRecMainParam, {
                                                             method: "POST",
                                                             success: function(oData, oResponse) {
-                                                                console.log(oData)
                                                                 inforRecReturn.push(oData.N_GetInfoRecReturn)
                                                                 resolve();
                                                             },
@@ -3805,7 +3870,6 @@ sap.ui.define([
                                                     //UEBTO
                                                     //UNTTO
                                                     //UEBTK
-                                                    console.log(poDetailsData);
                                                     for (var i = 0; i < poDetailsData.length; i++) {
                                                         if (poDetailsData[i].PRNO === dataRow.at(selRowItem).PRNO && poDetailsData[i].PRITM === dataRow.at(selRowItem).PRITM) {
                                                             poDetailsData[i].UNLIMITED = inforRecReturn[0].Unlimited
@@ -3838,7 +3902,6 @@ sap.ui.define([
                                             },
                                             success: async function (oData, oResponse) {
                                                 VPOGetGMCPOTolSetResult.push(oData);
-                                                console.log(oData)
                                                 resolve();
                                             },
                                             error: function (){
@@ -3975,6 +4038,10 @@ sap.ui.define([
                     var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
 
                     var message;
+                    var shipToPlant = this.byId("f1ShipToPlant").getValue();
+                    var incoTerms = this.byId("f1Incoterms").getValue();
+                    var destination = this.byId("f1Destination").getValue();
+                    var shipMode = this.byId("f1ShipMode").getValue();
 
                     if(oSelectedIndices.length > 0){
                         oSelectedIndices.forEach(item => {
@@ -3995,9 +4062,13 @@ sap.ui.define([
                                     Banfn: aData.at(item).PRNO, //PRNO
                                     Bnfpo: aData.at(item).PRITM, //PRITM
                                     Ebeln: me._pono,//pono
+                                    Unsez: shipToPlant, //shipToPlant
+                                    Inco1: incoTerms, // Incoterms
+                                    Inco2: destination, //Destination
+                                    Evers: shipMode, //ShipMode
                                     Ebelp: aData.at(item).ITEM,//poitem
                                     Txz01: aData.at(item).SHORTTEXT,//shorttext
-                                    Menge: aData.at(item).QTY,//QTY
+                                    Menge: aData.at(item).POQTY,//QTY
                                     Meins: aData.at(item).UOM,//UOM
                                     Netpr: aData.at(item).NETPRICE,//net price
                                     Peinh: aData.at(item).PER,//PER
