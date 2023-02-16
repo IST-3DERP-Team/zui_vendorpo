@@ -4,8 +4,8 @@
 			<Text text="Discard Changes?"/>
 		</Panel>
 		<buttons>
-			<Button text="{i18n>Yes}" press="onCloseDiscardChangesDialog"/>
-			<Button text="{i18n>Cancel}" press="onCancelDiscardChangesDialog"/>
+			<Button text="{i18n>Yes}" press=".onCloseDiscardChangesDialog"/>
+			<Button text="{i18n>Cancel}" press=".onCancelDiscardChangesDialog"/>
 		</buttons>
 	</Dialog>
 </core:FragmentDefinition>

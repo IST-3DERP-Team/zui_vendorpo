@@ -44,7 +44,7 @@
 
                 <f:Form id="POHeaderDetailForm1" editable="false" class="sapUiNoContentPadding formHdr1">
                     <f:layout>
-                        <f:ResponsiveGridLayout columnsXL="3" columnsL="3" columnsM="3" singleContainerFullSize="false" />
+                        <f:ResponsiveGridLayout columnsXL="4" columnsL="3" columnsM="3" singleContainerFullSize="false" />
                     </f:layout>
                     <f:formContainers>
                         <f:FormContainer ariaLabelledBy="Grp1" class="sapUiNoContentPadding" >
@@ -162,6 +162,28 @@
                                 <f:FormElement label="{captionMsg>/RELSTAT}" visible="true">
                                     <f:fields>
                                         <Input id="f1RelStat" value="{topHeaderData>/RELSTAT}" editable="{topHeaderDataEdit>/RELSTAT}" valueStateText="Required" 
+                                            change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
+                                    </f:fields>
+                                </f:FormElement>
+                            </f:formElements>
+                        </f:FormContainer>
+                        <f:FormContainer ariaLabelledBy="Grp4">
+                            <f:formElements>
+                                <f:FormElement label="{captionMsg>/CREATEDBY}" visible="true">
+                                    <f:fields>
+                                        <Input id="f1CreatedBy" value="{topHeaderData>/CREATEDBY}" editable="{topHeaderDataEdit>/CREATEDBY}" valueStateText="Required" 
+                                            change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
+                                    </f:fields>
+                                </f:FormElement>
+                                <f:FormElement label="{captionMsg>/CREATEDDT}" visible="true">
+                                    <f:fields>
+                                        <Input id="f1CreatedDt" value="{topHeaderData>/CREATEDDT}" editable="{topHeaderDataEdit>/CREATEDDT}" valueStateText="Required" 
+                                            change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
+                                    </f:fields>
+                                </f:FormElement>
+                                <f:FormElement label="{captionMsg>/UPDATEDDT}" visible="true">
+                                    <f:fields>
+                                        <Input id="f1UpdatedDt" value="{topHeaderData>/UPDATEDDT}" editable="{topHeaderDataEdit>/UPDATEDDT}" valueStateText="Required" 
                                             change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
                                     </f:fields>
                                 </f:FormElement>

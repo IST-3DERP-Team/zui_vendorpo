@@ -44,11 +44,6 @@
                                 width="15rem"/> -->
                             <Button id="vpoBtnAddPRtoPO" visible="true" text="{captionMsg>/ADDPRTOPO}" press=".onAddPRtoPODtls" />
                             <Button id="vpoBtnItemChanges" visible="true" text="{captionMsg>/ITEMCHANGES}" />
-                            <Button id="vpoBtnRefreshDetails" 
-                                icon="sap-icon://refresh"
-                                press=".onRefresh"
-                                tooltip="{captionMsg>/REFRESH}"
-                                visible="true" />
                             <Button id="vpoBtnEditDetails" 
                                 icon="sap-icon://edit"
                                 tooltip="{captionMsg>/EDIT}"
@@ -69,6 +64,11 @@
                                 tooltip="{captionMsg>/DELETE}"
                                 press=".onDeletePODtls"
                                 visible="true"/>
+                            <Button id="vpoBtnRefreshDetails" 
+                                icon="sap-icon://refresh"
+                                press=".onRefresh"
+                                tooltip="{captionMsg>/REFRESH}"
+                                visible="true" />
                             <Button id="vpoBtnSaveLayoutDetails" 
                                 icon="sap-icon://table-column"
                                 press=".onSaveTableLayout('vpoDetailsTab')"
