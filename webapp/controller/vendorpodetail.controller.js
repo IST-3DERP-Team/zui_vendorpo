@@ -18,6 +18,8 @@ sap.ui.define([
         var that;
         var dateFormat = sap.ui.core.format.DateFormat.getDateInstance({pattern : "MM/dd/yyyy" });
         var sapDateFormat = sap.ui.core.format.DateFormat.getDateInstance({pattern : "yyyy-MM-dd" });
+        var timeFormat = sap.ui.core.format.DateFormat.getTimeInstance({pattern: "KK:mm:ss a"}); 
+        var TZOffsetMs = new Date(0).getTimezoneOffset()*60*1000;
         var _promiseResult;
         var _withGR;
 
@@ -264,6 +266,10 @@ sap.ui.define([
                 oDDTextParam.push({CODE: "INFO_NO_DATA_EDIT"});
                 oDDTextParam.push({CODE: "INFO_NO_DATA_DELETE"});
                 oDDTextParam.push({CODE: "INFO_ERROR"});
+
+                oDDTextParam.push({CODE: "CREATEDBY"});
+                oDDTextParam.push({CODE: "CREATEDDT"});
+                oDDTextParam.push({CODE: "UPDATEDDT"});
                 
                 
                 await oModel.create("/CaptionMsgSet", { CaptionMsgItems: oDDTextParam  }, {
@@ -311,6 +317,8 @@ sap.ui.define([
                 var entitySet = "/mainSet(PONO='" + poNo + "')"
                 oModel.read(entitySet, {
                     success: function (oData, oResponse) {
+                        oData.CREATEDDT = dateFormat.format(new Date(oData.CREATEDDT));
+                        oData.UPDATEDDT = dateFormat.format(new Date(oData.UPDATEDDT));
                         if (oData.PODT !== null)
                             oData.PODT = dateFormat.format(new Date(oData.PODT));
                         
@@ -497,6 +505,7 @@ sap.ui.define([
                             if (data.results.length > 0) {
                                 data.results.forEach(item => {
                                     item.DELDT = dateFormat.format(new Date(item.DELDT));
+                                    item.CREATEDDT = dateFormat.format(new Date(item.CREATEDDT)) + " " + timeFormat.format(new Date(item.CREATEDTM.ms + TZOffsetMs));
                                     item.DELETED = item.DELETED === "L" ? true : false;
                                 })
                                 objectData.push(data.results);
@@ -2308,7 +2317,7 @@ sap.ui.define([
                 
                 var oDataEDitModel = this.getView().getModel("topHeaderDataEdit"); 
                 var oDataEdit = oDataEDitModel.getProperty('/');
-                if (this._headerIsEdited) {
+                if (true){//this._headerIsEdited) {
                     var bCompact = !!this.getView().$().closest(".sapUiSizeCompact").length;
                     _promiseResult = new Promise((resolve, reject) => {
                         MessageBox.information(
@@ -3516,6 +3525,7 @@ sap.ui.define([
                         })
                     }
                 }
+                console.log(this.validationErrors);
                 if(oEvent.getParameters().value === oEvent.getSource().getBindingInfo("value").binding.oValue){
                     this._isEdited = false;
                 }else{
@@ -3928,80 +3938,149 @@ sap.ui.define([
             },
             onCancelEditPODtls: async function(){
                 var me = this;
-                if (this._isEdited) {
-
-                    if (!this._DiscardChangesDialog) {
-                        this._DiscardChangesDialog = sap.ui.xmlfragment("zuivendorpo.view.fragments.dialog.DiscardChangesDialog", this);
-                        this.getView().addDependent(this._DiscardChangesDialog);
-                    }
-                    this._DiscardChangesDialog.open();
-                }else{
-                    this.showLoadingDialog('Loading...');
-                    // this.byId("vpoSearchFieldDetails").setVisible(true);
-                    this.byId("vpoBtnAddPRtoPO").setVisible(true);
-                    this.byId("vpoBtnItemChanges").setVisible(true);
-                    this.byId("vpoBtnRefreshDetails").setVisible(true);
-                    this.byId("vpoBtnEditDetails").setVisible(true);
-                    this.byId("vpoBtnDeleteDetails").setVisible(true);
-                    this.byId("vpoBtnSaveLayoutDetails").setVisible(true);
-                    this.byId("vpoBtnSaveDetails").setVisible(false);
-                    this.byId("vpoBtnCancelDetails").setVisible(false);
-
-                    this.enableOtherTabsChild("idIconTabBarInlineMode");
-                    this.enableOtherTabsChild("vpoHeaderTxtIconTab");
-                    this.byId("vpoDelSchedIconTab").setEnabled(true);
-                    this.byId("vpoDelInvIconTab").setEnabled(true);
-                    this.byId("vpoPoHistIconTab").setEnabled(true);
-                    this.byId("vpoConditionsIconTab").setEnabled(true);
-                    // this.byId("vpoNewHdrTxtRemarks").setEnabled(true);
-                    // this.byId("vpoEditHdrTxtRemarks").setEnabled(true);
-                    // this.byId("vpoDeleteHdrTxtRemarks").setEnabled(true);
-
-                    // this.byId("vpoHdrMenuBtn").setEnabled(true);
-                    // this.byId("vpoBtnEditHeader").setEnabled(true);
-                    // this.byId("vpoBtnRefreshtHeader").setEnabled(true);
-
-                    // this.byId("vpoNewHdrTxtPkgInst").setEnabled(true);
-                    // this.byId("vpoEditHdrTxtPkgInst").setEnabled(true);
-                    // this.byId("vpoDeleteHdrTxtPkgInst").setEnabled(true);
-                    this.validationErrors = [];
-
-                    _promiseResult = new Promise((resolve, reject)=>{
-                        resolve(me.loadAllData());
-                    });
-                    await _promiseResult;
-                    // if (this.getView().getModel("ui").getData().dataMode === 'NEW') this.setFilterAfterCreate();
-
-                    this.getView().getModel("ui").setProperty("/dataMode", 'READ');
-                    this.closeLoadingDialog(that);
+                if (!this._DiscardChangesDialog) {
+                    this._DiscardChangesDialog = sap.ui.xmlfragment("zuivendorpo.view.fragments.dialog.DiscardChangesDialog", this);
+                    this.getView().addDependent(this._DiscardChangesDialog);
                 }
+                this._DiscardChangesDialog.open();
+                // this.showLoadingDialog('Loading...');
+                // // this.byId("vpoSearchFieldDetails").setVisible(true);
+                // this.byId("vpoBtnAddPRtoPO").setVisible(true);
+                // this.byId("vpoBtnItemChanges").setVisible(true);
+                // this.byId("vpoBtnRefreshDetails").setVisible(true);
+                // this.byId("vpoBtnEditDetails").setVisible(true);
+                // this.byId("vpoBtnDeleteDetails").setVisible(true);
+                // this.byId("vpoBtnSaveLayoutDetails").setVisible(true);
+                // this.byId("vpoBtnSaveDetails").setVisible(false);
+                // this.byId("vpoBtnCancelDetails").setVisible(false);
+
+                // this.enableOtherTabsChild("idIconTabBarInlineMode");
+                // this.enableOtherTabsChild("vpoHeaderTxtIconTab");
+                // this.byId("vpoDelSchedIconTab").setEnabled(true);
+                // this.byId("vpoDelInvIconTab").setEnabled(true);
+                // this.byId("vpoPoHistIconTab").setEnabled(true);
+                // this.byId("vpoConditionsIconTab").setEnabled(true);
+                // this.validationErrors = [];
+
+                // _promiseResult = new Promise((resolve, reject)=>{
+                //     resolve(me.loadAllData());
+                // });
+                // await _promiseResult;
+
+                // this.getView().getModel("ui").setProperty("/dataMode", 'READ');
+                // this.closeLoadingDialog(that);
+                // var me = this;
+                // if (this._isEdited) {
+
+                //     if (!this._DiscardChangesDialog) {
+                //         this._DiscardChangesDialog = sap.ui.xmlfragment("zuivendorpo.view.fragments.dialog.DiscardChangesDialog", this);
+                //         this.getView().addDependent(this._DiscardChangesDialog);
+                //     }
+                //     this._DiscardChangesDialog.open();
+                // }else{
+                //     this.showLoadingDialog('Loading...');
+                //     // this.byId("vpoSearchFieldDetails").setVisible(true);
+                //     this.byId("vpoBtnAddPRtoPO").setVisible(true);
+                //     this.byId("vpoBtnItemChanges").setVisible(true);
+                //     this.byId("vpoBtnRefreshDetails").setVisible(true);
+                //     this.byId("vpoBtnEditDetails").setVisible(true);
+                //     this.byId("vpoBtnDeleteDetails").setVisible(true);
+                //     this.byId("vpoBtnSaveLayoutDetails").setVisible(true);
+                //     this.byId("vpoBtnSaveDetails").setVisible(false);
+                //     this.byId("vpoBtnCancelDetails").setVisible(false);
+
+                //     this.enableOtherTabsChild("idIconTabBarInlineMode");
+                //     this.enableOtherTabsChild("vpoHeaderTxtIconTab");
+                //     this.byId("vpoDelSchedIconTab").setEnabled(true);
+                //     this.byId("vpoDelInvIconTab").setEnabled(true);
+                //     this.byId("vpoPoHistIconTab").setEnabled(true);
+                //     this.byId("vpoConditionsIconTab").setEnabled(true);
+                //     // this.byId("vpoNewHdrTxtRemarks").setEnabled(true);
+                //     // this.byId("vpoEditHdrTxtRemarks").setEnabled(true);
+                //     // this.byId("vpoDeleteHdrTxtRemarks").setEnabled(true);
+
+                //     // this.byId("vpoHdrMenuBtn").setEnabled(true);
+                //     // this.byId("vpoBtnEditHeader").setEnabled(true);
+                //     // this.byId("vpoBtnRefreshtHeader").setEnabled(true);
+
+                //     // this.byId("vpoNewHdrTxtPkgInst").setEnabled(true);
+                //     // this.byId("vpoEditHdrTxtPkgInst").setEnabled(true);
+                //     // this.byId("vpoDeleteHdrTxtPkgInst").setEnabled(true);
+                //     this.validationErrors = [];
+
+                //     _promiseResult = new Promise((resolve, reject)=>{
+                //         resolve(me.loadAllData());
+                //     });
+                //     await _promiseResult;
+                //     // if (this.getView().getModel("ui").getData().dataMode === 'NEW') this.setFilterAfterCreate();
+
+                //     this.getView().getModel("ui").setProperty("/dataMode", 'READ');
+                //     this.closeLoadingDialog(that);
+                // }
             },
             onCloseDiscardChangesDialog: async function(){
                 var me = this;
-                if (this._isEdited) {
-                    this._DiscardChangesDialog.close();
-                    this.showLoadingDialog('Loading...');
-                    // this.byId("vpoSearchFieldDetails").setVisible(true);
-                    this.byId("vpoBtnAddPRtoPO").setVisible(true);
-                    this.byId("vpoBtnItemChanges").setVisible(true);
-                    this.byId("vpoBtnRefreshDetails").setVisible(true);
-                    this.byId("vpoBtnEditDetails").setVisible(true);
-                    this.byId("vpoBtnDeleteDetails").setVisible(true);
-                    this.byId("vpoBtnSaveLayoutDetails").setVisible(true);
-                    this.byId("vpoBtnSaveDetails").setVisible(false);
-                    this.byId("vpoBtnCancelDetails").setVisible(false);
+                this._DiscardChangesDialog.close();
+                this.showLoadingDialog('Loading...');
+                // this.byId("vpoSearchFieldDetails").setVisible(true);
+                this.byId("vpoBtnAddPRtoPO").setVisible(true);
+                this.byId("vpoBtnItemChanges").setVisible(true);
+                this.byId("vpoBtnRefreshDetails").setVisible(true);
+                this.byId("vpoBtnEditDetails").setVisible(true);
+                this.byId("vpoBtnDeleteDetails").setVisible(true);
+                this.byId("vpoBtnSaveLayoutDetails").setVisible(true);
+                this.byId("vpoBtnSaveDetails").setVisible(false);
+                this.byId("vpoBtnCancelDetails").setVisible(false);
 
-                    // this.getView().getModel("TableData").setProperty("/", this._oDataBeforeChange);
-                    _promiseResult = new Promise((resolve, reject)=>{
-                        resolve(me.loadAllData());
-                    });
-                    await _promiseResult;
-                    this.closeLoadingDialog(that);
-                }
+                this.enableOtherTabsChild("idIconTabBarInlineMode");
+                this.enableOtherTabsChild("vpoHeaderTxtIconTab");
+                this.byId("vpoDelSchedIconTab").setEnabled(true);
+                this.byId("vpoDelInvIconTab").setEnabled(true);
+                this.byId("vpoPoHistIconTab").setEnabled(true);
+                this.byId("vpoConditionsIconTab").setEnabled(true);
+
+                // this.getView().getModel("TableData").setProperty("/", this._oDataBeforeChange);
+                _promiseResult = new Promise((resolve, reject)=>{
+                    resolve(me.loadAllData());
+                });
+                await _promiseResult;
+                this.closeLoadingDialog(that);
                 this.validationErrors = [];
                 this._DiscardChangesDialog.close();
                 this.getView().getModel("ui").setProperty("/dataMode", 'READ');
                 this._isEdited = false;
+                // var me = this;
+                // if (this._isEdited) {
+                //     this._DiscardChangesDialog.close();
+                //     this.showLoadingDialog('Loading...');
+                //     // this.byId("vpoSearchFieldDetails").setVisible(true);
+                //     this.byId("vpoBtnAddPRtoPO").setVisible(true);
+                //     this.byId("vpoBtnItemChanges").setVisible(true);
+                //     this.byId("vpoBtnRefreshDetails").setVisible(true);
+                //     this.byId("vpoBtnEditDetails").setVisible(true);
+                //     this.byId("vpoBtnDeleteDetails").setVisible(true);
+                //     this.byId("vpoBtnSaveLayoutDetails").setVisible(true);
+                //     this.byId("vpoBtnSaveDetails").setVisible(false);
+                //     this.byId("vpoBtnCancelDetails").setVisible(false);
+
+                //     this.enableOtherTabsChild("idIconTabBarInlineMode");
+                //     this.enableOtherTabsChild("vpoHeaderTxtIconTab");
+                //     this.byId("vpoDelSchedIconTab").setEnabled(true);
+                //     this.byId("vpoDelInvIconTab").setEnabled(true);
+                //     this.byId("vpoPoHistIconTab").setEnabled(true);
+                //     this.byId("vpoConditionsIconTab").setEnabled(true);
+
+                //     // this.getView().getModel("TableData").setProperty("/", this._oDataBeforeChange);
+                //     _promiseResult = new Promise((resolve, reject)=>{
+                //         resolve(me.loadAllData());
+                //     });
+                //     await _promiseResult;
+                //     this.closeLoadingDialog(that);
+                // }
+                // this.validationErrors = [];
+                // this._DiscardChangesDialog.close();
+                // this.getView().getModel("ui").setProperty("/dataMode", 'READ');
+                // this._isEdited = false;
 
             },
             onCancelDiscardChangesDialog: async function(){
