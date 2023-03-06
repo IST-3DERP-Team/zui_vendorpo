@@ -157,7 +157,11 @@
     padding-top: 1rem !important;
 
     padding-bottom: 1rem !important;
+    
+}
 
+.sapUiRespGridSpanXL8{
+    margin-bottom: 5px !important;
 }
 
 .sapMOHR{
@@ -258,3 +262,8 @@ span[data-row-active-class=X] {
     box-sizing: border-box;
 }
 /* END: Spacing Between Forms */
+
+.sapMListItems {
+    max-height: 250px;
+    overflow: auto;
+}
