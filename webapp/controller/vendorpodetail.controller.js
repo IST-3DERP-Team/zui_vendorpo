@@ -2546,12 +2546,19 @@ sap.ui.define([
                                 rfcModel.create("/Get_PO_Change_VendorSet", changeVendorParam, {
                                     method: "POST",
                                     success: function(oData, oResponse) {
+                                        console.log(oData);
                                         if(oData.iv_msgtyp === "E"){
-                                            message = oData.iv_msgtyp + " " + oData.iv_msgv1;
+                                            if(oData.iv_msgv1 !== "")
+                                                message = oData.iv_msgtyp + " - No PO Created. "+ oData.iv_msgv1 +". ";
                                             MessageBox.error(message);
                                         }else{
-                                            message = oData.iv_msgtyp + " " + oData.iv_msgv1;
+                                            if(oData.iv_msgv1 !== "")
+                                                message = "New PO created: "+ oData.iv_msgv1 +".";
+                                            else
+                                                message = oData.iv_msgtyp + " - No PO Created. "+ oData.iv_msgv1 +". ";
+                                           
                                             MessageBox.information(message);
+                                            me.changeVendorDialog.destroy(true);
                                         }
                                         resolve();
                                     },
