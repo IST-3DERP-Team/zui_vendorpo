@@ -149,6 +149,8 @@ sap.ui.define([
                 this.byId("remarksTab").addEventDelegate(oTableEventDelegate);
                 this.byId("packInstructTab").addEventDelegate(oTableEventDelegate);
 
+                if (sap.ushell.Container) sap.ushell.Container.setDirtyFlag(false);
+
                 setTimeout(() => {
                     this.onEditHeader()
                 }, 1000);
@@ -406,6 +408,11 @@ sap.ui.define([
             },
 
             onCreatePO() {
+                if (_this.getView().getModel("detail").getData().results.length == 0) {
+                    sap.m.MessageBox.warning(_oCaption.WARN_DOC_NO_ITEMS);
+                    return;
+                }
+                
                 _this.showLoadingDialog("Creating PO...");
                 this.getNumber();
             },
@@ -713,7 +720,7 @@ sap.ui.define([
             },
 
             onCancelHeader() {
-                sap.m.MessageBox.confirm(_oCaption.CONFIRM_DISREGARD_CHANGE, {
+                sap.m.MessageBox.confirm(_oCaption.CONFIRM_PROCEED_CLOSE, {
                     actions: ["Yes", "No"],
                     onClose: function (sAction) {
                         if (sAction == "Yes") {
@@ -814,9 +821,9 @@ sap.ui.define([
                         actions: ["Yes", "No"],
                         onClose: function (sAction) {
                             if (sAction === "Yes") {
-                                var aRows = this.getView().getModel(sModel).getData().results;
+                                var aRows = _this.getView().getModel(sModel).getData().results;
                                 aRows.splice(oTable.getSelectedIndices(), 1);
-                                this.getView().getModel(pModel).setProperty("/results", aRows);
+                                _this.getView().getModel(sModel).setProperty("/results", aRows);
                             }
                         }
                     });
@@ -1020,8 +1027,18 @@ sap.ui.define([
 
                 oNewRow["NEW"] = true;
 
+                var iMaxItemNew = 0;
+                var iMaxItemOld = 0;
+                var iMaxItem = 0;
+
                 if (arg == "detail") {
-                    oNewRow["POITEM"] = ((aNewRows.length + this._oDataBeforeChange.results.length + 1) * 10).toString();
+                    if (_this._oDataBeforeChange.results.length > 0) {
+                        iMaxItemOld = Math.max(..._this._oDataBeforeChange.results.map(x => x.POITEM));
+                    }
+                    iMaxItemNew = Math.max(...aNewRows.map(x => x.POITEM));
+                    iMaxItem = parseInt(iMaxItemNew > iMaxItemOld ? iMaxItemNew : iMaxItemOld);
+
+                    oNewRow["POITEM"] = ((iMaxItem + 1) * 10).toString();
                     oNewRow["ACCTASSCAT"] = _oHeader.acctAssCat;
 
                     var sCurrentDate = sapDateFormat.format(new Date());
@@ -1034,7 +1051,13 @@ sap.ui.define([
                     oNewRow["TAXCODE"] = _oHeader.taxCode;
                     oNewRow["GLACCOUNT"] = _oHeader.glAccount;
                 } else if (arg == "remarks" || arg == "packInstruct") {
-                    oNewRow["ITEM"] = (aNewRows.length + this._oDataBeforeChange.results.length + 1).toString();
+                    if (_this._oDataBeforeChange.results.length > 0) {
+                        iMaxItemOld = Math.max(..._this._oDataBeforeChange.results.map(x => x.ITEM));
+                    }
+                    iMaxItemNew = Math.max(...aNewRows.map(x => x.ITEM));
+                    iMaxItem = parseInt(iMaxItemNew > iMaxItemOld ? iMaxItemNew : iMaxItemOld);
+
+                    oNewRow["ITEM"] = (iMaxItem + 1).toString();
                 }
 
                 aNewRows.push(oNewRow);
@@ -1786,6 +1809,8 @@ sap.ui.define([
 
                 // MessageBox
                 oDDTextParam.push({CODE: "INFO_NO_SELECTED"});
+                oDDTextParam.push({CODE: "INFO_NO_RECORD_SELECT"});
+                oDDTextParam.push({CODE: "INFO_PROCEED_DELETE"});
                 oDDTextParam.push({CODE: "CONFIRM_DISREGARD_CHANGE"});
                 oDDTextParam.push({CODE: "INFO_NO_DATA_EDIT"});
                 oDDTextParam.push({CODE: "INFO_INVALID_SAVE"});
@@ -1798,6 +1823,7 @@ sap.ui.define([
                 oDDTextParam.push({CODE: "INFO_EXECUTE_FAIL"});
                 oDDTextParam.push({CODE: "CONFIRM_PROCEED_EXECUTE"});
                 oDDTextParam.push({CODE: "CONFIRM_PROCEED_CLOSE"});
+                oDDTextParam.push({CODE: "WARN_DOC_NO_ITEMS"});
 
                 oModel.create("/CaptionMsgSet", { CaptionMsgItems: oDDTextParam  }, {
                     method: "POST",
