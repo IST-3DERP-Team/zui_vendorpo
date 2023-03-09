@@ -475,7 +475,7 @@ sap.ui.define([
                                     item.EXFTY = dateFormat.format(new Date(item.EXFTY));
                                     item.CREATEDDT = dateFormat.format(new Date(item.CREATEDDT));
                                     item.UPDATEDDT = dateFormat.format(new Date(item.UPDATEDDT));
-                                    item.DELETED = item.DELETED === "" ? false : true;
+                                    // item.DELETED = item.DELETED === "" ? false : true;
                                 })
                                 objectData.push(data.results);
                                 objectData[0].sort((a,b) => (a.ITEM > b.ITEM) ? 1 : ((b.ITEM > a.ITEM) ? -1 : 0));
@@ -2914,7 +2914,7 @@ sap.ui.define([
                                 _promiseResult = new Promise((resolve, reject)=>{
                                     rfcModel.create("/ChangePOSet", oParam, {
                                         method: "POST",
-                                        success: function(oData, oResponse){
+                                        success: async function(oData, oResponse){
                                             if(oData.N_ChangePOReturn.results.length > 0){
                                                 if(oData.N_ChangePOReturn.results[0].Msgtyp === "E"){
                                                     message = oData.N_ChangePOReturn.results[0].Msgv1;
@@ -2922,6 +2922,9 @@ sap.ui.define([
                                                     resolve()
                                                 }else{
                                                     message = oData.N_ChangePOReturn.results[0].Msgv1;
+                                                    await new Promise((resolve, reject)=>{
+                                                        resolve(me.loadAllData())
+                                                    });
                                                     MessageBox.information(message);
                                                     resolve()
                                                 }
@@ -3092,7 +3095,7 @@ sap.ui.define([
                                 _promiseResult = new Promise((resolve, reject)=>{
                                     rfcModel.create("/ChangePOSet", oParam, {
                                         method: "POST",
-                                        success: function(oData, oResponse){
+                                        success: async function(oData, oResponse){
                                             if(oData.N_ChangePOReturn.results.length > 0){
                                                 if(oData.N_ChangePOReturn.results[0].Msgtyp === "E"){
                                                     message = oData.N_ChangePOReturn.results[0].Msgv1;
@@ -3100,6 +3103,9 @@ sap.ui.define([
                                                     resolve()
                                                 }else{
                                                     message = oData.N_ChangePOReturn.results[0].Msgv1;
+                                                    await new Promise((resolve, reject)=>{
+                                                        resolve(me.loadAllData())
+                                                    });
                                                     MessageBox.information(message);
                                                     resolve()
                                                 }
@@ -4187,11 +4193,20 @@ sap.ui.define([
                             _promiseResult = new Promise((resolve, reject)=>{
                                 oModel.create("/ChangePOSet", oParam, {
                                     method: "POST",
-                                    success: function(oData, oResponse){
+                                    success: async function(oData, oResponse){
                                         if(oData.N_ChangePOReturn.results.length > 0){
-                                            message = oData.N_ChangePOReturn.results[0].Msgv1;
-                                            MessageBox.information(message);
-                                            resolve()
+                                            if(oData.N_ChangePOReturn.results[0].Msgtyp === 'E'){
+                                                message = oData.N_ChangePOReturn.results[0].Msgv1;
+                                                MessageBox.error(message);
+                                                resolve()
+                                            }else{
+                                                message = oData.N_ChangePOReturn.results[0].Msgv1;
+                                                MessageBox.information(message);
+                                                await new Promise((resolve, reject)=>{
+                                                    resolve(me.loadAllData())
+                                                });
+                                                resolve()
+                                            }   
                                         }else{
                                             MessageBox.error("No Details to Delete.");
                                         }
@@ -4315,6 +4330,17 @@ sap.ui.define([
                 var me = this;
                 var poNo = this._pono;
 
+                // var vendorCd = ''; 
+                // var purchOrg = '';
+                // var purchGrp = '';
+                // var inco1 = ''
+                // var inco2 = ''
+                // var currency = ''
+                // var paymentTerms = ''
+                // var shipToPlant = '';
+                // var purchPlant = '';
+                // var docType = '';
+
                 var oTable = this.byId("vpoAddPRtoPOTbl");
                 var aSelIndices = oTable.getSelectedIndices();
                 var oTmpSelectedIndices = [];
@@ -4340,6 +4366,16 @@ sap.ui.define([
                 _promiseResult = new Promise((resolve, reject)=>{
                     oModel.read("/mainSet(PONO='" + poNo + "')", {
                         success: function (oData, oResponse) {
+                            // vendorCd= oData.VENDOR; 
+                            // purchOrg= oData.PURCHORG;
+                            // purchGrp= oData.PURCHGRP;
+                            // shipToPlant= oData.SHIPTOPLANT;
+                            // purchPlant= oData.PURCHPLANT;
+                            // docType= oData.DOCTYPE;
+                            // inco1 = oData.INCOTERMS;
+                            // inco2 = oData.DEST;
+                            // currency = oData.CURRENCY
+                            // paymentTerms = oData.PAYMNTTERMS
                             if (oData.PODT !== null)
                                 oData.PODT = dateFormat.format(new Date(oData.PODT));
                             headerPOArr.push(oData);
@@ -4390,17 +4426,27 @@ sap.ui.define([
                             IDoDownload: "",
                             IChangeonlyHdrplants: "",
                         };
+                        console.log(aData.at(item));
                         oParamDataPO.push({
                             Bedat     : sapDateFormat.format(new Date(headerPOArr[0].PODT)) + "T00:00:00", //PODocDt
                             Bsart     : headerPOArr[0].DOCTYPE, //PODocTyp
                             Banfn     : aData.at(item).PRNO, //PR
                             Bnfpo     : aData.at(item).PRITM, //PRITM
+                            // Ekorg     : aData.at(item).PURCHORG,
+                            // Lifnr     : aData.at(item).VENDORCD,
+                            // Ekgrp     : aData.at(item).PURCHGRP,
+                            // Inco1     : inco1,
+                            // Inco2     : inco2,
+                            // Waers     : currency,
+                            // Zterm     : paymentTerms,
                             Ebeln     : poNo, //PONO
                             Ebelp     : poItemLastCnt, //POITM
                             Bukrs     : headerPOArr[0].COMPANY,//COCD
                             Werks     : headerPOArr[0].PURCHPLANT,//PLANTCD
-                            Unsez     : "",//
-                            Txz01     : "",//ShortText
+                            Unsez     : headerPOArr[0].SHIPTOPLANT,//
+                            Matnr     : aData.at(item).MATNO, //MatNo
+                            Charg     : aData.at(item).IONO,
+                            Txz01     : aData.at(item).SHORTTEXT,//ShortText
                             Menge     : aData.at(item).QTY,//OrdQTY
                             Meins     : aData.at(item).UOM,//UOM
                             // Netpr     : resultExtendPop[0][x].NETPR,//NET ORD PRICE/
@@ -4429,15 +4475,26 @@ sap.ui.define([
                     oParam = oParamInitParam;
                     oParam['N_ChangePOItemParam'] = oParamDataPO;
                     oParam['N_ChangePOReturn'] = [];
-
+                    console.log(oParam);
                     _promiseResult = new Promise((resolve, reject)=>{
                         rfcModel.create("/ChangePOSet", oParam, {
                             method: "POST",
-                            success: function(oData, oResponse){
+                            success: async function(oData, oResponse){
+                                console.log(oData);
                                 if(oData.N_ChangePOReturn.results.length > 0){
-                                    message = oData.N_ChangePOReturn.results[0].Msgv1;
-                                    MessageBox.information(message);
-                                    resolve()
+                                    if(oData.N_ChangePOReturn.results[0].Msgtyp === "E"){
+                                        message = oData.N_ChangePOReturn.results[0].Msgv1;
+                                        MessageBox.error(message);
+                                        resolve()
+                                    }else{
+                                        message = oData.N_ChangePOReturn.results[0].Msgv1;
+                                        MessageBox.information(message);
+                                        me.addPRToPODialog.destroy(true);
+                                        await new Promise((resolve, reject)=>{
+                                            resolve(me.loadAllData())
+                                        });
+                                        resolve()
+                                    }
                                 }else{
                                     MessageBox.error("Error, No Data Changed");
                                     resolve()
