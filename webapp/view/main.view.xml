@@ -14,7 +14,7 @@
     <Page id="page" title="{i18n>title}" showHeader="false">
         <content>
             
-            <smartfilterbar:SmartFilterBar id="smartFilterBar" entitySet="ZVB_3DERP_VPO_FILTERS" search="onSearch" persistencyKey="3DERP_StylesPKey" filterContainerWidth="15rem">
+            <smartfilterbar:SmartFilterBar id="smartFilterBar" entitySet="ZVB_3DERP_VPO_FILTERS" search="onSearch" showClearOnFB="true" persistencyKey="3DERP_StylesPKey" filterContainerWidth="15rem">
                 <smartfilterbar:controlConfiguration>
                     <smartfilterbar:ControlConfiguration key="SBU" groupId="_BASIC" label="{captionMsg>/SBU}" mandatory="mandatory" width="50px">
                         <smartfilterbar:customControl>
@@ -30,18 +30,21 @@
                     </smartfilterbar:ControlConfiguration>
                 </smartfilterbar:controlConfiguration>
                 <smartfilterbar:controlConfiguration>
-                    <smartfilterbar:ControlConfiguration id="filterVendor" label="{captionMsg>/VENDOR}" key="VENDOR" groupId="_BASIC" displayBehaviour="descriptionAndId"
+                    <smartfilterbar:ControlConfiguration key="PONO" label="{captionMsg>/PONO}" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false" displayBehaviour ="idOnly" />
+                </smartfilterbar:controlConfiguration>
+                <smartfilterbar:controlConfiguration>
+                    <smartfilterbar:ControlConfiguration id="filterVendor" label="{captionMsg>/VENDOR}" key="VENDOR" groupId="_BASIC" displayBehaviour ="idOnly"
                         preventInitialDataFetchInValueHelpDialog="false"> 
                     </smartfilterbar:ControlConfiguration>
                 </smartfilterbar:controlConfiguration>
                 <smartfilterbar:controlConfiguration>
-                    <smartfilterbar:ControlConfiguration key="DOCTYPE" label="{captionMsg>/DOCTYP}" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false" />
+                    <smartfilterbar:ControlConfiguration key="DOCTYPE" label="{captionMsg>/DOCTYP}" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false" displayBehaviour ="idOnly"/>
                 </smartfilterbar:controlConfiguration>
                 <smartfilterbar:controlConfiguration>
-                    <smartfilterbar:ControlConfiguration key="COMPANY" label="{captionMsg>/COMPANY}" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false" />
+                    <smartfilterbar:ControlConfiguration key="COMPANY" label="{captionMsg>/COMPANY}" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false" displayBehaviour ="idOnly"/>
                 </smartfilterbar:controlConfiguration>
                 <smartfilterbar:controlConfiguration>
-                    <smartfilterbar:ControlConfiguration key="SHIPTOPLANT" label="{captionMsg>/SHIPTOPLANT}" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false" />
+                    <smartfilterbar:ControlConfiguration key="SHIPTOPLANT" label="{captionMsg>/SHIPTOPLANT}" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false" displayBehaviour ="idOnly"/>
                 </smartfilterbar:controlConfiguration>
                 <smartfilterbar:layoutData>
                     <FlexItemData growFactor="0"/>

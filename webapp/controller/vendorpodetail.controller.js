@@ -90,14 +90,14 @@ sap.ui.define([
                 var me = this;
                 
                 this._pono = oEvent.getParameter("arguments").PONO;
-                this._condrec = oEvent.getParameter("arguments").CONDREC;
+                // this._condrec = oEvent.getParameter("arguments").CONDREC;
                 this._sbu = oEvent.getParameter("arguments").SBU;
 
 
                 this.getView().getModel("ui").setProperty("/activePONo", this._pono);
-                this.getView().getModel("ui").setProperty("/activeCondRec", this._condrec);
+                
                 // //Load header
-                this.getHeaderData(); //get header data
+                await this.getHeaderData(); //get header data
                 this.loadReleaseStrategy();
 
                 _promiseResult = new Promise((resolve, reject)=>{
@@ -300,7 +300,7 @@ sap.ui.define([
             closeLoadingDialog() {
                 this._LoadingDialog.close();
             },
-            getHeaderData: function () {
+            getHeaderData: async function () {
                 var me = this;
                 var poNo = this._pono;
                 var pritm = this._pritm;
@@ -315,42 +315,48 @@ sap.ui.define([
                 //read Style header data
                 
                 var entitySet = "/mainSet(PONO='" + poNo + "')"
-                oModel.read(entitySet, {
-                    success: function (oData, oResponse) {
-                        oData.CREATEDDT = dateFormat.format(new Date(oData.CREATEDDT));
-                        oData.UPDATEDDT = dateFormat.format(new Date(oData.UPDATEDDT));
-                        if (oData.PODT !== null)
-                            oData.PODT = dateFormat.format(new Date(oData.PODT));
-                        
-                        oJSONModel.setData(oData);
-                        for (var oDatas in oData) {
-                            //get only editable fields
-                            edditableFields[oDatas] = false;
-                        }
-                        
-                        me.ediVendor = oData.EDIVENDOR;
+                await new Promise((resolve, reject) => {
+                    oModel.read(entitySet, {
+                        success: function (oData, oResponse) {
+                            oData.CREATEDDT = dateFormat.format(new Date(oData.CREATEDDT));
+                            oData.UPDATEDDT = dateFormat.format(new Date(oData.UPDATEDDT));
+                            if (oData.PODT !== null)
+                                oData.PODT = dateFormat.format(new Date(oData.PODT));
+                            
+                            oJSONModel.setData(oData);
+                            for (var oDatas in oData) {
+                                //get only editable fields
+                                edditableFields[oDatas] = false;
+                            }
+                            
+                            me.ediVendor = oData.EDIVENDOR;
+                            
+                            me.getView().getModel("ui").setProperty("/activeCondRec", oData.CONDREC);
+                            
 
-                        oJSONEdit.setData(edditableFields);
-                        // console.log(oView.getModel("topHeaderData"))
-                        
-                        oView.setModel(oJSONModel, "topHeaderData");
-                        oView.setModel(oJSONEdit, "topHeaderDataEdit");
-                        
-                        me.closeLoadingDialog(that);
-                        // me.setChangeStatus(false);
-                    },
-                    error: function () {
-                        me.closeLoadingDialog(that);
-                    }
-                })
+                            oJSONEdit.setData(edditableFields);
+                            // console.log(oView.getModel("topHeaderData"))
+                            
+                            oView.setModel(oJSONModel, "topHeaderData");
+                            oView.setModel(oJSONEdit, "topHeaderDataEdit");
+                            
+                            me.closeLoadingDialog(that);
+                            resolve();
+                            // me.setChangeStatus(false);
+                        },
+                        error: function () {
+                            me.closeLoadingDialog(that);
+                            resolve();
+                        }
+                    })
+                });
             },
             getMain: async function(){
                 this._oDataBeforeChange = {}
                 var oModel = this.getOwnerComponent().getModel();
                 var _this = this;
                 var poNo = this._pono;
-                var condrec = this._condrec;
-
+                var condrec = this.getView().getModel("ui").getProperty("/activeCondRec");
                 return new Promise(async (resolve, reject) => {
                     _this.getView().setModel(new JSONModel({
                         results: []
@@ -435,7 +441,7 @@ sap.ui.define([
             getConditions2: async function(CONDREC){
                 var oModel = this.getOwnerComponent().getModel();
                 var me = this;
-                var vSBU = this._sbu;
+                var oJSONModel = new sap.ui.model.json.JSONModel();
                 return new Promise((resolve, reject)=>{
                     oModel.read('/VPOConditionsSet', { 
                         urlParameters: {
@@ -443,7 +449,6 @@ sap.ui.define([
                         },
                         success: function (data, response) {
                             if (data.results.length > 0) {
-                                var oJSONModel = new sap.ui.model.json.JSONModel();
                                 oJSONModel.setData(data);
                             }
                             me.getView().setModel(oJSONModel, "VPOCondVPODet");
@@ -565,7 +570,6 @@ sap.ui.define([
                 var vSBU = this._sbu;
 
                 var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_COMMON_SRV");
-                // console.log(oModel)
                 oModel.setHeaders({
                     sbu: vSBU,
                     type: modCode,
@@ -1732,8 +1736,6 @@ sap.ui.define([
                                     TextLine: ""
                                 })
                             }
-                            
-
                             this.showLoadingDialog('Loading...');
                             oParam = oParamInitParam;
                             oParam['N_ChangePOHdrTextParam'] = oParamDataPOHdr;
@@ -2012,6 +2014,7 @@ sap.ui.define([
                 var me = this;
                 var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
                 var oEntitySet = "/ValidatePO_ChangeSet"
+                var bProceed = true;
 
                 _promiseResult = new Promise((resolve, reject)=>{
                     oModel.read(oEntitySet, {
@@ -2022,8 +2025,43 @@ sap.ui.define([
                             if(data.results[0].WithGR !== "X"){
                                 resolve(me._validPOChange = 1)
                             }else{
-                                
-                                resolve(me._validPOChange = 0)
+                                var count = me.getView().getModel("VPODtlsVPODet").getProperty("/results").length;
+                                var itemCount = 0;
+                                var isValidObj = [];
+
+                                me.getView().getModel("VPODtlsVPODet").getProperty("/results").forEach(item => {
+
+                                    if(item.DELETED === true || item.CLOSED === true){
+                                        isValidObj.push({
+                                            Deleted: item.DELETED,
+                                            Closed: item.CLOSED
+                                        });
+                                        itemCount++
+                                    }else{
+                                        isValidObj.push({
+                                            Deleted: item.DELETED,
+                                            Closed: item.CLOSED
+                                        })
+                                        itemCount++
+                                    }
+                                    if(itemCount === count){
+                                        var result = isValidObj.find(item => item.Deleted === false && item.Closed === false)
+                                        if(result != undefined){
+                                            if(result.Deleted === false && result.Closed === false){
+                                                bProceed = true;
+                                            }else{
+                                                bProceed = false;
+                                            }
+                                        }else{
+                                            bProceed = false;
+                                        }
+                                    }
+                                })
+                                if(bProceed){
+                                    resolve(me._validPOChange = 1)
+                                }else{
+                                    resolve(me._validPOChange = 0)
+                                }
                             }
                         },
                         error: function(error){
@@ -2093,39 +2131,37 @@ sap.ui.define([
                 var bProceed = true
                 var isValid = true
 
-                var count = this.getView().getModel("VPODtlsVPODet").getProperty("/results").length;
+                var count = me.getView().getModel("VPODtlsVPODet").getProperty("/results").length;
                 var itemCount = 0;
-                var isDeletedObj = [];
+                var isValidObj = [];
 
                 this.getView().getModel("VPODtlsVPODet").getProperty("/results").forEach(item => {
 
-                    if(item.DELETED === true){
-                        isDeletedObj.push({
-                            Deleted: true
+                    if(item.DELETED === true || item.CLOSED === true){
+                        isValidObj.push({
+                            Deleted: item.DELETED,
+                            Closed: item.CLOSED
                         });
                         itemCount++
                     }else{
-                        isDeletedObj.push({
-                            Deleted: false
+                        isValidObj.push({
+                            Deleted: item.DELETED,
+                            Closed: item.CLOSED
                         })
                         itemCount++
                     }
                     if(itemCount === count){
-                        var result = isDeletedObj.find(item => item.Deleted === false)
+                        var result = isValidObj.find(item => item.Deleted === false && item.Closed === false)
                         if(result != undefined){
-                            if(result.Deleted === false){
+                            if(result.Deleted === false && result.Closed === false){
                                 bProceed = true;
-                                isValid = true;
                             }else{
                                 bProceed = false;
-                                isValid = false;
                             }
                         }else{
                             bProceed = false;
-                            isValid = false;
                         }
                     }
-
                     // if(bProceed){
                     //     if(isValid){
                     //         if(item.DELETED !== true){
@@ -2546,7 +2582,6 @@ sap.ui.define([
                                 rfcModel.create("/Get_PO_Change_VendorSet", changeVendorParam, {
                                     method: "POST",
                                     success: function(oData, oResponse) {
-                                        console.log(oData);
                                         if(oData.iv_msgtyp === "E"){
                                             if(oData.iv_msgv1 !== "")
                                                 message = oData.iv_msgtyp + " - No PO Created. "+ oData.iv_msgv1 +". ";
@@ -2598,18 +2633,48 @@ sap.ui.define([
                     bProceed = false
                 }
 
+                var count = this.getView().getModel("VPODtlsVPODet").getProperty("/results").length;
+                var itemCount = 0;
+                var isValidObj = [];
+
                 this.getView().getModel("VPODtlsVPODet").getProperty("/results").forEach(item => {
-                    if(bProceed){
-                        if(isValid){
-                            if(item.DELETED !== true && item.CLOSED !== true){
+
+                    if(item.DELETED === true || item.CLOSED === true){
+                        isValidObj.push({
+                            Deleted: item.DELETED,
+                            Closed: item.CLOSED
+                        });
+                        itemCount++
+                    }else{
+                        isValidObj.push({
+                            Deleted: item.DELETED,
+                            Closed: item.CLOSED
+                        })
+                        itemCount++
+                    }
+                    if(itemCount === count){
+                        var result = isValidObj.find(item => item.Deleted === false && item.Closed === false)
+                        if(result != undefined){
+                            if(result.Deleted === false && result.Closed === false){
                                 bProceed = true;
-                                isValid = true;
                             }else{
                                 bProceed = false;
-                                isValid = false;
                             }
+                        }else{
+                            bProceed = false;
                         }
                     }
+                    // if(bProceed){
+                    //     if(isValid){
+                    //         if(item.DELETED !== true && item.CLOSED !== true){
+                    //             bProceed = true;
+                    //             isValid = true;
+                    //         }else{
+                    //             bProceed = false;
+                    //             isValid = false;
+                    //         }
+                    //     }
+                    // }
                 })
 
                 var poNo = this._pono;
@@ -2720,7 +2785,7 @@ sap.ui.define([
                                     if(oData.N_ChangePOReturn.results.length > 0){
                                         if(oData.N_ChangePOReturn.results[0].Msgtyp === "E"){
                                             message = oData.N_ChangePOReturn.results[0].Msgv1;
-                                            MessageBox.information(message);
+                                            MessageBox.error(message);
                                             resolve()
                                         }else{
                                             me.changeDlvDateDialog.destroy(true);
@@ -2771,18 +2836,48 @@ sap.ui.define([
                     bProceed = false
                 }
 
+                var count = this.getView().getModel("VPODtlsVPODet").getProperty("/results").length;
+                var itemCount = 0;
+                var isValidObj = [];
+
                 this.getView().getModel("VPODtlsVPODet").getProperty("/results").forEach(item => {
-                    if(bProceed){
-                        if(isValid){
-                            if(item.DELETED !== true && item.CLOSED !== true){
+
+                    if(item.DELETED === true || item.CLOSED === true){
+                        isValidObj.push({
+                            Deleted: item.DELETED,
+                            Closed: item.CLOSED
+                        });
+                        itemCount++
+                    }else{
+                        isValidObj.push({
+                            Deleted: item.DELETED,
+                            Closed: item.CLOSED
+                        })
+                        itemCount++
+                    }
+                    if(itemCount === count){
+                        var result = isValidObj.find(item => item.Deleted === false && item.Closed === false)
+                        if(result != undefined){
+                            if(result.Deleted === false && result.Closed === false){
                                 bProceed = true;
-                                isValid = true;
                             }else{
                                 bProceed = false;
-                                isValid = false;
                             }
+                        }else{
+                            bProceed = false;
                         }
                     }
+                    // if(bProceed){
+                    //     if(isValid){
+                    //         if(item.DELETED !== true && item.CLOSED !== true){
+                    //             bProceed = true;
+                    //             isValid = true;
+                    //         }else{
+                    //             bProceed = false;
+                    //             isValid = false;
+                    //         }
+                    //     }
+                    // }
                 })
 
                 if(!isValid){
@@ -3538,7 +3633,6 @@ sap.ui.define([
                         })
                     }
                 }
-                console.log(this.validationErrors);
                 if(oEvent.getParameters().value === oEvent.getSource().getBindingInfo("value").binding.oValue){
                     this._isEdited = false;
                 }else{
@@ -4426,7 +4520,6 @@ sap.ui.define([
                             IDoDownload: "",
                             IChangeonlyHdrplants: "",
                         };
-                        console.log(aData.at(item));
                         oParamDataPO.push({
                             Bedat     : sapDateFormat.format(new Date(headerPOArr[0].PODT)) + "T00:00:00", //PODocDt
                             Bsart     : headerPOArr[0].DOCTYPE, //PODocTyp
@@ -4475,12 +4568,10 @@ sap.ui.define([
                     oParam = oParamInitParam;
                     oParam['N_ChangePOItemParam'] = oParamDataPO;
                     oParam['N_ChangePOReturn'] = [];
-                    console.log(oParam);
                     _promiseResult = new Promise((resolve, reject)=>{
                         rfcModel.create("/ChangePOSet", oParam, {
                             method: "POST",
                             success: async function(oData, oResponse){
-                                console.log(oData);
                                 if(oData.N_ChangePOReturn.results.length > 0){
                                     if(oData.N_ChangePOReturn.results[0].Msgtyp === "E"){
                                         message = oData.N_ChangePOReturn.results[0].Msgv1;

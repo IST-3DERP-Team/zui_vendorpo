@@ -30,6 +30,7 @@ sap.ui.define([
                     activePONo:'',
                     activePOItem:'',
                     activeCondRec:'',
+                    activeDocTyp: ''
                 }), "ui");
 
                 var oDelegateKeyUp = {
@@ -161,9 +162,12 @@ sap.ui.define([
                         var aData = this.byId("mainTab").getModel().getData().rows;
 
                         this.getView().getModel("ui").setProperty("/activePONo", aData.at(oSelectedIndices[0]).PONO);
+                        this.getView().getModel("ui").setProperty("/activeCondRec", aData.at(oSelectedIndices[0]).CONDREC);
+                        this.getView().getModel("ui").setProperty("/activeDocTyp", aData.at(oSelectedIndices[0]).DOCTYPE);
 
                         
                         var PONo = this.getView().getModel("ui").getProperty("/activePONo");
+                        var condrec = this.getView().getModel("ui").getProperty("/activeCondRec");
 
                         _promiseResult = new Promise((resolve,reject)=> {
                         
@@ -172,7 +176,7 @@ sap.ui.define([
                             this.getDelSchedule2(PONo)
                             this.getDelInvoice2(PONo)
                             this.getPOHistory2(PONo)
-                            this.getConditions2(PONo)
+                            this.getConditions2(condrec)
                             resolve();
                         })
                         await _promiseResult;;
@@ -199,8 +203,8 @@ sap.ui.define([
                 var oModel = this.getOwnerComponent().getModel();
                 var me = this;
                 var poNo;
-                var poItem;
                 var condrec;
+                var docType;
                 var aFilters = this.getView().byId("smartFilterBar").getFilters();
 
                 var vSBU = this.getView().getModel("ui").getData().sbu;
@@ -233,16 +237,18 @@ sap.ui.define([
                                 /*data.results.sort((a,b) => (a.GMC > b.GMC ? 1 : -1));*/
                                 poNo = data.results[0].PONO;
                                 condrec = data.results[0].CONDREC;
+                                docType = data.results[0].DOCTYPE;
                                 var oJSONModel = new sap.ui.model.json.JSONModel();
                                 oJSONModel.setData(data);
                                 me.getView().setModel(oJSONModel, "VPOHdr");
                                 me.getView().getModel("ui").setProperty("/activePONo", poNo);
                                 me.getView().getModel("ui").setProperty("/activeCondRec", condrec);
+                                me.getView().getModel("ui").setProperty("/activeDocTyp", docType)
                                 resolve(me.getPODetails2(poNo));
                                 resolve(me.getDelSchedule2(poNo));
                                 resolve(me.getDelInvoice2(poNo));
                                 resolve(me.getPOHistory2(poNo));
-                                resolve(me.getConditions2(poNo));
+                                resolve(me.getConditions2(condrec));
                                 resolve();
                             }
                             else {
@@ -397,7 +403,7 @@ sap.ui.define([
                                     item.EXFTY = dateFormat.format(new Date(item.EXFTY));
                                     item.CREATEDDT = dateFormat.format(new Date(item.CREATEDDT));
                                     item.UPDATEDDT = dateFormat.format(new Date(item.UPDATEDDT));
-                                    item.DELETED = item.DELETED === "" ? false : true;
+                                    // item.DELETED = item.DELETED === "" ? false : true;
                                 })
                                 objectData.push(data.results);
                                 objectData[0].sort((a,b) => (a.ITEM > b.ITEM) ? 1 : ((b.ITEM > a.ITEM) ? -1 : 0));
@@ -661,17 +667,18 @@ sap.ui.define([
                     //double click event
                     this.byId("mainTab").attachBrowserEvent('dblclick',function(e){
                         var PONo = me.getView().getModel("ui").getProperty("/activePONo");
-                        var CONDREC = me.getView().getModel("ui").getProperty("/activeCondRec");
+                        // var CONDREC = me.getView().getModel("ui").getProperty("/activeCondRec");
                         var SBU = me.getView().getModel("ui").getData().sbu;
                         e.preventDefault();
                         if(me.getView().getModel("ui").getData().dataMode === 'READ'){
-                            me.navToDetail(PONo, CONDREC, SBU); //navigate to detail page
+                            me.navToDetail(PONo, SBU); //navigate to detail page
                         }
                     });
                 }
                 if (modCode === 'VPODTLS') {
                     oColumnsModel = this.getView().getModel("VPODtls");  
                     oDataModel = this.getView().getModel("VPODTLSColumns"); 
+                    var docType = this.getView().getModel("ui").getData().activeDocTyp;
                     
                     oData = oColumnsModel === undefined ? [] :oColumnsModel.getProperty('/results');
 
@@ -679,6 +686,38 @@ sap.ui.define([
                         oData = [];
                     }
                     oColumnsData = oDataModel.getProperty('/');   
+                    if(docType === "ZVAS" || docType === "ZSUR"){
+                        oColumnsData.forEach((item, index) =>{
+                            if(item.ColumnName === "GMCDESC"){
+                                item.Visible = false;
+                            }
+                            if(item.ColumnName === "ADDTLDESC"){
+                                item.Visible = false;
+                            }
+                            if(item.ColumnName === "MERCHMATDESC"){
+                                item.Visible = false;
+                            }
+                            if(item.ColumnName === "SHORTTEXT"){
+                                item.Visible = true;
+                            }
+                        })
+                    }else{
+                        oColumnsData.forEach((item, index) =>{
+                            if(item.ColumnName === "GMCDESC"){
+                                item.Visible = true;
+                            }
+                            if(item.ColumnName === "ADDTLDESC"){
+                                item.Visible = true;
+                            }
+                            if(item.ColumnName === "MERCHMATDESC"){
+                                item.Visible = true;
+                            }
+                            if(item.ColumnName === "SHORTTEXT"){
+                                item.Visible = false;
+                            }
+                        })
+                    }
+
                     this.addColumns("detailsTab", oColumnsData, oData, "VPODtls");
                 }
                 if (modCode === 'VPODELSCHED') {
@@ -892,16 +931,20 @@ sap.ui.define([
                 this.navToDetail(PONo, CONDREC, SBU);
                 
             },
-            navToDetail(PONo, CONDREC, SBU){
+            navToDetail(PONo, SBU){
                 var me = this;
 
+                // if(CONDREC === undefined || CONDREC === "" || CONDREC ===null){
+                //     MessageBox.error("PO: "+ PONo +" has no Condition Record!")
+                // }else{
                 var oJSONModel = new JSONModel();
                 oJSONModel.setData(this.getView().getModel("captionMsg").getData());
                 this._router.navTo("vendorpodetail", {
                     PONO: PONo,
-                    CONDREC: CONDREC,
+                    // CONDREC: CONDREC,
                     SBU: SBU
                 });
+                // }
             },
             onSaveTableLayout: function (table) {
                 var type;
@@ -986,14 +1029,17 @@ sap.ui.define([
                 var oRow;
                 var oTable;
                 var PONo = this.getView().getModel("ui").getProperty("/activePONo")
+                var condrec = this.getView().getModel("ui").getProperty("/activeCondRec")
                 var me = this;
                 if(oEvent.getParameters().id.includes("mainTab")){
                     oRow = this.getView().getModel("VPOHdr").getProperty(sRowPath)
                     oTable = this.byId("mainTab");
                     this.getView().getModel("ui").setProperty("/activePONo", oRow.PONO);
                     this.getView().getModel("ui").setProperty("/activeCondRec", oRow.CONDREC);
+                    this.getView().getModel("ui").setProperty("/activeDocTyp", oRow.DOCTYPE)
 
                     PONo = this.getView().getModel("ui").getProperty("/activePONo");
+                    condrec = this.getView().getModel("ui").getProperty("/activeCondRec");
                     _promiseResult = new Promise((resolve,reject)=> {
                         
                         me._tblChange = true;
@@ -1001,7 +1047,7 @@ sap.ui.define([
                         me.getDelSchedule2(PONo)
                         me.getDelInvoice2(PONo)
                         me.getPOHistory2(PONo)
-                        me.getConditions2(PONo)
+                        me.getConditions2(condrec)
                         resolve();
                     })
                     await _promiseResult;;
@@ -1062,6 +1108,7 @@ sap.ui.define([
                         oTable = this.byId("mainTab")
                         this.getView().getModel("ui").setProperty("/activePONo", oRow.PONO)
                         this.getView().getModel("ui").setProperty("/activeCondRec", oRow.CONDREC)
+                        this.getView().getModel("ui").setProperty("/activeDocTyp", oRow.DOCTYPE)
 
                         _promiseResult = new Promise((resolve,reject)=> {
                             
@@ -1232,6 +1279,7 @@ sap.ui.define([
                 var oRow;
                 var oTable;
                 var PONo = this.getView().getModel("ui").getProperty("/activePONo")
+                var condrec = this.getView().getModel("ui").getProperty("/activeCondRec")
                 var me = this;
                 
                 if(oEvent.getParameters().id.includes("mainTab")){
@@ -1239,8 +1287,10 @@ sap.ui.define([
                     oTable = this.byId("mainTab");
                     this.getView().getModel("ui").setProperty("/activePONo", oRow.PONO);
                     this.getView().getModel("ui").setProperty("/activeCondRec", oRow.CONDREC);
+                    this.getView().getModel("ui").setProperty("/activeDocTyp", oRow.DOCTYPE)
 
                     PONo = this.getView().getModel("ui").getProperty("/activePONo");
+                    condrec = this.getView().getModel("ui").getProperty("/activeCondRec");
                     _promiseResult = new Promise((resolve,reject)=> {
                         
                         me._tblChange = true;
@@ -1248,7 +1298,7 @@ sap.ui.define([
                         me.getDelSchedule2(PONo)
                         me.getDelInvoice2(PONo)
                         me.getPOHistory2(PONo)
-                        me.getConditions2(PONo)
+                        me.getConditions2(condrec)
                         resolve();
                     })
                     await _promiseResult;;
