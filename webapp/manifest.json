@@ -198,7 +198,7 @@
                 },
                 {
                     "name": "vendorpodetail",
-                    "pattern": "VPODet/{PONO}/{SBU}/{CONDREC}",
+                    "pattern": "VPODet/{PONO}/{SBU}",
                     "greedy": false,
                     "target": [
                         "TargetVPODetail"
