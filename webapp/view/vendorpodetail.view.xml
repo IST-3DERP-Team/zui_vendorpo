@@ -28,7 +28,7 @@
                 <!-- </layoutData> -->
             <!-- </ObjectHeader> -->
             <VBox id="_IDGenVBox1" fitContainer="true" class="sidePadding vboxHeightPODet">
-                <uiL:ResponsiveSplitter defaultPane="default">
+                <uiL:ResponsiveSplitter id="splitDet" defaultPane="default">
                     <uiL:PaneContainer orientation="Vertical">
                         <uiL:SplitPane  requiredParentWidth="800">
                             <IconTabBar
@@ -81,9 +81,15 @@
                                         </IconTabFilter>
                                     </items>
                             </IconTabBar>
+                            <uiL:layoutData>
+                                <uiL:SplitterLayoutData size="50%"/>
+                            </uiL:layoutData>
                         </uiL:SplitPane>
                         <uiL:SplitPane  requiredParentWidth="800">
                             <core:Fragment fragmentName="zuivendorpo.view.subviews.vpodetailtab" type="XML"/>
+                            <uiL:layoutData>
+                                <uiL:SplitterLayoutData size="50%"/>
+                            </uiL:layoutData>
                         </uiL:SplitPane>
                     </uiL:PaneContainer>
                 </uiL:ResponsiveSplitter>

@@ -52,9 +52,9 @@
             </smartfilterbar:SmartFilterBar>
             
             <VBox id="_IDGenVBox1" fitContainer="true" class="sidePadding vboxHeight">
-                <uiL:ResponsiveSplitter defaultPane="default">
+                <uiL:ResponsiveSplitter id="splitMain" defaultPane="default">
                     <uiL:PaneContainer orientation="Vertical">
-                        <uiL:SplitPane  requiredParentWidth="800">
+                        <uiL:SplitPane requiredParentWidth="800">
                             <uiT:Table id="mainTab"
                                 class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
                                 visibleRowCountMode="Auto"
@@ -129,10 +129,18 @@
                                             tooltip="{captionMsg>/EDIT}" 
                                             press=".onClickEdit"/>
                                         <Button id="btnRefreshMain" 
-                                                icon="sap-icon://refresh"
-                                                tooltip="{captionMsg>/REFRESH}"
-                                                press=".onRefresh"
-                                                visible="true" />
+                                            icon="sap-icon://refresh"
+                                            tooltip="{captionMsg>/REFRESH}"
+                                            press=".onRefresh"
+                                            visible="true" />
+                                        <Button id="btnExportToExcel" 
+                                            icon="sap-icon://excel-attachment"
+                                            tooltip="{captionMsg>/EXPORTTOEXCEL}"
+                                            press=".onExportToExcel"
+                                            visible="true" />
+                                        <Button icon="sap-icon://full-screen"
+                                            press="onTableResize"
+                                            visible="true" />
                                         <!-- <Button id="btnSortMain" 
                                             icon="sap-icon://sort"
                                             press=".onColSort"
@@ -164,6 +172,9 @@
                                     <FlexItemData growFactor="1" baseSize="0%"/>
                                 </uiT:layoutData>                        
                             </uiT:Table> 
+                            <uiL:layoutData>
+                                <uiL:SplitterLayoutData size="46%"/>
+                            </uiL:layoutData>
                         </uiL:SplitPane>
                         <uiL:SplitPane  requiredParentWidth="800">
                             <IconTabBar id="itbDetail"
@@ -175,7 +186,7 @@
                                 stretchContentHeight="true" 
                                 applyContentPadding="false">
                                 <items>
-                                    <IconTabFilter text="{captionMsg>/DETAILS}">
+                                    <IconTabFilter id="detailsIconTab" text="{captionMsg>/DETAILS}">
                                         <uiT:Table id="detailsTab"
                                             class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
                                             visibleRowCountMode="Auto"
@@ -194,6 +205,14 @@
                                                         press=".onRefresh"
                                                         tooltip="{captionMsg>/REFRESH}"
                                                         visible="true" />
+                                                    <Button id="btnExportToExcelDetails" 
+                                                        icon="sap-icon://excel-attachment"
+                                                        tooltip="{captionMsg>/EXPORTTOEXCEL}"
+                                                        press=".onExportToExcel"
+                                                        visible="true" />
+                                                    <Button icon="sap-icon://full-screen"
+                                                        press="onTableResize"
+                                                        visible="true" />
                                                     <Button id="btnColPropDetails" 
                                                         icon="sap-icon://table-column"
                                                         press=".onSaveTableLayout('detailsTab')"
@@ -206,7 +225,7 @@
                                             </uiT:layoutData>                        
                                         </uiT:Table> 
                                     </IconTabFilter>
-                                    <IconTabFilter text="{captionMsg>/DELSCHED}">
+                                    <IconTabFilter id="delSchedIconTab" text="{captionMsg>/DELSCHED}">
                                         <uiT:Table id="delSchedTab"
                                             class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
                                             visibleRowCountMode="Auto"
@@ -226,6 +245,14 @@
                                                         press=".onRefresh"
                                                         tooltip="{captionMsg>/REFRESH}"
                                                         visible="true" />
+                                                    <Button id="btnExportToExcelDelSched" 
+                                                        icon="sap-icon://excel-attachment"
+                                                        tooltip="{captionMsg>/EXPORTTOEXCEL}"
+                                                        press=".onExportToExcel"
+                                                        visible="true" />
+                                                    <Button icon="sap-icon://full-screen"
+                                                        press="onTableResize"
+                                                        visible="true" />
                                                     <Button id="btnColPropDelSched" 
                                                         icon="sap-icon://table-column"
                                                         press=".onSaveTableLayout('delSchedTab')"
@@ -238,7 +265,7 @@
                                             </uiT:layoutData>                        
                                         </uiT:Table> 
                                     </IconTabFilter>
-                                    <IconTabFilter text="{captionMsg>/DELIVERY}/{captionMsg>/INVOICE}">
+                                    <IconTabFilter id="delInvIconTab" text="{captionMsg>/DELIVERY}/{captionMsg>/INVOICE}">
                                         <uiT:Table id="delInvTab"
                                             class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
                                             visibleRowCountMode="Auto"
@@ -258,6 +285,14 @@
                                                         press=".onRefresh"
                                                         tooltip="{captionMsg>/REFRESH}"
                                                         visible="true" />
+                                                    <Button id="btnExportToExcelDelInv" 
+                                                        icon="sap-icon://excel-attachment"
+                                                        tooltip="{captionMsg>/EXPORTTOEXCEL}"
+                                                        press=".onExportToExcel"
+                                                        visible="true" />
+                                                    <Button icon="sap-icon://full-screen"
+                                                        press="onTableResize"
+                                                        visible="true" />
                                                     <Button id="btnColPropDelInv" 
                                                         icon="sap-icon://table-column"
                                                         press=".onSaveTableLayout('delInvTab')"
@@ -270,7 +305,7 @@
                                             </uiT:layoutData>                        
                                         </uiT:Table> 
                                     </IconTabFilter>
-                                    <IconTabFilter text="{captionMsg>/POHIST}">
+                                    <IconTabFilter id="poHistIconTab" text="{captionMsg>/POHIST}">
                                         <uiT:Table id="poHistTab"
                                             class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
                                             visibleRowCountMode="Auto"
@@ -285,10 +320,18 @@
                                                     <Text text="{captionMsg>/PONO}: {ui>/activePONo}," class="selHdrKeyFontStyle" />
                                                     <Text text="{captionMsg>/POITEM}: {ui>/activePOItem}" class="selHdrKeyFontStyle" />
                                                     <ToolbarSpacer/>
-                                                    <Button id="btnRefresPOHistory" 
+                                                    <Button id="btnRefreshPOHistory" 
                                                         icon="sap-icon://refresh"
                                                         press=".onRefresh"
                                                         tooltip="{captionMsg>/REFRESH}"
+                                                        visible="true" />
+                                                    <Button id="btnExportToExcelPOHistory" 
+                                                        icon="sap-icon://excel-attachment"
+                                                        tooltip="{captionMsg>/EXPORTTOEXCEL}"
+                                                        press=".onExportToExcel"
+                                                        visible="true" />
+                                                    <Button icon="sap-icon://full-screen"
+                                                        press="onTableResize"
                                                         visible="true" />
                                                     <Button id="btnColPropPOHistory" 
                                                         icon="sap-icon://table-column"
@@ -302,7 +345,7 @@
                                             </uiT:layoutData>                        
                                         </uiT:Table> 
                                     </IconTabFilter>
-                                    <IconTabFilter text="{captionMsg>/CONDITIONS}">
+                                    <IconTabFilter id="conditionsIconTab" text="{captionMsg>/CONDITIONS}">
                                         <uiT:Table id="conditionsTab"
                                             class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
                                             visibleRowCountMode="Auto"
@@ -321,6 +364,14 @@
                                                         press=".onRefresh"
                                                         tooltip="{captionMsg>/REFRESH}"
                                                         visible="true" />
+                                                    <Button id="btnExportToExcelConditions" 
+                                                        icon="sap-icon://excel-attachment"
+                                                        tooltip="{captionMsg>/EXPORTTOEXCEL}"
+                                                        press=".onExportToExcel"
+                                                        visible="true" />
+                                                    <Button icon="sap-icon://full-screen"
+                                                        press="onTableResize"
+                                                        visible="true" />
                                                     <Button id="btnColPropConditions" 
                                                         icon="sap-icon://table-column"
                                                         press=".onSaveTableLayout('conditionsTab')"
@@ -338,6 +389,9 @@
                                     <FlexItemData growFactor="1" baseSize="0%"/>
                                 </layoutData>
                             </IconTabBar>
+                            <uiL:layoutData>
+                                <uiL:SplitterLayoutData size="54%"/>
+                            </uiL:layoutData>
                         </uiL:SplitPane>
                     </uiL:PaneContainer>
                 </uiL:ResponsiveSplitter>
