@@ -115,10 +115,25 @@
     height: 100%;
 } */
 .vboxHeight {
-    height: 85%;
+    height: 76%;
     padding-left: 0rem;
     padding-right: 0rem;
 }
+
+
+/* For Full Screen Style */
+.onAddvboxHeight {
+    height: 100%;
+    padding-left: 0rem;
+    padding-right: 0rem;
+}
+.addDesignSection2 {
+    position: absolute;
+    height: 100%;
+}
+/* For Full Screen Style */
+
+
 .vboxHeightPODet > .sapMFlexItem {
     height: 100%;
 }
