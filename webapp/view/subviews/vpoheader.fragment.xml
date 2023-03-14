@@ -130,6 +130,12 @@
                                             change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
                                     </f:fields>
                                 </f:FormElement>
+                                <f:FormElement label="{captionMsg>/PAYMNTTERMS}" visible="true">
+                                    <f:fields>
+                                        <Input id="f1PaymentTerms" value="{topHeaderData>/PAYMNTTERMS}" editable="{topHeaderDataEdit>/PAYMNTTERMS}" valueStateText="Required" 
+                                            change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
+                                    </f:fields>
+                                </f:FormElement>
                                 <f:FormElement label="{captionMsg>/INCOTERMS}" visible="true">
                                     <f:fields>
                                         <ComboBox
@@ -159,15 +165,15 @@
                                             change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
                                     </f:fields>
                                 </f:FormElement>
-                                <f:FormElement label="{captionMsg>/RELSTAT}" visible="true">
-                                    <f:fields>
-                                        <Input id="f1RelStat" value="{topHeaderData>/RELSTAT}" editable="{topHeaderDataEdit>/RELSTAT}" valueStateText="Required" 
-                                            change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
-                                    </f:fields>
-                                </f:FormElement>
                             </f:formElements>
                         </f:FormContainer>
                         <f:FormContainer ariaLabelledBy="Grp4">
+                            <f:FormElement label="{captionMsg>/RELSTAT}" visible="true">
+                                <f:fields>
+                                    <Input id="f1RelStat" value="{topHeaderData>/RELSTAT}" editable="{topHeaderDataEdit>/RELSTAT}" valueStateText="Required" 
+                                        change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
+                                </f:fields>
+                            </f:FormElement>
                             <f:formElements>
                                 <f:FormElement label="{captionMsg>/CREATEDBY}" visible="true">
                                     <f:fields>

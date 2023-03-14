@@ -52,7 +52,7 @@
                             <f:formElements>
                                 <f:FormElement label="{captionMsg>/RELCD}" visible="true">
                                     <f:fields>
-                                        <Input id="PORelSRelCd" value="{headerData>/PONumber}" editable="false" valueStateText="Required" 
+                                        <Input id="PORelSRelCd" value="{relStratData>/RELCD}" editable="false" valueStateText="Required" 
                                             change="onHeaderChange" liveChange="onHeaderChange">
                                         </Input>
                                     </f:fields>
