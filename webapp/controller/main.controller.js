@@ -183,7 +183,7 @@ sap.ui.define([
                             resolve();
                         })
                         await _promiseResult;;
-                        this.closeLoadingDialog(that);
+                        this.closeLoadingDialog();
                     }
                     if(sQuery === "" && sQuery !== undefined){
                         this.showLoadingDialog(this.getView().getModel("captionMsg").getData()["LOADING"]);
@@ -197,7 +197,7 @@ sap.ui.define([
                             resolve(this.getCols());
                         });
                         await _promiseResult;
-                        this.closeLoadingDialog(that);
+                        this.closeLoadingDialog();
                     }
                 }
     
@@ -1621,6 +1621,16 @@ sap.ui.define([
                 } else {
                     sap.m.MessageBox.information("SBU is required.");
                 }
+            },
+
+            onNavToAnP: function(){
+                var oCrossAppNavigator = sap.ushell.Container.getService("CrossApplicationNavigation");
+                oCrossAppNavigator.toExternal({
+                    target: {
+                        semanticObject: "ZSO_3DERP_APROCESS",
+                        action: "display"
+                    }
+                });
             },
             callCaptionsAPI: async function(){
                 var oJSONModel = new JSONModel();
