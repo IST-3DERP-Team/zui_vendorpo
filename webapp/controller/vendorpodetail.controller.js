@@ -80,6 +80,31 @@ sap.ui.define([
                     activeCondRec: ''
                 }), "ui");
 
+                var nodeLanes = 
+                {
+                    "nodes": [],
+                    "lanes": [
+                        {
+                            "id": "0",
+                            "icon": "sap-icon://order-status",
+                            "label": "Ordering",
+                            "position": 0
+                        }, {
+                            "id": "1",
+                            "icon": "sap-icon://shipping-status",
+                            "label": "Goods Receiving",
+                            "position": 1
+                        }, {
+                            "id": "2",
+                            "icon": "sap-icon://payment-approval",
+                            "label": "Invoicing",
+                            "position": 2
+                        }
+                    ]
+                }
+                
+                this.getView().setModel(new JSONModel(nodeLanes), "processFlow");
+
                 this.updUnlock = 1;
                 this.zpoUnlock = 1;
                 this.ediVendor; 
@@ -91,11 +116,11 @@ sap.ui.define([
                 
                 this._pono = oEvent.getParameter("arguments").PONO;
                 // this._condrec = oEvent.getParameter("arguments").CONDREC;
-                this._sbu = oEvent.getParameter("arguments").SBU;
-
+                this._sbu = oEvent.getParameter("arguments").SBU;                
 
                 this.getView().getModel("ui").setProperty("/activePONo", this._pono);
-                
+                this.getView().getModel("processFlow").setProperty("/nodes", []);
+
                 // //Load header
                 await this.getHeaderData(); //get header data
                 this.loadReleaseStrategy();
@@ -105,11 +130,11 @@ sap.ui.define([
                 });
                 await _promiseResult;
                 
-                
                 _promiseResult = new Promise((resolve, reject)=>{
                     resolve(me.getCols());
                 });
                 await _promiseResult;
+                this.getProcessFlow();
                 
                 this.hdrTextLoadCol();
                 _promiseResult = new Promise((resolve, reject)=>{
@@ -123,7 +148,7 @@ sap.ui.define([
                 await _promiseResult;
 
                 this.getView().getModel("ui").setProperty("/dataMode", 'READ');
-
+                
                 // var oTable = this.byId("vpoDetailsTab");
                 // _promiseResult = new Promise((resolve, reject)=>{
                 //     oTable.getRows().forEach(row => {
@@ -271,7 +296,8 @@ sap.ui.define([
                 oDDTextParam.push({CODE: "CREATEDDT"});
                 oDDTextParam.push({CODE: "UPDATEDDT"});
                 
-                
+                oDDTextParam.push({CODE: "PROCFLOW"});
+
                 await oModel.create("/CaptionMsgSet", { CaptionMsgItems: oDDTextParam  }, {
                     method: "POST",
                     success: function(oData, oResponse) {
@@ -4915,6 +4941,186 @@ sap.ui.define([
                 oIconTabBar.getItems().filter(item => item.getProperty("key"))
                 .forEach(item => item.setProperty("enabled", true));
 
-            }
+            },
+
+            getProcessFlow: function() {
+                // this.getView().getModel("processFlow").setProperty("/nodes", []);
+
+                var oModel = this.getOwnerComponent().getModel();
+                var me = this;
+                var oData = [], oGRData = [], oInvData = [];
+
+                var bGetGRFin = false, bGetInvFin = false;
+
+                oModel.read('/VPOProcFlowGRSet', { 
+                    urlParameters: {
+                        "$filter": "EBELN eq '" + this._pono + "'"
+                    },
+                    success: function (oData, oResponse) {
+                        oGRData = oData.results;
+                        bGetGRFin = true;
+                    },
+                    error: function (err) { bGetGRFin = true; }
+                });
+
+                oModel.read('/VPOProcFlowINVSet', { 
+                    urlParameters: {
+                        "$filter": "EBELN eq '" + this._pono + "'"
+                    },
+                    success: function (oData, oResponse) {
+                        oInvData = oData.results;
+                        bGetInvFin = true;
+                    },
+                    error: function (err) { bGetInvFin = true; }
+                });
+
+                var oInterval = setInterval(() => {
+                    if (bGetGRFin && bGetInvFin) {
+                        me.setProcessFlow(oGRData, oInvData);
+                        clearInterval(oInterval);
+                    }
+                }, 100);
+            },
+
+            setProcessFlow: function(oGRData, oInvData) {
+                this._processFlowGRData = [];
+
+                var oNodes = [];
+                var iCounter = 0;
+                var sVendor = this.getView().getModel("topHeaderData").getData().VENDOR;          
+
+                this.byId("vpoDetailsTab").getModel().getData().rows.forEach(item => {  
+                    iCounter++;
+
+                    var oChildren = [];
+
+                    oGRData.forEach((gr, idx) => oChildren.push(idx+1+iCounter));
+                    oInvData.forEach((inv, idx) => oChildren.push(idx+1+iCounter+oGRData.length));
+
+                    oNodes.push({
+                        id: iCounter + "",
+                        lane: "0",
+                        title: "Purchase Order " + item.PONO + "/" + item.ITEM,
+                        titleAbbreviation: "PO",
+                        children: oChildren,
+                        state: "Positive",
+                        stateText: "Follow-On Documents",
+                        focused: true,
+                        highlighted: false,
+                        texts: [ "Created On: " + dateFormat.format(new Date(item.CREATEDDT)), "Vendor: " + sVendor ]                        
+                    })
+                    
+                    oGRData.forEach(gr => {
+                        iCounter++;
+
+                        var oState = "";
+                        var vBaseQty = 0;
+
+                        if (+gr.MENGE === 0) { oState = "Negative" }
+                        else if (+gr.MENGE > 0 && +gr.MENGE !== +item.POQTY) { oState = "Critical" }
+                        else if (+gr.MENGE === +item.POQTY) { oState = "Positive" }
+
+                        if (gr.BASEANDEC === 0) { vBaseQty = (+gr.MENGE).toFixed(gr.BASEANDEC) }
+
+                        oNodes.push({
+                            id: iCounter + "",
+                            lane: "1",
+                            title: "Goods Receipt " + gr.MBLNR + "/" + gr.ZEILE,
+                            titleAbbreviation: "GR",
+                            children: [ ],
+                            state: "Positive",
+                            stateText: "Completed",
+                            focused: true,
+                            highlighted: false,
+                            texts: [ "Posted On: " + dateFormat.format(new Date(gr.BUDAT)), 
+                                "Quantity (Base): " + vBaseQty + " " + gr.MEINS,
+                                "Quantity (Order): " + gr.ERFMG + " " + gr.ERFME],                            
+                        })
+
+                        this._processFlowGRData.push({
+                            NODEID: iCounter + "",
+                            EBELN: gr.EBELN,
+                            EBELP: gr.EBELP,
+                            MBLNR: gr.MBLNR,
+                            MJAHR: gr.MJAHR,
+                            ZEILE: gr.ZEILE
+                        })
+                    })
+                    
+                    oInvData.forEach(inv => {
+                        iCounter++;
+                        oNodes.push({
+                            id: iCounter + "",
+                            lane: "2",
+                            title: "Supplier Invoice " + inv.BELNR + "/" + inv.BUZEI,
+                            titleAbbreviation: "INV",
+                            children: [ ],
+                            state: "Positive",
+                            stateText: inv.BUDAT !== null ? "Posted" : "Not Yet Posted",
+                            focused: true,
+                            highlighted: false,
+                            texts: [ "Posted On: " + dateFormat.format(new Date(inv.BUDAT)), 
+                                "Gross Amount: " + inv.RMWWR + " " + inv.WAERS]
+                        })
+                    })
+                })
+
+                // var nodeLanes = 
+                // {
+                //     "nodes": oNodes,
+                //     "lanes": [
+                //         {
+                //             "id": "0",
+                //             "icon": "sap-icon://order-status",
+                //             "label": "Ordering",
+                //             "position": 0
+                //         }, {
+                //             "id": "1",
+                //             "icon": "sap-icon://shipping-status",
+                //             "label": "Goods Receiving",
+                //             "position": 1
+                //         }, {
+                //             "id": "2",
+                //             "icon": "sap-icon://payment-approval",
+                //             "label": "Invoicing",
+                //             "position": 2
+                //         }
+                //     ]
+                // }
+                
+                this.getView().getModel("processFlow").setProperty("/nodes", oNodes);
+                // this.getView().setModel(new JSONModel(nodeLanes), "processFlow");
+                this.byId("processflowPO").setZoomLevel(sap.suite.ui.commons.ProcessFlowZoomLevel.One)
+            },
+
+            onNodePress: function(oEvent) {
+                var oData = this._processFlowGRData.filter(fItem => fItem.NODEID === oEvent.getParameters().getNodeId());
+                console.log(oData);
+                this.viewMatDoc(oData);
+            },
+
+            viewMatDoc: function(oData) {
+                var oCrossAppNavigator = sap.ushell.Container.getService("CrossApplicationNavigation");
+                var vMatDoc = oData[0].MBLNR;
+                var vMatDocYear = oData[0].MJAHR;
+
+                var hash = (oCrossAppNavigator && oCrossAppNavigator.hrefForExternal({
+                    target: {
+                        semanticObject: "PurchaseOrder",
+                        action: "displayMaterialDocument?GODYNPRO-MAT_DOC=" + vMatDoc + ";GODYNPRO-DOC_YEAR=" + vMatDocYear + ";DYNP_OKCODE=OK_GO"
+                    }
+                    // params: {
+                    //     "styleno": vStyle,
+                    //     "sbu": "VER"
+                    // }
+                })) || ""; // generate the Hash to display style
+
+                oCrossAppNavigator.toExternal({
+                    target: {
+                        shellHash: hash
+                    }
+                }); // navigate to Supplier application
+            },
+
         });
     });

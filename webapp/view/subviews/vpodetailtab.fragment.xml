@@ -11,6 +11,7 @@
     xmlns:semantic="sap.m.semantic"
     xmlns:smartfilterbar="sap.ui.comp.smartfilterbar"
     xmlns:fb="sap.ui.comp.filterbar" 
+    xmlns:sUIC="sap.suite.ui.commons"
     displayBlock="true"> 
         
     <IconTabBar id="vpoDetailTab"
@@ -191,6 +192,37 @@
                         <FlexItemData growFactor="1" baseSize="0%"/>
                     </uiT:layoutData>                        
                 </uiT:Table> 
+            </IconTabFilter>
+            <IconTabFilter id="vpoProcFlowIconTab" text="{captionMsg>/PROCFLOW}">
+                <sUIC:ProcessFlow
+                    id="processflowPO"
+                    scrollable="false"
+                    foldedCorners="true"
+                    wheelZoomable="false"
+                    nodePress="onNodePress"
+                    nodes="{processFlow>/nodes}"
+                    lanes="{processFlow>/lanes}">
+                    <sUIC:nodes>
+                        <sUIC:ProcessFlowNode
+                            laneId="{processFlow>lane}"
+                            nodeId="{processFlow>id}"
+                            title="{processFlow>title}"
+                            titleAbbreviation="{processFlow>titleAbbreviation}"
+                            children="{processFlow>children}"
+                            state="{processFlow>state}"
+                            stateText="{processFlow>stateText}"
+                            texts="{processFlow>texts}"
+                            highlighted="{processFlow>highlighted}"
+                            focused="{processFlow>focused}" />
+                    </sUIC:nodes>
+                    <sUIC:lanes>
+                        <sUIC:ProcessFlowLaneHeader
+                            laneId="{processFlow>id}"
+                            iconSrc="{processFlow>icon}"
+                            text="{processFlow>label}"
+                            position="{processFlow>position}" />
+                    </sUIC:lanes>
+                </sUIC:ProcessFlow>
             </IconTabFilter>
             <IconTabFilter id="vpoPoHistIconTab" text="{captionMsg>/POHIST}">
                 <uiT:Table id="vpoPoHistTab"
