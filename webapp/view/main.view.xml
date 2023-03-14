@@ -120,7 +120,7 @@
                                         <menu>
                                             <Menu id="_IDGenMenu3">
                                                 <MenuItem id="_IDGenMenuItem_03_1" text="Manual" press="onCreateManualPO"/>
-                                                <MenuItem id="_IDGenMenuItem_03_2" text="Assign and Process" />
+                                                <MenuItem id="_IDGenMenuItem_03_2" text="Assign and Process" press="onNavToAnP"/>
                                             </Menu>
                                         </menu>                    
                                         </MenuButton>
@@ -181,7 +181,6 @@
                                 expanded="{device>/isNoPhone}" 
                                 expandable="false" 
                                 class="designSection2" 
-                                select="onSelectTab"
                                 headerBackgroundDesign="Solid" 
                                 stretchContentHeight="true" 
                                 applyContentPadding="false">
