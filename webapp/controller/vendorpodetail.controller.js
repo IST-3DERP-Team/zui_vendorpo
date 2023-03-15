@@ -27,7 +27,7 @@ sap.ui.define([
 
         return Controller.extend("zuivendorpo.controller.vendorpodetail", {
 
-            onInit: function () {
+            onInit: async function () {
                 that = this;
                 
                 //Initialize router
@@ -114,6 +114,49 @@ sap.ui.define([
                 this.updateZERPPOUnlock();
 
                 this._tableFullScreenRender = "";
+
+                this._appAction = "" //global variable of Application Action if Display or Change
+                await this.getAppAction(); //Get the Application actions if Display or Change in LTD
+
+                if(this._appAction === "display"){
+                    this.byId("vpoHdrMenuBtn").setVisible(false);
+                    this.byId("vpoBtnEditHeader").setVisible(false);
+
+                    this.byId("vpoNewHdrTxtRemarks").setVisible(false);
+                    this.byId("vpoEditHdrTxtRemarks").setVisible(false);
+                    this.byId("vpoDeleteHdrTxtRemarks").setVisible(false);
+
+                    this.byId("vpoNewHdrTxtPkgInst").setVisible(false);
+                    this.byId("vpoEditHdrTxtPkgInst").setVisible(false);
+                    this.byId("vpoDeleteHdrTxtPkgInst").setVisible(false);
+
+                    this.byId("vpoBtnAddPRtoPO").setVisible(false);
+                    this.byId("vpoBtnItemChanges").setVisible(false);
+                    this.byId("vpoBtnEditDetails").setVisible(false);
+                    this.byId("vpoBtnDeleteDetails").setVisible(false);
+                    this.byId("vpoBtnSaveLayoutDetails").setVisible(false);
+
+                    this.byId("vpoBtnLineSplit").setVisible(false);
+                    this.byId("vpoBtnEditDelSched").setVisible(false);
+                    this.byId("vpoBtnDeleteDelSched").setVisible(false);
+                    this.byId("vpoBtnSaveLayoutDelSched").setVisible(false);
+
+                    this.byId("vpoBtnEditDelInv").setVisible(false);
+                    this.byId("vpoBtnSaveLayoutDelInv").setVisible(false);
+
+                    this.byId("vpoBtnSaveLayoutPOHistory").setVisible(false);
+                    this.byId("vpoBtnSaveLayoutConditions").setVisible(false);
+                }
+            },
+
+            getAppAction: async function(){
+                if(sap.ushell.Container !==undefined){
+                    const fullHash = new HashChanger().getHash();
+                    const urlParsing = await sap.ushell.Container.getServiceAsync("URLParsing");
+                    const shellHash = urlParsing.parseShellHash(fullHash);
+                    const sAction = shellHash.action;
+                    this._appAction = sAction;
+                }
             },
             _routePatternMatched: async function (oEvent) {
                 var me = this;

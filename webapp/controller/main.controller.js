@@ -5,11 +5,12 @@ sap.ui.define([
     "sap/ui/model/FilterOperator",
     "sap/m/MessageBox",
     "../js/Utils",
+    "sap/ui/core/routing/HashChanger",
 ],
     /**
      * @param {typeof sap.ui.core.mvc.Controller} Controller
      */
-    function (Controller, JSONModel, Filter, FilterOperator, MessageBox, Utils) {
+    function (Controller, JSONModel, Filter, FilterOperator, MessageBox, Utils, HashChanger) {
         "use strict";
 
         var that;
@@ -18,7 +19,7 @@ sap.ui.define([
         var _promiseResult;
 
         return Controller.extend("zuivendorpo.controller.main", {
-            onInit: function () {
+            onInit: async function () {
                 that = this;
                 this._oModel = this.getOwnerComponent().getModel();
                 this.callCaptionsAPI();
@@ -85,9 +86,30 @@ sap.ui.define([
                 this._ediVendor; 
 
                 this._tableFullScreenRender = "";
-
+                this._appAction = "" //global variable of Application Action if Display or Change
+                await this.getAppAction(); //Get the Application actions if Display or Change in LTD
                 // this.getCols();
                 // this.getMain();
+                if(this._appAction === "display"){
+                    this.byId("btnTabLayout").setVisible(false);
+                    this.byId("btnColPropDetails").setVisible(false);
+                    this.byId("btnColPropDelSched").setVisible(false);
+                    this.byId("btnColPropDelInv").setVisible(false);
+                    this.byId("btnColPropPOHistory").setVisible(false);
+                    this.byId("btnColPropConditions").setVisible(false);
+
+                    this.byId("_IDGenMenuButton3").setVisible(false);
+                }
+            },
+
+            getAppAction: async function(){
+                if(sap.ushell.Container !==undefined){
+                    const fullHash = new HashChanger().getHash();
+                    const urlParsing = await sap.ushell.Container.getServiceAsync("URLParsing");
+                    const shellHash = urlParsing.parseShellHash(fullHash);
+                    const sAction = shellHash.action;
+                    this._appAction = sAction;
+                }
             },
             setSmartFilterModel: function () {
                 //Model StyleHeaderFilters is for the smartfilterbar
