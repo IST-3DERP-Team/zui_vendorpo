@@ -78,10 +78,10 @@
                                 <uiT:extension>
                                     <Toolbar>
                                         <uiL:HorizontalLayout class="sapUiTinyMarginTop sapUiTinyMarginBegin sapUiTinyMarginEnd">
-                                            <GenericTag text="{i18n>UNRELEASEDPO}" design="StatusIconHidden" status="Warning" class="sapUiTinyMarginEnd" >
+                                            <GenericTag text="{captionMsg>/UNRELEASEDPO}" design="StatusIconHidden" status="Warning" class="sapUiTinyMarginEnd" >
                                                 <ObjectNumber emphasized="true" number="{counts>/unreleasedpo}" state="Information" id="unreleasedPO"/>
                                             </GenericTag>
-                                            <GenericTag text="{i18n>OPENLINEITEMS}" design="StatusIconHidden" status="Information" class="sapUiTinyMarginEnd">
+                                            <GenericTag text="{captionMsg>/OPENLINEITEMS}" design="StatusIconHidden" status="Information" class="sapUiTinyMarginEnd">
                                                 <ObjectNumber emphasized="true" number="{counts>/openlineitems}" state="Information" id="openLineItem"/>
                                             </GenericTag>
                                         </uiL:HorizontalLayout>
@@ -120,8 +120,8 @@
                                         <MenuButton id="_IDGenMenuButton3" icon="sap-icon://add">
                                         <menu>
                                             <Menu id="_IDGenMenu3">
-                                                <MenuItem id="_IDGenMenuItem_03_1" text="Manual" press="onCreateManualPO"/>
-                                                <MenuItem id="_IDGenMenuItem_03_2" text="Assign and Process" />
+                                                <MenuItem id="_IDGenMenuItem_03_1" text="{captionMsg>/MANUAL}" press="onCreateManualPO"/>
+                                                <MenuItem id="_IDGenMenuItem_03_2" text="{captionMsg>/ASSIGNPROCESS}" press="onNavToAnP"/>
                                             </Menu>
                                         </menu>                    
                                         </MenuButton>
@@ -141,6 +141,7 @@
                                             visible="true" />
                                         <Button icon="sap-icon://full-screen"
                                             press="onTableResize"
+                                            tooltip="{captionMsg>/FULLSCREEN}"
                                             visible="true" />
                                         <!-- <Button id="btnSortMain" 
                                             icon="sap-icon://sort"
@@ -182,7 +183,6 @@
                                 expanded="{device>/isNoPhone}" 
                                 expandable="false" 
                                 class="designSection2" 
-                                select="onSelectTab"
                                 headerBackgroundDesign="Solid" 
                                 stretchContentHeight="true" 
                                 applyContentPadding="false">
@@ -212,6 +212,7 @@
                                                         press=".onExportToExcel"
                                                         visible="true" />
                                                     <Button icon="sap-icon://full-screen"
+                                                        tooltip="{captionMsg>/FULLSCREEN}"
                                                         press="onTableResize"
                                                         visible="true" />
                                                     <Button id="btnColPropDetails" 
@@ -252,6 +253,7 @@
                                                         press=".onExportToExcel"
                                                         visible="true" />
                                                     <Button icon="sap-icon://full-screen"
+                                                        tooltip="{captionMsg>/FULLSCREEN}"
                                                         press="onTableResize"
                                                         visible="true" />
                                                     <Button id="btnColPropDelSched" 
@@ -292,6 +294,7 @@
                                                         press=".onExportToExcel"
                                                         visible="true" />
                                                     <Button icon="sap-icon://full-screen"
+                                                        tooltip="{captionMsg>/FULLSCREEN}"
                                                         press="onTableResize"
                                                         visible="true" />
                                                     <Button id="btnColPropDelInv" 
@@ -379,6 +382,7 @@
                                                         press=".onExportToExcel"
                                                         visible="true" />
                                                     <Button icon="sap-icon://full-screen"
+                                                        tooltip="{captionMsg>/FULLSCREEN}"
                                                         press="onTableResize"
                                                         visible="true" />
                                                     <Button id="btnColPropPOHistory" 
@@ -418,6 +422,7 @@
                                                         press=".onExportToExcel"
                                                         visible="true" />
                                                     <Button icon="sap-icon://full-screen"
+                                                        tooltip="{captionMsg>/FULLSCREEN}"
                                                         press="onTableResize"
                                                         visible="true" />
                                                     <Button id="btnColPropConditions" 

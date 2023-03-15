@@ -1,16 +1,8 @@
 <core:FragmentDefinition 
     controllerName="zuivendorpo.controller.vendorpodetail"
-    xmlns:mvc="sap.ui.core.mvc" 
-    xmlns:c="zuivendorpo.control"
     xmlns:core="sap.ui.core"
-    xmlns:uiL="sap.ui.layout"
     xmlns:uiT="sap.ui.table"
-    xmlns:plugins="sap.ui.table.plugins"
     xmlns="sap.m"
-    xmlns:f="sap.f"
-    xmlns:semantic="sap.m.semantic"
-    xmlns:smartfilterbar="sap.ui.comp.smartfilterbar"
-    xmlns:fb="sap.ui.comp.filterbar" 
     xmlns:sUIC="sap.suite.ui.commons"
     displayBlock="true"> 
         
@@ -18,8 +10,7 @@
         expanded="{device>/isNoPhone}" 
         headerMode="Inline"
         expandable="false" 
-        class="vpoDetSection" 
-        select="onSelectTab"
+        class="vpoDetSection"
         headerBackgroundDesign="Solid" 
         stretchContentHeight="true" 
         applyContentPadding="false">
@@ -77,6 +68,7 @@
                                 visible="true" />
                             <Button icon="sap-icon://full-screen"
                                 press=".onTableResize"
+                                tooltip="{captionMsg>/FULLSCREEN}"
                                 visible="true" />
                             <Button id="vpoBtnSaveLayoutDetails" 
                                 icon="sap-icon://table-column"
@@ -142,6 +134,7 @@
                                 press=".onExportToExcel"
                                 visible="true" />
                             <Button icon="sap-icon://full-screen"
+                                tooltip="{captionMsg>/FULLSCREEN}"
                                 press=".onTableResize"
                                 visible="true" />
                             <Button id="vpoBtnSaveLayoutDelSched" 
@@ -203,6 +196,7 @@
                                 press=".onExportToExcel"
                                 visible="true" />
                             <Button icon="sap-icon://full-screen"
+                                tooltip="{captionMsg>/FULLSCREEN}"
                                 press=".onTableResize"
                                 visible="true" />
                             <Button id="vpoBtnSaveLayoutDelInv" 
@@ -292,6 +286,7 @@
                                 press=".onExportToExcel"
                                 visible="true" />
                             <Button icon="sap-icon://full-screen"
+                                tooltip="{captionMsg>/FULLSCREEN}"
                                 press=".onTableResize"
                                 visible="true" />
                             <Button id="vpoBtnSaveLayoutPOHistory" 
@@ -336,6 +331,7 @@
                                 press=".onExportToExcel"
                                 visible="true" />
                             <Button icon="sap-icon://full-screen"
+                                tooltip="{captionMsg>/FULLSCREEN}"
                                 press=".onTableResize"
                                 visible="true" />
                             <Button id="vpoBtnSaveLayoutConditions" 

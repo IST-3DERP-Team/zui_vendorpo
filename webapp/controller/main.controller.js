@@ -4,12 +4,13 @@ sap.ui.define([
     "sap/ui/model/Filter",
     "sap/ui/model/FilterOperator",
     "sap/m/MessageBox",
-    "../js/Utils"
+    "../js/Utils",
+    "sap/ui/core/routing/HashChanger",
 ],
     /**
      * @param {typeof sap.ui.core.mvc.Controller} Controller
      */
-    function (Controller, JSONModel, Filter, FilterOperator, MessageBox, Utils) {
+    function (Controller, JSONModel, Filter, FilterOperator, MessageBox, Utils, HashChanger) {
         "use strict";
 
         var that;
@@ -18,7 +19,7 @@ sap.ui.define([
         var _promiseResult;
 
         return Controller.extend("zuivendorpo.controller.main", {
-            onInit: function () {
+            onInit: async function () {
                 that = this;
                 this._oModel = this.getOwnerComponent().getModel();
                 this.callCaptionsAPI();
@@ -110,8 +111,30 @@ sap.ui.define([
                 }
                 
                 this.getView().setModel(new JSONModel(nodeLanes), "processFlow");
+                this._appAction = "" //global variable of Application Action if Display or Change
+                await this.getAppAction(); //Get the Application actions if Display or Change in LTD
                 // this.getCols();
                 // this.getMain();
+                if(this._appAction === "display"){
+                    this.byId("btnTabLayout").setVisible(false);
+                    this.byId("btnColPropDetails").setVisible(false);
+                    this.byId("btnColPropDelSched").setVisible(false);
+                    this.byId("btnColPropDelInv").setVisible(false);
+                    this.byId("btnColPropPOHistory").setVisible(false);
+                    this.byId("btnColPropConditions").setVisible(false);
+
+                    this.byId("_IDGenMenuButton3").setVisible(false);
+                }
+            },
+
+            getAppAction: async function(){
+                if(sap.ushell.Container !==undefined){
+                    const fullHash = new HashChanger().getHash();
+                    const urlParsing = await sap.ushell.Container.getServiceAsync("URLParsing");
+                    const shellHash = urlParsing.parseShellHash(fullHash);
+                    const sAction = shellHash.action;
+                    this._appAction = sAction;
+                }
             },
             setSmartFilterModel: function () {
                 //Model StyleHeaderFilters is for the smartfilterbar
@@ -208,7 +231,7 @@ sap.ui.define([
                             resolve();
                         })
                         await _promiseResult;;
-                        this.closeLoadingDialog(that);
+                        this.closeLoadingDialog();
                     }
                     if(sQuery === "" && sQuery !== undefined){
                         this.showLoadingDialog(this.getView().getModel("captionMsg").getData()["LOADING"]);
@@ -222,7 +245,7 @@ sap.ui.define([
                             resolve(this.getCols());
                         });
                         await _promiseResult;
-                        this.closeLoadingDialog(that);
+                        this.closeLoadingDialog();
                     }
                 }
     
@@ -322,7 +345,12 @@ sap.ui.define([
                             me.closeLoadingDialog();
                             resolve();
                         },
-                        error: function (err) { }
+                        error: function (err) { 
+                            //error message
+                            MessageBox.error(me.getView().getModel("captionMsg").getData()["INFO_ERROR"])
+                            console.log("Logs: Error Encountered!")
+                            resolve();
+                        }
                     });
                     
                     
@@ -353,7 +381,7 @@ sap.ui.define([
                                 resolve(me.setTableColumnsData('VPOHISTORY'));
                             resolve();
                         },
-                        error: function (err) { 
+                        error: function (err) {
                             me.getView().setModel(oJSONModel, "VPOPOHist");
                             if(tblChange)
                                 resolve(me.setTableColumnsData('VPOHISTORY'));
@@ -385,7 +413,7 @@ sap.ui.define([
                             resolve();
                         },
                         error: function (err) { 
-                            me.getView().setModel(oJSONModel, "VPODelInv");
+                           me.getView().setModel(oJSONModel, "VPODelInv");
                             if(tblChange)
                                 resolve(me.setTableColumnsData('VPODELINV'));
                             resolve();
@@ -414,7 +442,7 @@ sap.ui.define([
                             resolve();
                         },
                         error: function (err) { 
-                            me.getView().setModel(oJSONModel, "VPOCond");
+                           me.getView().setModel(oJSONModel, "VPOCond");
                             if(tblChange)
                                 resolve(me.setTableColumnsData('VPOCOND'));
                             resolve();
@@ -643,6 +671,8 @@ sap.ui.define([
                             }
                         },
                         error: function (err) {
+                            //error message
+                            MessageBox.error(me.getView().getModel("captionMsg").getData()["INFO_ERROR"])
                             me._columnLoadError = true;
                             if (modCode === 'VENDORPO') {
                                 me.getView().setModel(oJSONColumnsModel, "VENDORPOColumns");
@@ -1054,11 +1084,12 @@ sap.ui.define([
                 oModel.create("/TableLayoutSet", oParam, {
                     method: "POST",
                     success: function(data, oResponse) {
-                        sap.m.MessageBox.information("Layout saved.");
+                        sap.m.MessageBox.information(me.getView().getModel("captionMsg").getData()["SAVELAYOUT"]);
                         //Common.showMessage(me._i18n.getText('t6'));
                     },
                     error: function(err) {
-                        sap.m.MessageBox.error(err);
+                        //layout error message
+                        MessageBox.error(me.getView().getModel("captionMsg").getData()["INFO_NO_LAYOUT"])
                     }
                 });                
             },
@@ -1693,6 +1724,16 @@ sap.ui.define([
                     sap.m.MessageBox.information("SBU is required.");
                 }
             },
+
+            onNavToAnP: function(){
+                var oCrossAppNavigator = sap.ushell.Container.getService("CrossApplicationNavigation");
+                oCrossAppNavigator.toExternal({
+                    target: {
+                        semanticObject: "ZSO_3DERP_APROCESS",
+                        action: "display"
+                    }
+                });
+            },
             callCaptionsAPI: async function(){
                 var oJSONModel = new JSONModel();
                 var oDDTextParam = [];
@@ -1761,6 +1802,17 @@ sap.ui.define([
 
                 oDDTextParam.push({CODE: "PROCFLOW"});
 
+                oDDTextParam.push({CODE: "UNRELEASEDPO"});
+                oDDTextParam.push({CODE: "OPENLINEITEMS"});
+                oDDTextParam.push({CODE: "MANUAL"});
+                oDDTextParam.push({CODE: "ASSIGNPROCESS"});
+                oDDTextParam.push({CODE: "INFO_ERROR"});
+                oDDTextParam.push({CODE: "INFO_NO_LAYOUT"});
+                oDDTextParam.push({CODE: "SAVELAYOUT"});
+                oDDTextParam.push({CODE: "FULLSCREEN"});
+                oDDTextParam.push({CODE: "EXPORTTOEXCEL"});
+
+                
                 await oModel.create("/CaptionMsgSet", { CaptionMsgItems: oDDTextParam  }, {
                     method: "POST",
                     success: function(oData, oResponse) {
@@ -1772,7 +1824,8 @@ sap.ui.define([
                         that.getView().setModel(oJSONModel, "captionMsg");
                     },
                     error: function(err) {
-                        sap.m.MessageBox.error(err);
+                        //error message
+                        MessageBox.error(me.getView().getModel("captionMsg").getData()["INFO_ERROR"])
                     }
                 });
             },
