@@ -282,3 +282,18 @@ span[data-row-active-class=X] {
     max-height: 250px;
     overflow: auto;
 }
+
+.vendorPO .sapMITBContent,
+.vendorPODtl .sapMITBContent {
+    border-bottom: none !important;
+}
+
+.vendorPO .procFlowOverflow,
+.vendorPODtl .procFlowOverflow {
+    overflow: auto;
+}
+
+.vendorPO .sapUiLoSplitterContent,
+.vendorPODtl .sapUiLoSplitterContent {
+    overflow: hidden;
+}

@@ -218,35 +218,48 @@
                 </uiT:Table> 
             </IconTabFilter>
             <IconTabFilter id="vpoProcFlowIconTab" text="{captionMsg>/PROCFLOW}">
-                <sUIC:ProcessFlow
-                    id="processflowPO"
-                    scrollable="false"
-                    foldedCorners="true"
-                    wheelZoomable="false"
-                    nodePress="onNodePress"
-                    nodes="{processFlow>/nodes}"
-                    lanes="{processFlow>/lanes}">
-                    <sUIC:nodes>
-                        <sUIC:ProcessFlowNode
-                            laneId="{processFlow>lane}"
-                            nodeId="{processFlow>id}"
-                            title="{processFlow>title}"
-                            titleAbbreviation="{processFlow>titleAbbreviation}"
-                            children="{processFlow>children}"
-                            state="{processFlow>state}"
-                            stateText="{processFlow>stateText}"
-                            texts="{processFlow>texts}"
-                            highlighted="{processFlow>highlighted}"
-                            focused="{processFlow>focused}" />
-                    </sUIC:nodes>
-                    <sUIC:lanes>
-                        <sUIC:ProcessFlowLaneHeader
-                            laneId="{processFlow>id}"
-                            iconSrc="{processFlow>icon}"
-                            text="{processFlow>label}"
-                            position="{processFlow>position}" />
-                    </sUIC:lanes>
-                </sUIC:ProcessFlow>
+                <Toolbar>
+                    <ToolbarSpacer/>
+                    <Button id="btnRefreshProcFlow" 
+                        icon="sap-icon://refresh"
+                        press=".onRefresh"
+                        tooltip="{captionMsg>/REFRESH}"
+                        visible="true" />
+                    <Button icon="sap-icon://full-screen"
+                        press=".onTableResize"
+                        visible="true" />
+                </Toolbar>
+                <VBox height="100%" class="procFlowOverflow">
+                    <sUIC:ProcessFlow
+                        id="vpoProcessFlowPO"
+                        scrollable="true"
+                        foldedCorners="true"
+                        wheelZoomable="false"
+                        nodePress="onNodePress"
+                        nodes="{vpoProcessFlow>/nodes}"
+                        lanes="{vpoProcessFlow>/lanes}">
+                        <sUIC:nodes>
+                            <sUIC:ProcessFlowNode
+                                laneId="{vpoProcessFlow>lane}"
+                                nodeId="{vpoProcessFlow>id}"
+                                title="{vpoProcessFlow>title}"
+                                titleAbbreviation="{vpoProcessFlow>titleAbbreviation}"
+                                children="{vpoProcessFlow>children}"
+                                state="{vpoProcessFlow>state}"
+                                stateText="{vpoProcessFlow>stateText}"
+                                texts="{vpoProcessFlow>texts}"
+                                highlighted="{vpoProcessFlow>highlighted}"
+                                focused="{vpoProcessFlow>focused}" />
+                        </sUIC:nodes>
+                        <sUIC:lanes>
+                            <sUIC:ProcessFlowLaneHeader
+                                laneId="{vpoProcessFlow>id}"
+                                iconSrc="{vpoProcessFlow>icon}"
+                                text="{vpoProcessFlow>label}"
+                                position="{vpoProcessFlow>position}" />
+                        </sUIC:lanes>
+                    </sUIC:ProcessFlow>
+                </VBox>
             </IconTabFilter>
             <IconTabFilter id="vpoPoHistIconTab" text="{captionMsg>/POHIST}">
                 <uiT:Table id="vpoPoHistTab"

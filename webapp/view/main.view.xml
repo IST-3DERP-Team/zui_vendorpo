@@ -10,6 +10,7 @@
     xmlns:semantic="sap.m.semantic"
     xmlns:smartfilterbar="sap.ui.comp.smartfilterbar"
     xmlns:fb="sap.ui.comp.filterbar" 
+    xmlns:sUIC="sap.suite.ui.commons"
     displayBlock="true"> 
     <Page id="page" title="{i18n>title}" showHeader="false">
         <content>
@@ -51,7 +52,7 @@
                 </smartfilterbar:layoutData>
             </smartfilterbar:SmartFilterBar>
             
-            <VBox id="_IDGenVBox1" fitContainer="true" class="sidePadding vboxHeight">
+            <VBox id="_IDGenVBox1" fitContainer="true" class="sidePadding vboxHeight vendorPO">
                 <uiL:ResponsiveSplitter id="splitMain" defaultPane="default">
                     <uiL:PaneContainer orientation="Vertical">
                         <uiL:SplitPane requiredParentWidth="800">
@@ -64,7 +65,6 @@
                                 selectionMode="MultiToggle"
                                 selectionBehavior="RowSelector"
                                 rowSelectionChange=".onSelectionChange"
-                                
                                 firstVisibleRowChanged=".onFirstVisibleRowChanged"
                                 cellClick=".onCellClick"
                                 sort="onSort"
@@ -91,8 +91,9 @@
                                             placeholder="{captionMsg>/SEARCH}"
                                             value=""
                                             search=".onSearchHeader"
+                                            visible="false"
                                             width="15rem"/>
-                                        <ToolbarSeparator />
+                                        <!-- <ToolbarSeparator /> -->
                                         <!-- <Button id="btnRelStrat" 
                                             visible="true"
                                             text="Release Strategy" />
@@ -304,6 +305,53 @@
                                                 <FlexItemData growFactor="1" baseSize="0%"/>
                                             </uiT:layoutData>                        
                                         </uiT:Table> 
+                                    </IconTabFilter>
+                                    <IconTabFilter id="procFlowIconTab" text="{captionMsg>/PROCFLOW}">
+                                        <Toolbar>
+                                            <ToolbarSpacer/>
+                                            <Button id="btnRefreshProcFlow" 
+                                                icon="sap-icon://refresh"
+                                                press=".onRefresh"
+                                                tooltip="{captionMsg>/REFRESH}"
+                                                visible="true" />
+                                            <Button icon="sap-icon://full-screen"
+                                                press="onTableResize"
+                                                visible="true" />
+                                        </Toolbar>
+                                        <VBox height="100%" class="procFlowOverflow">
+                                            <sUIC:ProcessFlow
+                                                id="processFlowPO"
+                                                scrollable="true"
+                                                foldedCorners="true"
+                                                wheelZoomable="false"
+                                                nodePress="onNodePress"
+                                                nodes="{processFlow>/nodes}"
+                                                lanes="{processFlow>/lanes}">
+                                                <sUIC:nodes>
+                                                    <sUIC:ProcessFlowNode
+                                                        laneId="{processFlow>lane}"
+                                                        nodeId="{processFlow>id}"
+                                                        title="{processFlow>title}"
+                                                        titleAbbreviation="{processFlow>titleAbbreviation}"
+                                                        children="{processFlow>children}"
+                                                        state="{processFlow>state}"
+                                                        stateText="{processFlow>stateText}"
+                                                        texts="{processFlow>texts}"
+                                                        highlighted="{processFlow>highlighted}"
+                                                        focused="{processFlow>focused}" />
+                                                </sUIC:nodes>
+                                                <sUIC:lanes>
+                                                    <sUIC:ProcessFlowLaneHeader
+                                                        laneId="{processFlow>id}"
+                                                        iconSrc="{processFlow>icon}"
+                                                        text="{processFlow>label}"
+                                                        position="{processFlow>position}" />
+                                                </sUIC:lanes>
+                                                <sUIC:layoutData>
+                                                    <FlexItemData growFactor="1" baseSize="0%"/>
+                                                </sUIC:layoutData>  
+                                            </sUIC:ProcessFlow>
+                                        </VBox>
                                     </IconTabFilter>
                                     <IconTabFilter id="poHistIconTab" text="{captionMsg>/POHIST}">
                                         <uiT:Table id="poHistTab"

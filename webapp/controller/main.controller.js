@@ -4,7 +4,7 @@ sap.ui.define([
     "sap/ui/model/Filter",
     "sap/ui/model/FilterOperator",
     "sap/m/MessageBox",
-    "../js/Utils",
+    "../js/Utils"
 ],
     /**
      * @param {typeof sap.ui.core.mvc.Controller} Controller
@@ -86,6 +86,30 @@ sap.ui.define([
 
                 this._tableFullScreenRender = "";
 
+                var nodeLanes = 
+                {
+                    "nodes": [],
+                    "lanes": [
+                        {
+                            "id": "0",
+                            "icon": "sap-icon://order-status",
+                            "label": "Ordering",
+                            "position": 0
+                        }, {
+                            "id": "1",
+                            "icon": "sap-icon://shipping-status",
+                            "label": "Goods Receiving",
+                            "position": 1
+                        }, {
+                            "id": "2",
+                            "icon": "sap-icon://payment-approval",
+                            "label": "Invoicing",
+                            "position": 2
+                        }
+                    ]
+                }
+                
+                this.getView().setModel(new JSONModel(nodeLanes), "processFlow");
                 // this.getCols();
                 // this.getMain();
             },
@@ -121,14 +145,15 @@ sap.ui.define([
                 _promiseResult = new Promise((resolve, reject)=>{
                     resolve(this.getMain());
                 });
-                await _promiseResult;
-                
+                await _promiseResult;                
                 
                 _promiseResult = new Promise((resolve, reject)=>{
                     resolve(me.getCols());
                 });
                 await _promiseResult;
-                this.closeLoadingDialog();
+
+                this.getProcessFlow();
+                this.closeLoadingDialog();                
             },
             onSearchHeader: async function(oEvent){
                 if(this.getView().getModel("ui").getData().dataMode === 'NODATA'){
@@ -460,11 +485,10 @@ sap.ui.define([
                                 })
                                 objectData.push(data.results);
                                 objectData[0].sort((a,b) => (a.ITEM > b.ITEM) ? 1 : ((b.ITEM > a.ITEM) ? -1 : 0));
-                                
+
                                 oJSONModel.setData(data);
                             }
 
-                            
                             var poItem = data.results[0].ITEM;
                             me.getView().getModel("ui").setProperty("/activePOItem", poItem);
 
@@ -481,7 +505,6 @@ sap.ui.define([
                         }
                     });
                 });
-                
             },
             setSmartFilterModel: function () {
                 //Model StyleHeaderFilters is for the smartfilterbar
@@ -735,6 +758,7 @@ sap.ui.define([
                     }
 
                     this.addColumns("detailsTab", oColumnsData, oData, "VPODtls");
+                    this.getProcessFlow();
                 }
                 if (modCode === 'VPODELSCHED') {
                     oColumnsModel = this.getView().getModel("VPODelSched");  
@@ -1143,7 +1167,8 @@ sap.ui.define([
                             });
                         })
                         await _promiseResult;
-                        
+
+                        this.getProcessFlow();
                         this._tblChange = false;
                     }else if(oEvent.srcControl.sId.includes("detailsTab")){
                         oRow = this.getView().getModel("VPODtls").getProperty(sRowPath);
@@ -1317,7 +1342,9 @@ sap.ui.define([
                         me.getConditions2(condrec)
                         resolve();
                     })
-                    await _promiseResult;;
+                    await _promiseResult;
+
+                    this.getProcessFlow();
     
                     _promiseResult = new Promise((resolve, reject)=>{
                         oTable.getRows().forEach(row => {
@@ -1409,7 +1436,7 @@ sap.ui.define([
                 var oSplitter = this.byId("splitMain");
                 var oFirstPane = oSplitter.getRootPaneContainer().getPanes().at(0);
                 var oSecondPane = oSplitter.getRootPaneContainer().getPanes().at(1);
-
+                console.log(event)
                 if(this._tableFullScreenRender !== ""){
                     //hide Smart Filter Bar
                     this.byId('smartFilterBar').setVisible(true)
@@ -1439,6 +1466,7 @@ sap.ui.define([
                         this.byId("delInvIconTab").setEnabled(true);
                         this.byId("poHistIconTab").setEnabled(true);
                         this.byId("conditionsIconTab").setEnabled(true);
+                        this.byId("procFlowIconTab").setEnabled(true);
                     }
                     else if(event.getParent().getParent().getId().includes("delSchedTab")){
                         this.byId('mainTab').setVisible(true)
@@ -1456,6 +1484,7 @@ sap.ui.define([
                         this.byId("delInvIconTab").setEnabled(true);
                         this.byId("poHistIconTab").setEnabled(true);
                         this.byId("conditionsIconTab").setEnabled(true);
+                        this.byId("procFlowIconTab").setEnabled(true);
                     }
                     else if(event.getParent().getParent().getId().includes("delInvTab")){
                         this.byId('mainTab').setVisible(true)
@@ -1473,6 +1502,7 @@ sap.ui.define([
                         // this.byId("delInvIconTab").setEnabled(true);
                         this.byId("poHistIconTab").setEnabled(true);
                         this.byId("conditionsIconTab").setEnabled(true);
+                        this.byId("procFlowIconTab").setEnabled(true);
                     }
                     else if(event.getParent().getParent().getId().includes("poHistTab")){
                         this.byId('mainTab').setVisible(true)
@@ -1490,6 +1520,7 @@ sap.ui.define([
                         this.byId("delInvIconTab").setEnabled(true);
                         // this.byId("poHistIconTab").setEnabled(true);
                         this.byId("conditionsIconTab").setEnabled(true);
+                        this.byId("procFlowIconTab").setEnabled(true);
                     }
                     else if(event.getParent().getParent().getId().includes("conditionsTab")){
                         this.byId('mainTab').setVisible(true)
@@ -1507,6 +1538,24 @@ sap.ui.define([
                         this.byId("delInvIconTab").setEnabled(true);
                         this.byId("poHistIconTab").setEnabled(true);
                         // this.byId("conditionsIconTab").setEnabled(true);
+                        this.byId("procFlowIconTab").setEnabled(true);
+                    }
+                    else if(event.getParent().getParent().getId().includes("procFlowIconTab")){
+                        this.byId('mainTab').setVisible(true)
+                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
+                            size: "54%",
+                            resizable: true
+                        });
+                        oSecondPane.setLayoutData(oLayoutData);
+                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
+                        this.byId("itbDetail").addStyleClass("designSection2")
+                        this.byId("itbDetail").removeStyleClass("addDesignSection2")
+
+                        this.byId("detailsIconTab").setEnabled(true);
+                        this.byId("delSchedIconTab").setEnabled(true);
+                        this.byId("delInvIconTab").setEnabled(true);
+                        this.byId("poHistIconTab").setEnabled(true);
+                        this.byId("conditionsIconTab").setEnabled(true);
                     }
                     this._tableFullScreenRender = ""
                 }else{
@@ -1538,6 +1587,7 @@ sap.ui.define([
                         this.byId("delInvIconTab").setEnabled(false);
                         this.byId("poHistIconTab").setEnabled(false);
                         this.byId("conditionsIconTab").setEnabled(false);
+                        this.byId("procFlowIconTab").setEnabled(false);
                     }
                     else if(event.getParent().getParent().getId().includes("delSchedTab")){
                         this.byId('mainTab').setVisible(false)
@@ -1555,6 +1605,7 @@ sap.ui.define([
                         this.byId("delInvIconTab").setEnabled(false);
                         this.byId("poHistIconTab").setEnabled(false);
                         this.byId("conditionsIconTab").setEnabled(false);
+                        this.byId("procFlowIconTab").setEnabled(false);
                     }
                     else if(event.getParent().getParent().getId().includes("delInvTab")){
                         this.byId('mainTab').setVisible(false)
@@ -1572,6 +1623,7 @@ sap.ui.define([
                         // this.byId("delInvIconTab").setEnabled(false);
                         this.byId("poHistIconTab").setEnabled(false);
                         this.byId("conditionsIconTab").setEnabled(false);
+                        this.byId("procFlowIconTab").setEnabled(false);
                     }
                     else if(event.getParent().getParent().getId().includes("poHistTab")){
                         this.byId('mainTab').setVisible(false)
@@ -1589,6 +1641,7 @@ sap.ui.define([
                         this.byId("delInvIconTab").setEnabled(false);
                         // this.byId("poHistIconTab").setEnabled(false);
                         this.byId("conditionsIconTab").setEnabled(false);
+                        this.byId("procFlowIconTab").setEnabled(false);
                     }
                     else if(event.getParent().getParent().getId().includes("conditionsTab")){
                         this.byId('mainTab').setVisible(false)
@@ -1606,6 +1659,24 @@ sap.ui.define([
                         this.byId("delInvIconTab").setEnabled(false);
                         this.byId("poHistIconTab").setEnabled(false);
                         // this.byId("conditionsIconTab").setEnabled(false);
+                        this.byId("procFlowIconTab").setEnabled(false);
+                    }
+                    else if(event.getParent().getParent().getId().includes("procFlowIconTab")){
+                        this.byId('mainTab').setVisible(false)
+                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
+                            size: "100%",
+                            resizable: false
+                        });
+                        oSecondPane.setLayoutData(oLayoutData);
+                        this.byId("_IDGenVBox1").addStyleClass("onAddvboxHeight")
+                        this.byId("itbDetail").removeStyleClass("designSection2")
+                        this.byId("itbDetail").addStyleClass("addDesignSection2")
+
+                        this.byId("detailsIconTab").setEnabled(false);
+                        this.byId("delSchedIconTab").setEnabled(false);
+                        this.byId("delInvIconTab").setEnabled(false);
+                        this.byId("poHistIconTab").setEnabled(false);
+                        this.byId("conditionsIconTab").setEnabled(false);
                     }
                     this._tableFullScreenRender = "Value"
                 }
@@ -1688,7 +1759,8 @@ sap.ui.define([
                 oDDTextParam.push({CODE: "ITEMCHANGES"});
                 oDDTextParam.push({CODE: "LINESPLIT"});
 
-                
+                oDDTextParam.push({CODE: "PROCFLOW"});
+
                 await oModel.create("/CaptionMsgSet", { CaptionMsgItems: oDDTextParam  }, {
                     method: "POST",
                     success: function(oData, oResponse) {
@@ -1705,5 +1777,216 @@ sap.ui.define([
                 });
             },
             
+            getProcessFlow: function() {
+                // this.getView().getModel("processFlow").setProperty("/nodes", []);
+
+                var oModel = this.getOwnerComponent().getModel();
+                var me = this;
+                var oGRData = [], oInvData = [];
+
+                var bGetGRFin = false, bGetInvFin = false;
+                var vPONO = this.getView().getModel("ui").getProperty("/activePONo");
+
+                oModel.read('/VPOProcFlowGRSet', { 
+                    urlParameters: {
+                        "$filter": "EBELN eq '" + vPONO + "'"
+                    },
+                    success: function (oData, oResponse) {
+                        oGRData = oData.results;
+                        bGetGRFin = true;
+                    },
+                    error: function (err) { bGetGRFin = true; }
+                });
+
+                oModel.read('/VPOProcFlowINVSet', { 
+                    urlParameters: {
+                        "$filter": "EBELN eq '" + vPONO + "'"
+                    },
+                    success: function (oData, oResponse) {
+                        oInvData = oData.results;
+                        bGetInvFin = true;
+                    },
+                    error: function (err) { bGetInvFin = true; }
+                });
+
+                var oInterval = setInterval(() => {
+                    if (bGetGRFin && bGetInvFin) {
+                        me.setProcessFlow(oGRData, oInvData);
+                        clearInterval(oInterval);
+                    }
+                }, 100);
+            },
+
+            setProcessFlow: function(oGRData, oInvData) {
+                this._processFlowData = [];
+
+                var oNodes = [];
+                var iCounter = 0;
+                var sVendor = "";
+                var vPONO = this.getView().getModel("ui").getProperty("/activePONo");
+
+                this.byId("mainTab").getModel().getData().rows.filter(fItem => fItem.PONO === vPONO).map(val => sVendor = val.VENDOR);
+
+                this.byId("detailsTab").getModel().getData().rows.forEach(item => {  
+                    iCounter++;
+
+                    var oChildren = [];
+                    var oGRItemData = oGRData.filter(fItem => fItem.EBELP === item.ITEM);
+                    var oInvItemData = oInvData.filter(fItem => fItem.EBELP === item.ITEM);
+
+                    oGRItemData.forEach((gr, idx) => oChildren.push(idx+1+iCounter));
+                    oInvItemData.forEach((inv, idx) => oChildren.push(idx+1+iCounter+oGRItemData.length));
+
+                    oNodes.push({
+                        id: iCounter + "",
+                        lane: "0",
+                        title: "Purchase Order " + item.PONO + "/" + item.ITEM,
+                        titleAbbreviation: "PO",
+                        children: oChildren,
+                        state: "Positive",
+                        stateText: "Follow-On Documents",
+                        focused: true,
+                        highlighted: false,
+                        texts: [ "Created On: " + dateFormat.format(new Date(item.CREATEDDT)), "Vendor: " + sVendor ]                        
+                    })
+                    
+                    oGRItemData.forEach(gr => {
+                        iCounter++;
+
+                        var oState = "";
+                        var vBaseQty = 0;
+
+                        if (+gr.MENGE === 0) { oState = "Negative" }
+                        else if (+gr.MENGE > 0 && +gr.MENGE !== +item.POQTY) { oState = "Critical" }
+                        else if (+gr.MENGE === +item.POQTY) { oState = "Positive" }
+
+                        if (gr.BASEANDEC === 0) { vBaseQty = (+gr.MENGE).toFixed(gr.BASEANDEC) }
+
+                        oNodes.push({
+                            id: iCounter + "",
+                            lane: "1",
+                            title: "Goods Receipt " + gr.MBLNR + "/" + gr.ZEILE,
+                            titleAbbreviation: "GR",
+                            children: [ ],
+                            state: "Positive",
+                            stateText: "Completed",
+                            focused: true,
+                            highlighted: false,
+                            texts: [ "Posted On: " + dateFormat.format(new Date(gr.BUDAT)), 
+                                "Quantity (Base): " + vBaseQty + " " + gr.MEINS,
+                                "Quantity (Order): " + gr.ERFMG + " " + gr.ERFME],                            
+                        })
+
+                        // processFlowGRData.push({
+                        //     NODEID: iCounter + "",
+                        //     DOCTYPE: "MD",
+                        //     EBELN: gr.EBELN,
+                        //     EBELP: gr.EBELP,
+                        //     MBLNR: gr.MBLNR,
+                        //     MJAHR: gr.MJAHR,
+                        //     ZEILE: gr.ZEILE
+                        // })
+
+                        this._processFlowData.push({
+                            NODEID: iCounter + "",
+                            ITEM: {
+                                NODEID: iCounter + "",
+                                DOCTYPE: "MAT",
+                                EBELN: gr.EBELN,
+                                EBELP: gr.EBELP,
+                                MBLNR: gr.MBLNR,
+                                MJAHR: gr.MJAHR,
+                                ZEILE: gr.ZEILE
+                            }
+                        })
+                    })
+                    
+                    oInvItemData.forEach(inv => {
+                        iCounter++;
+                        oNodes.push({
+                            id: iCounter + "",
+                            lane: "2",
+                            title: "Supplier Invoice " + inv.BELNR + "/" + inv.BUZEI,
+                            titleAbbreviation: "INV",
+                            children: [ ],
+                            state: "Positive",
+                            stateText: inv.BUDAT !== null ? "Posted" : "Not Yet Posted",
+                            focused: true,
+                            highlighted: false,
+                            texts: [ "Posted On: " + dateFormat.format(new Date(inv.BUDAT)), 
+                                "Gross Amount: " + inv.RMWWR + " " + inv.WAERS]
+                        })
+
+                        // processFlowInvData.push({
+                        //     NODEID: iCounter + "",
+                        //     LANE: "2",
+                        //     BELNR : inv.BELNR ,
+                        //     GJAHR: inv.GJAHR
+                        // })
+
+                        this._processFlowData.push({
+                            NODEID: iCounter + "",
+                            ITEM: {
+                                NODEID: iCounter + "",
+                                DOCTYPE: "INV",
+                                BELNR : inv.BELNR ,
+                                GJAHR: inv.GJAHR
+                            }
+                        })
+                    })
+                })
+                
+                this.getView().getModel("processFlow").setProperty("/nodes", oNodes);
+                // this.getView().setModel(new JSONModel(nodeLanes), "processFlow");
+                // this.byId("processFlowPO").setZoomLevel(sap.suite.ui.commons.ProcessFlowZoomLevel.One)
+                this.byId("processFlowPO").setZoomLevel("One")
+            },
+
+            onNodePress: function(oEvent) {
+                var oData = this._processFlowData.filter(fItem => fItem.NODEID === oEvent.getParameters().getNodeId());
+                this.viewDoc(oData[0].ITEM); 
+            },
+
+            viewDoc: function(oData) {
+                var oCrossAppNavigator = sap.ushell.Container.getService("CrossApplicationNavigation");
+
+                if (oData.DOCTYPE === "MAT") {
+                    // var vMatDoc = oData[0].MBLNR;
+                    // var vMatDocYear = oData[0].MJAHR;
+    
+                    var hash = (oCrossAppNavigator && oCrossAppNavigator.hrefForExternal({
+                        target: {
+                            semanticObject: "ZSO_3DERP_INV_MIGO_DIALOG",
+                            action: "display"
+                        },
+                        params: {
+                            "MatDoc": oData.MBLNR,
+                            "MatDocYear": oData.MJAHR,
+                            "MatDocItem": oData.ZEILE,
+                            "PONumber": oData.EBELN,
+                            "POItem": oData.EBELP
+                        }
+                    })) || ""; // generate the Hash to display style
+                }
+                else if (oData.DOCTYPE === "INV") {
+                    var hash = (oCrossAppNavigator && oCrossAppNavigator.hrefForExternal({
+                        target: {
+                            semanticObject: "SupplierInvoice",
+                            action: "displayAdvanced"
+                        },
+                        params: {
+                            "RBKP-BELNR": oData.BELNR,
+                            "RBKP-GJAHR": oData.GJAHR
+                        }
+                    })) || ""; // generate the Hash to display style 
+                }
+
+                oCrossAppNavigator.toExternal({
+                    target: {
+                        shellHash: hash
+                    }
+                });
+            },
+
         });
     });
