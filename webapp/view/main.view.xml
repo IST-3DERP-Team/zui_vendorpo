@@ -309,7 +309,7 @@
                                             </uiT:layoutData>                        
                                         </uiT:Table> 
                                     </IconTabFilter>
-                                    <IconTabFilter id="procFlowIconTab" text="{captionMsg>/PROCFLOW}">
+                                    <IconTabFilter id="procFlowIconTab" text="{captionMsg>/PROCFLOW}" visible="false">
                                         <Toolbar>
                                             <ToolbarSpacer/>
                                             <Button id="btnRefreshProcFlow" 
