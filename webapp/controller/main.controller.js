@@ -297,7 +297,12 @@ sap.ui.define([
                             me.closeLoadingDialog();
                             resolve();
                         },
-                        error: function (err) { }
+                        error: function (err) { 
+                            //error message
+                            MessageBox.error(me.getView().getModel("captionMsg").getData()["INFO_ERROR"])
+                            console.log("Logs: Error Encountered!")
+                            resolve();
+                        }
                     });
                     
                     
@@ -328,7 +333,7 @@ sap.ui.define([
                                 resolve(me.setTableColumnsData('VPOHISTORY'));
                             resolve();
                         },
-                        error: function (err) { 
+                        error: function (err) {
                             me.getView().setModel(oJSONModel, "VPOPOHist");
                             if(tblChange)
                                 resolve(me.setTableColumnsData('VPOHISTORY'));
@@ -360,7 +365,7 @@ sap.ui.define([
                             resolve();
                         },
                         error: function (err) { 
-                            me.getView().setModel(oJSONModel, "VPODelInv");
+                           me.getView().setModel(oJSONModel, "VPODelInv");
                             if(tblChange)
                                 resolve(me.setTableColumnsData('VPODELINV'));
                             resolve();
@@ -389,7 +394,7 @@ sap.ui.define([
                             resolve();
                         },
                         error: function (err) { 
-                            me.getView().setModel(oJSONModel, "VPOCond");
+                           me.getView().setModel(oJSONModel, "VPOCond");
                             if(tblChange)
                                 resolve(me.setTableColumnsData('VPOCOND'));
                             resolve();
@@ -620,6 +625,8 @@ sap.ui.define([
                             }
                         },
                         error: function (err) {
+                            //error message
+                            MessageBox.error(me.getView().getModel("captionMsg").getData()["INFO_ERROR"])
                             me._columnLoadError = true;
                             if (modCode === 'VENDORPO') {
                                 me.getView().setModel(oJSONColumnsModel, "VENDORPOColumns");
@@ -1030,11 +1037,12 @@ sap.ui.define([
                 oModel.create("/TableLayoutSet", oParam, {
                     method: "POST",
                     success: function(data, oResponse) {
-                        sap.m.MessageBox.information("Layout saved.");
+                        sap.m.MessageBox.information(me.getView().getModel("captionMsg").getData()["SAVELAYOUT"]);
                         //Common.showMessage(me._i18n.getText('t6'));
                     },
                     error: function(err) {
-                        sap.m.MessageBox.error(err);
+                        //layout error message
+                        MessageBox.error(me.getView().getModel("captionMsg").getData()["INFO_NO_LAYOUT"])
                     }
                 });                
             },
@@ -1698,6 +1706,16 @@ sap.ui.define([
                 oDDTextParam.push({CODE: "ITEMCHANGES"});
                 oDDTextParam.push({CODE: "LINESPLIT"});
 
+                oDDTextParam.push({CODE: "UNRELEASEDPO"});
+                oDDTextParam.push({CODE: "OPENLINEITEMS"});
+                oDDTextParam.push({CODE: "MANUAL"});
+                oDDTextParam.push({CODE: "ASSIGNPROCESS"});
+                oDDTextParam.push({CODE: "INFO_ERROR"});
+                oDDTextParam.push({CODE: "INFO_NO_LAYOUT"});
+                oDDTextParam.push({CODE: "SAVELAYOUT"});
+                oDDTextParam.push({CODE: "FULLSCREEN"});
+                oDDTextParam.push({CODE: "EXPORTTOEXCEL"});
+
                 
                 await oModel.create("/CaptionMsgSet", { CaptionMsgItems: oDDTextParam  }, {
                     method: "POST",
@@ -1710,7 +1728,8 @@ sap.ui.define([
                         that.getView().setModel(oJSONModel, "captionMsg");
                     },
                     error: function(err) {
-                        sap.m.MessageBox.error(err);
+                        //error message
+                        MessageBox.error(me.getView().getModel("captionMsg").getData()["INFO_ERROR"])
                     }
                 });
             },
