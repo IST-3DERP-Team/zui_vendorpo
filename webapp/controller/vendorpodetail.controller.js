@@ -229,6 +229,7 @@ sap.ui.define([
                 oDDTextParam.push({CODE: "SHIPTOPLANT"});
 
                 oDDTextParam.push({CODE: "SEARCH"});
+                oDDTextParam.push({CODE: "NEW"});
                 oDDTextParam.push({CODE: "ADD"});
                 oDDTextParam.push({CODE: "EDIT"});
                 oDDTextParam.push({CODE: "REFRESH"});
@@ -299,6 +300,8 @@ sap.ui.define([
                 oDDTextParam.push({CODE: "CREATEDBY"});
                 oDDTextParam.push({CODE: "CREATEDDT"});
                 oDDTextParam.push({CODE: "UPDATEDDT"});
+                oDDTextParam.push({CODE: "FULLSCREEN"});
+                oDDTextParam.push({CODE: "EXPORTTOEXCEL"});
                 
                 oDDTextParam.push({CODE: "PROCFLOW"});
 
@@ -313,6 +316,7 @@ sap.ui.define([
                         that.getView().setModel(oJSONModel, "captionMsg");
                     },
                     error: function(err) {
+                        //error message layout
                         sap.m.MessageBox.error(err);
                     }
                 });
@@ -333,7 +337,6 @@ sap.ui.define([
             getHeaderData: async function () {
                 var me = this;
                 var poNo = this._pono;
-                var pritm = this._pritm;
                 var oModel = this.getOwnerComponent().getModel();
                 var oJSONModel = new sap.ui.model.json.JSONModel();
                 var oJSONEdit = new sap.ui.model.json.JSONModel();
@@ -370,12 +373,12 @@ sap.ui.define([
                             oView.setModel(oJSONModel, "topHeaderData");
                             oView.setModel(oJSONEdit, "topHeaderDataEdit");
                             
-                            me.closeLoadingDialog(that);
+                            me.closeLoadingDialog();
                             resolve();
                             // me.setChangeStatus(false);
                         },
                         error: function () {
-                            me.closeLoadingDialog(that);
+                            me.closeLoadingDialog();
                             resolve();
                         }
                     })
@@ -419,7 +422,6 @@ sap.ui.define([
             getPOHistory2: async function(PONO){
                 var oModel = this.getOwnerComponent().getModel();
                 var me = this;
-                var vSBU = this._sbu;
                 var oJSONModel = new sap.ui.model.json.JSONModel();
                 var objectData = [];
                 return new Promise((resolve, reject)=>{
@@ -439,7 +441,9 @@ sap.ui.define([
                             me.getView().setModel(oJSONModel, "VPOPOHistVPODet");
                             resolve();
                         },
-                        error: function (err) { }
+                        error: function (err) {
+                            resolve();
+                        }
                     });
                 });
             },
@@ -463,7 +467,9 @@ sap.ui.define([
                             me.getView().setModel(oJSONModel, "VPODelInvVPODet");
                             resolve();
                         },
-                        error: function (err) { }
+                        error: function (err) { 
+                            resolve();
+                        }
                     });
                 });
                 
@@ -484,7 +490,9 @@ sap.ui.define([
                             me.getView().setModel(oJSONModel, "VPOCondVPODet");
                             resolve();
                         },
-                        error: function (err) { }
+                        error: function (err) {
+                            resolve();    
+                        }
                     });
                 });
                 
@@ -520,7 +528,9 @@ sap.ui.define([
                             me.getView().setModel(oJSONModel, "VPODelSchedVPODet");
                             resolve();
                         },
-                        error: function (err) { }
+                        error: function (err) {
+                            resolve();
+                        }
                     });
                 });
                 
@@ -554,7 +564,9 @@ sap.ui.define([
                             me.getView().setModel(oJSONModel, "VPODtlsVPODet");
                             resolve();
                         },
-                        error: function (err) { }
+                        error: function (err) { 
+                            resolve();
+                        }
                     });
                 });
             },
@@ -686,7 +698,7 @@ sap.ui.define([
                         },
                         error: function (err) {
                             me._columnLoadError = true;
-                            me.closeLoadingDialog(that);
+                            me.closeLoadingDialog();
                             resolve();
                         }
                     });
@@ -984,12 +996,12 @@ sap.ui.define([
                         }
                         oJSONModel.setData(oData);
                         oView.setModel(oJSONModel, "relStratData");
-                        me.closeLoadingDialog(that);
+                        me.closeLoadingDialog();
                         // me.setChangeStatus(false);
                     },
                     error: function (error) {
                         oView.setModel(oJSONModel, "relStratData");
-                        me.closeLoadingDialog(that);
+                        me.closeLoadingDialog();
                     }
                 })
             },
@@ -1078,8 +1090,6 @@ sap.ui.define([
                 })
             },
             hdrTextLoadCol: async function(){
-                var sbu = this._sbu;
-
                 var oJSONColumnsModel = new JSONModel();
                 var oJSONColumnsModel2 = new JSONModel();
 
@@ -1588,7 +1598,8 @@ sap.ui.define([
                                     }
                                 },error: function(error){
                                     MessageBox.error("Error Occured");
-                                    me.closeLoadingDialog(that);
+                                    me.closeLoadingDialog();
+                                    //error message
                                     resolve()
                                 }
                             })
@@ -1614,7 +1625,7 @@ sap.ui.define([
                     });
                     await _promiseResult;
                     
-                    this.closeLoadingDialog(that);
+                    this.closeLoadingDialog();
                 }
                 if(type === 'PkgInst'){
                     this.showLoadingDialog('Loading...')
@@ -1661,7 +1672,8 @@ sap.ui.define([
                                     }
                                 },error: function(error){
                                     MessageBox.error("Error Occured");
-                                    me.closeLoadingDialog(that);
+                                    me.closeLoadingDialog();
+                                    //error message
                                     resolve()
                                 }
                             })
@@ -1687,7 +1699,7 @@ sap.ui.define([
                     });
                     await _promiseResult;
 
-                    this.closeLoadingDialog(that);
+                    this.closeLoadingDialog();
                 }
             },
             onDeleteEditHdrTxt: async function(type){
@@ -1784,7 +1796,8 @@ sap.ui.define([
                                         }
                                     },error: function(error){
                                         MessageBox.error("Error Occured");
-                                        me.closeLoadingDialog(that);
+                                        me.closeLoadingDialog();
+                                        //error message
                                         resolve()
                                     }
                                 })
@@ -1795,7 +1808,7 @@ sap.ui.define([
                                 resolve(me.loadAllData())
                             });
                             await _promiseResult;
-                            this.closeLoadingDialog(that);
+                            this.closeLoadingDialog();
                         }else{
                             MessageBox.error(this.getView().getModel("captionMsg").getData()["INFO_NO_DATA_DELETE"]);
                         }
@@ -1921,7 +1934,8 @@ sap.ui.define([
                                         }
                                     },error: function(error){
                                         MessageBox.error("Error Occured");
-                                        me.closeLoadingDialog(that);
+                                        me.closeLoadingDialog();
+                                        //error message
                                         resolve()
                                     }
                                 })
@@ -1932,7 +1946,7 @@ sap.ui.define([
                                 resolve(me.loadAllData())
                             });
                             await _promiseResult;
-                            this.closeLoadingDialog(that);
+                            this.closeLoadingDialog();
                         }else{
                             MessageBox.error(this.getView().getModel("captionMsg").getData()["INFO_NO_DATA_DELETE"]);
                         }
@@ -2342,6 +2356,7 @@ sap.ui.define([
                                     resolve()
                                 }
                             },error: function(error){
+                                //error message
                                 MessageBox.error(error);
                                 resolve()
                             }
@@ -2372,7 +2387,7 @@ sap.ui.define([
                 }
 
                 this.getView().getModel("ui").setProperty("/dataMode", 'READ');
-                this.closeLoadingDialog(that);
+                this.closeLoadingDialog();
             },
             onCancelVPOHeader: async function(){
                 var me = this;
@@ -2557,9 +2572,9 @@ sap.ui.define([
 
                 _promiseResult = new Promise((resolve, reject)=>{
                     oModel.read("/VPOVendorMatRscSet",{
-                    urlParameters: {
-                        "$filter": "PONO eq '" + poNo + "'"
-                    }, 
+                        urlParameters: {
+                            "$filter": "PONO eq '" + poNo + "'"
+                        }, 
                         success: function (oData, oResponse) {
                             // if (oData.PODT !== null)
                             //     oData.PODT = dateFormat.format(new Date(oData.PODT));
@@ -2637,7 +2652,7 @@ sap.ui.define([
 
                     }
                 }
-                this.closeLoadingDialog(that);
+                this.closeLoadingDialog();
             },
             onCancelVendorDialog: async function(){
                 this.changeVendorDialog.destroy(true);
@@ -2839,7 +2854,7 @@ sap.ui.define([
                 this.loadAllData()
 
                 this.getView().getModel("ui").setProperty("/dataMode", 'READ');
-                this.closeLoadingDialog(that);
+                this.closeLoadingDialog();
             },
             onDatePickVPODelvDateChange: async function(oEvent){
                 this._newDlvDate = oEvent.getParameter("value");
@@ -3071,7 +3086,7 @@ sap.ui.define([
                             MessageBox.error("PO is not valid to Delete.")
                         }
                         
-                        this.closeLoadingDialog(that);
+                        this.closeLoadingDialog();
                     }
                 }else{
                    MessageBox.error("PO is not valid for Editing.")
@@ -3249,7 +3264,7 @@ sap.ui.define([
                             }
                             this.loadAllData()
                             this.getView().getModel("ui").setProperty("/dataMode", 'READ');
-                            this.closeLoadingDialog(that);
+                            this.closeLoadingDialog();
                         }else{
                             MessageBox.error("PO is not valid to Cancel.")
                         }
@@ -3781,7 +3796,9 @@ sap.ui.define([
                                         MessageBox.error("No Details to be saved.");
                                     }
                                 },error: function(error){
+                                    //error message
                                     MessageBox.error(error);
+                                    resolve();
                                 }
                             })
                         });
@@ -3823,7 +3840,7 @@ sap.ui.define([
                     // if (this.getView().getModel("ui").getData().dataMode === 'NEW') this.setFilterAfterCreate();
 
                     this.getView().getModel("ui").setProperty("/dataMode", 'READ');
-                    this.closeLoadingDialog(that);
+                    this.closeLoadingDialog();
                 }
 
             },
@@ -3895,6 +3912,7 @@ sap.ui.define([
                             })
                             resolve();
                         },error: function(error){
+                            //error message
                             MessageBox.error(error);
                             resolve();
                         }
@@ -3931,6 +3949,7 @@ sap.ui.define([
                                             //Success
                                             resolve();
                                         },error: function(error){
+                                            //error message
                                             MessageBox.error(error);
                                             resolve();
                                         }
@@ -3981,6 +4000,7 @@ sap.ui.define([
                                                                 //Success Message
                                                                 resolve();
                                                             },error: function(error){
+                                                                //error message
                                                                 MessageBox.error(error);
                                                                 resolve();
                                                             }
@@ -4182,7 +4202,7 @@ sap.ui.define([
                     resolve(me.loadAllData());
                 });
                 await _promiseResult;
-                this.closeLoadingDialog(that);
+                this.closeLoadingDialog();
                 this._validationErrors = [];
                 this._DiscardChangesDialog.close();
                 this.getView().getModel("ui").setProperty("/dataMode", 'READ');
@@ -4346,7 +4366,7 @@ sap.ui.define([
                         MessageBox.error(this.getView().getModel("captionMsg").getData()["INFO_NO_DATA_DELETE"]);
                     }
 
-                    this.closeLoadingDialog(that);
+                    this.closeLoadingDialog();
 
                 }
             },
@@ -4508,6 +4528,7 @@ sap.ui.define([
                         },
                         error: function () {
                             MessageBox.error("Error Encountered.")
+                            //error message
                             bProceed = false;
                             resolve();
                         }
@@ -4622,6 +4643,7 @@ sap.ui.define([
                                     resolve()
                                 }
                             },error: function(error){
+                                //error message
                                 MessageBox.error("Error, No Data Changed");
                                 resolve()
                             }
@@ -4630,7 +4652,7 @@ sap.ui.define([
                     await _promiseResult;
                 }
                     
-                this.closeLoadingDialog(that);
+                this.closeLoadingDialog();
                 
             },
             onCancelAddPRtoPO: async function(){
@@ -4679,7 +4701,7 @@ sap.ui.define([
                     resolve(this.loadAllData());
                 });
                 await _promiseResult;
-                this.closeLoadingDialog(that);
+                this.closeLoadingDialog();
             },
 
             onCellClick: async function(oEvent) {
@@ -5122,6 +5144,7 @@ sap.ui.define([
                         //Common.showMessage(me._i18n.getText('t6'));
                     },
                     error: function(err) {
+                        //Layout Error
                         sap.m.MessageBox.error(err);
                     }
                 });                

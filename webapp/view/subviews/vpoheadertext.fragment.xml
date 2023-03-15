@@ -1,15 +1,7 @@
 <core:FragmentDefinition 
-    xmlns:mvc="sap.ui.core.mvc" 
-    xmlns:c="zuivendorpo.control"
     xmlns:core="sap.ui.core"
-    xmlns:uiL="sap.ui.layout"
     xmlns:uiT="sap.ui.table"
-    xmlns:plugins="sap.ui.table.plugins"
     xmlns="sap.m"
-    xmlns:f="sap.ui.layout.form" 
-    xmlns:semantic="sap.m.semantic"
-    xmlns:smartfilterbar="sap.ui.comp.smartfilterbar"
-    xmlns:fb="sap.ui.comp.filterbar" 
     displayBlock="false"> 
     <IconTabBar
         id="vpoHeaderTxtIconTab"
@@ -32,35 +24,34 @@
                         enableColumnFreeze="true"
                         selectionMode="MultiToggle"
                         selectionBehavior="Row"
-                        rowSelectionChange=".onSelectionChange"
-                        sort="onSorted">
+                        >
                         <uiT:extension>
                             <Toolbar>
                                 <ToolbarSpacer/>
                                 <Button id="vpoNewHdrTxtRemarks" 
                                     icon="sap-icon://add-document"
                                     press=".onNewHdrTxt('Remarks')"
-                                    tooltip="New"
+                                    tooltip="{captionMsg>/NEW}"
                                     visible="true"/>
                                 <Button id="vpoEditHdrTxtRemarks" 
                                     icon="sap-icon://edit"
                                     press=".onEditHdrTxt('Remarks')"
-                                    tooltip="Edit"
+                                    tooltip="{captionMsg>/EDIT}"
                                     visible="true"/>
                                 <Button id="vpoDeleteHdrTxtRemarks" 
                                     icon="sap-icon://delete"
                                     press=".onDeleteEditHdrTxt('Remarks')"
-                                    tooltip="Delete"
+                                    tooltip="{captionMsg>/DELETE}"
                                     visible="true"/>
                                 <Button id="vpoSaveHdrTxtRemarks" 
                                     icon="sap-icon://save"
                                     press=".onSaveEditHdrTxt('Remarks')" 
-                                    tooltip="Save"
+                                    tooltip="{captionMsg>/SAVE}"
                                     visible="false" />
                                 <Button id="vpoCancelHdrTxtRemarks" 
                                     icon="sap-icon://sys-cancel"
                                     press=".onCancelEditHdrTxt('Remarks')" 
-                                    tooltip="Cancel"
+                                    tooltip="{captionMsg>/CANCEL}"
                                     visible="false" />
                             </Toolbar>
                         </uiT:extension>
@@ -78,35 +69,34 @@
                         enableColumnFreeze="true"
                         selectionMode="MultiToggle"
                         selectionBehavior="Row"
-                        rowSelectionChange=".onSelectionChange"
-                        sort="onSorted">
+                        >
                         <uiT:extension>
                             <Toolbar>
                                 <ToolbarSpacer/>
                                 <Button id="vpoNewHdrTxtPkgInst" 
                                     icon="sap-icon://add-document"
                                     press=".onNewHdrTxt('PkgInst')"
-                                    tooltip="New"
+                                    tooltip="{captionMsg>/NEW}"
                                     visible="true"/>
                                 <Button id="vpoEditHdrTxtPkgInst" 
                                     icon="sap-icon://edit"
                                     press=".onEditHdrTxt('PkgInst')"
-                                    tooltip="Edit"
+                                    tooltip="{captionMsg>/EDIT}"
                                     visible="true"/>
                                 <Button id="vpoDeleteHdrTxtPkgInst" 
                                     icon="sap-icon://delete"
                                     press=".onDeleteEditHdrTxt('PkgInst')"
-                                    tooltip="Delete"
+                                    tooltip="{captionMsg>/DELETE}"
                                     visible="true"/>
                                 <Button id="vpoSaveHdrTxtPkgInst" 
                                     icon="sap-icon://save"
                                     press=".onSaveEditHdrTxt('PkgInst')" 
-                                    tooltip="Save"
+                                    tooltip="{captionMsg>/SAVE}"
                                     visible="false" />
                                 <Button id="vpoCancelHdrTxtPkgInst" 
                                     icon="sap-icon://sys-cancel"
                                     press=".onCancelEditHdrTxt('PkgInst')" 
-                                    tooltip="Cancel"
+                                    tooltip="{captionMsg>/CANCEL}"
                                     visible="false" />
                             </Toolbar>
                         </uiT:extension>
