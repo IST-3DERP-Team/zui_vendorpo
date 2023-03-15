@@ -23,6 +23,7 @@ sap.ui.define([
         var TZOffsetMs = new Date(0).getTimezoneOffset()*60*1000;
         var _promiseResult;
         var _withGR;
+        var _captionList = [];
 
         return Controller.extend("zuivendorpo.controller.vendorpodetail", {
 
@@ -261,7 +262,7 @@ sap.ui.define([
                 oDDTextParam.push({CODE: "CHANGEDELVDATE"});
                 oDDTextParam.push({CODE: "CHANGEVENDOR"});
                 oDDTextParam.push({CODE: "DELETEPO"});
-                oDDTextParam.push({CODE: "CANCELPO"});
+                // oDDTextParam.push({CODE: "CANCELPO"});
                 oDDTextParam.push({CODE: "SPLITPO"});
 
                 oDDTextParam.push({CODE: "PODATE"});
@@ -276,7 +277,6 @@ sap.ui.define([
                 oDDTextParam.push({CODE: "RELSTAT"});
 
                 oDDTextParam.push({CODE: "RELGRP"});
-                oDDTextParam.push({CODE: "RELSTRAT"});
                 oDDTextParam.push({CODE: "EXPECTEDREL"});
                 oDDTextParam.push({CODE: "RELCD"});
                 oDDTextParam.push({CODE: "RELIND"});
@@ -295,7 +295,34 @@ sap.ui.define([
 
                 oDDTextParam.push({CODE: "INFO_NO_DATA_EDIT"});
                 oDDTextParam.push({CODE: "INFO_NO_DATA_DELETE"});
+                
+                oDDTextParam.push({CODE: "INFO_PO_NOT_VALID_TO_EDIT"});
+                oDDTextParam.push({CODE: "INFO_PO_IS_DELETED"});
                 oDDTextParam.push({CODE: "INFO_ERROR"});
+                oDDTextParam.push({CODE: "INFO_NO_DTLS_TO_SAVE"});
+                oDDTextParam.push({CODE: "INFO_NEW_VENDORCD_EMPTY"});
+                oDDTextParam.push({CODE: "INFO_DLVDT_EMPTY"});
+                oDDTextParam.push({CODE: "INFO_PO_CLOSED_DELETED"});
+                oDDTextParam.push({CODE: "CONF_PROCEED_DELETE_VPO"});
+                oDDTextParam.push({CODE: "INFO_PO_ALREADY_RELEASED_CANCEL"});
+                oDDTextParam.push({CODE: "INFO_PO_NOT_VALID_TO_DELETE"});
+                oDDTextParam.push({CODE: "INFO_NO_DTLS_TO_DELETE"});
+                oDDTextParam.push({CODE: "CONF_PROCEED_CANCEL_VPO"});
+                oDDTextParam.push({CODE: "CANCELPO"});
+                oDDTextParam.push({CODE: "INFO_PO_NOT_VALID_TO_CANCEL"});
+                oDDTextParam.push({CODE: "INFO_PO_NOT_YET_RELEASED_DELETE"});
+                oDDTextParam.push({CODE: "INFO_NO_DTLS_TO_CANCEL"});
+                oDDTextParam.push({CODE: "INFO_REQUIRED_FIELD"});
+                oDDTextParam.push({CODE: "INFO_PO_LINE_CANNOT_BE_DELETED"});
+                oDDTextParam.push({CODE: "LOADING"});
+                oDDTextParam.push({CODE: "INFO_PO_INVALID_ADD_PR_TO_PO"});
+                oDDTextParam.push({CODE: "INFO_NO_RECORD_SELECT"})
+                oDDTextParam.push({CODE: "INFO_NO_DATA_MODIFIED"});
+                oDDTextParam.push({CODE: "CONF_PROCEED_DELETE_RECORD"});
+                oDDTextParam.push({CODE: "DELETE"});
+                oDDTextParam.push({CODE: "SAVELAYOUT"});
+                oDDTextParam.push({CODE: "INFO_NO_LAYOUT"});
+                oDDTextParam.push({CODE: "INFO_LAYOUT_SAVE"});
 
                 oDDTextParam.push({CODE: "CREATEDBY"});
                 oDDTextParam.push({CODE: "CREATEDDT"});
@@ -311,13 +338,13 @@ sap.ui.define([
                         oData.CaptionMsgItems.results.forEach(item=>{
                             oDDTextResult[item.CODE] = item.TEXT;
                         })
+                        _captionList = oDDTextResult;
                         
                         oJSONModel.setData(oDDTextResult);
                         that.getView().setModel(oJSONModel, "captionMsg");
                     },
                     error: function(err) {
-                        //error message layout
-                        sap.m.MessageBox.error(err);
+                        sap.m.MessageBox.error(_captionList.INFO_ERROR);
                     }
                 });
             },
@@ -343,7 +370,7 @@ sap.ui.define([
                 var oView = this.getView();
                 var edditableFields = [];
 
-                this.showLoadingDialog('Loading...');
+                this.showLoadingDialog(_captionList.LOADING);
 
                 //read Style header data
                 
@@ -934,7 +961,7 @@ sap.ui.define([
                 var relState = "";
                 var relStateCount = 0
 
-                this.showLoadingDialog('Loading...');
+                this.showLoadingDialog(_captionList.LOADING);
 
                 //read Style header data
                 
@@ -1458,7 +1485,7 @@ sap.ui.define([
                         this.onRowEditPO("PackingInstTbl", "VPOPkngInstsCol");
                     }
                 }else{
-                    MessageBox.information("PO is not valid for Editing.")
+                    MessageBox.information(_captionList.INFO_PO_NOT_VALID_TO_EDIT)
                 }
             },
             onEditHdrTxt: async function(type){
@@ -1533,7 +1560,7 @@ sap.ui.define([
                         
                     }
                 }else{
-                    MessageBox.information("PO is not valid for Editing.")
+                    MessageBox.information(_captionList.INFO_PO_NOT_VALID_TO_EDIT)
                 }
             },
             onSaveEditHdrTxt: async function(type){
@@ -1553,7 +1580,7 @@ sap.ui.define([
                 var message;
 
                 if(type === 'Remarks'){
-                    this.showLoadingDialog('Loading...')
+                    this.showLoadingDialog(_captionList.LOADING)
                     oTable = this.byId("RemarksTbl");
                     oSelectedIndices = oTable.getBinding("rows").aIndices;
 
@@ -1593,11 +1620,11 @@ sap.ui.define([
                                         MessageBox.information(message);
                                         resolve()
                                     }else{
-                                        MessageBox.information("No Details to be saved.");
+                                        MessageBox.information(_captionList.INFO_NO_DTLS_TO_SAVE);
                                         resolve()
                                     }
                                 },error: function(error){
-                                    MessageBox.error("Error Occured");
+                                    MessageBox.error(_captionList.INFO_ERROR);
                                     me.closeLoadingDialog();
                                     //error message
                                     resolve()
@@ -1628,7 +1655,7 @@ sap.ui.define([
                     this.closeLoadingDialog();
                 }
                 if(type === 'PkgInst'){
-                    this.showLoadingDialog('Loading...')
+                    this.showLoadingDialog(_captionList.LOADING)
                     oTable = this.byId("PackingInstTbl");
                     oSelectedIndices = oTable.getBinding("rows").aIndices;
 
@@ -1667,11 +1694,11 @@ sap.ui.define([
                                         MessageBox.information(message);
                                         resolve()
                                     }else{
-                                        MessageBox.information("No Details to be saved.");
+                                        MessageBox.information(_captionList.INFO_NO_DTLS_TO_SAVE);
                                         resolve()
                                     }
                                 },error: function(error){
-                                    MessageBox.error("Error Occured");
+                                    MessageBox.error(_captionList.INFO_ERROR);
                                     me.closeLoadingDialog();
                                     //error message
                                     resolve()
@@ -1778,7 +1805,7 @@ sap.ui.define([
                                     TextLine: ""
                                 })
                             }
-                            this.showLoadingDialog('Loading...');
+                            this.showLoadingDialog(_captionList.LOADING);
                             oParam = oParamInitParam;
                             oParam['N_ChangePOHdrTextParam'] = oParamDataPOHdr;
                             oParam['N_ChangePOReturn'] = [];
@@ -1795,7 +1822,7 @@ sap.ui.define([
                                             resolve()
                                         }
                                     },error: function(error){
-                                        MessageBox.error("Error Occured");
+                                        MessageBox.error(_captionList.INFO_ERROR);
                                         me.closeLoadingDialog();
                                         //error message
                                         resolve()
@@ -1841,7 +1868,7 @@ sap.ui.define([
                         //     })
                         // }
                         // if (oParamDataPOHdr.length > 0) {
-                        //     this.showLoadingDialog('Loading...');
+                        //     this.showLoadingDialog(_captionList.LOADING);
                         //     oParam = oParamInitParam;
                         //     oParam['N_ChangePOHdrTextParam'] = oParamDataPOHdr;
                         //     oParam['N_ChangePOReturn'] = [];
@@ -1916,7 +1943,7 @@ sap.ui.define([
                                 })
                             }
 
-                            this.showLoadingDialog('Loading...');
+                            this.showLoadingDialog(_captionList.LOADING);
                             oParam = oParamInitParam;
                             oParam['N_ChangePOHdrTextParam'] = oParamDataPOHdr;
                             oParam['N_ChangePOReturn'] = [];
@@ -1933,7 +1960,7 @@ sap.ui.define([
                                             resolve()
                                         }
                                     },error: function(error){
-                                        MessageBox.error("Error Occured");
+                                        MessageBox.error(_captionList.INFO_ERROR);
                                         me.closeLoadingDialog();
                                         //error message
                                         resolve()
@@ -1980,7 +2007,7 @@ sap.ui.define([
                         //     })
                         // }
                         // if (oParamDataPOHdr.length > 0) {
-                        //     this.showLoadingDialog('Loading...');
+                        //     this.showLoadingDialog(_captionList.LOADING);
                         //     oParam = oParamInitParam;
                         //     oParam['N_ChangePOHdrTextParam'] = oParamDataPOHdr;
                         //     oParam['N_ChangePOReturn'] = [];
@@ -2014,7 +2041,7 @@ sap.ui.define([
                         // }
                     }
                 }else{
-                    MessageBox.information("PO is not valid for Editing.")
+                    MessageBox.information(_captionList.INFO_PO_NOT_VALID_TO_EDIT)
                 }
             },
             onCancelEditHdrTxt: async function(type){
@@ -2220,7 +2247,7 @@ sap.ui.define([
                 })
 
                 if(!isValid){
-                    MessageBox.error("PO is already Deleted.")
+                    MessageBox.error(_captionList.INFO_PO_IS_DELETED)
                     return;
                 }
                 if(bProceed){
@@ -2261,7 +2288,7 @@ sap.ui.define([
             },
             onSaveVPOHeader: async function(){
                 var me = this;
-                this.showLoadingDialog('Loading...')
+                this.showLoadingDialog(_captionList.LOADING)
                 var oView = this.getView();
                 var edditableFields = [];
                 var oJSONEdit = new sap.ui.model.json.JSONModel();
@@ -2352,7 +2379,7 @@ sap.ui.define([
                                     MessageBox.information(message);
                                     resolve()
                                 }else{
-                                    MessageBox.information("No Details to be saved.");
+                                    MessageBox.information(_captionList.INFO_NO_DTLS_TO_SAVE);
                                     resolve()
                                 }
                             },error: function(error){
@@ -2540,12 +2567,12 @@ sap.ui.define([
                         }
                     });
                 }else{
-                    MessageBox.error("PO is not valid for Editing.")
+                    MessageBox.error(_captionList.INFO_PO_NOT_VALID_TO_EDIT)
                 }
             },
             onSaveVendorVPOHeader: async function(oEvent){
                 var me = this;
-                this.showLoadingDialog('Loading...')
+                this.showLoadingDialog(_captionList.LOADING)
                 var poNo = this._pono
                 var oModel = this.getOwnerComponent().getModel();
                 var rfcModel = this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
@@ -2566,7 +2593,7 @@ sap.ui.define([
                 var message;
 
                 if(newVendorCd === undefined || newVendorCd === "" || newVendorCd === null){
-                    MessageBox.error("New Vendor Code is Empty!")
+                    MessageBox.error(_captionList.INFO_NEW_VENDORCD_EMPTY)
                     bProceed = false;
                 }
 
@@ -2741,7 +2768,7 @@ sap.ui.define([
                     this.getView().addDependent(this.changeDlvDateDialog);
                     this.changeDlvDateDialog.open();
                 }else{
-                    MessageBox.error("PO is not valid for Editing.")
+                    MessageBox.error(_captionList.INFO_PO_NOT_VALID_TO_EDIT)
                 }
             },
             onCancelChangeVPODelvDate: async function(){
@@ -2750,7 +2777,7 @@ sap.ui.define([
             onSaveChangeVPODelvDate: async function(){
                 var me = this;
                 
-                this.showLoadingDialog('Loading...')
+                this.showLoadingDialog(_captionList.LOADING)
                 var oView = this.getView();
 
                 var oParamInitParam = {}
@@ -2770,7 +2797,7 @@ sap.ui.define([
                 var validPOItem
 
                 if(this._newDlvDate === undefined || this._newDlvDate === "" || this._newDlvDate === null){
-                    MessageBox.error("Delivery Date is Empty!")
+                    MessageBox.error(_captionList.INFO_DLVDT_EMPTY)
                     bProceed = false;
                 }
 
@@ -2839,11 +2866,11 @@ sap.ui.define([
                                             resolve()
                                         }
                                     }else{
-                                        MessageBox.error("No Details to be saved.");
+                                        MessageBox.error(_captionList.INFO_NO_DTLS_TO_SAVE);
                                         resolve()
                                     }
                                 },error: function(error){
-                                    MessageBox.error("Error Occured");
+                                    MessageBox.error(_captionList.INFO_ERROR);
                                     resolve()
                                 }
                             })
@@ -2926,7 +2953,7 @@ sap.ui.define([
                 })
 
                 if(!isValid){
-                    MessageBox.error("PO is already Closed or Deleted.")
+                    MessageBox.error(_captionList.INFO_PO_CLOSED_DELETED)
                     return;
                 }
 
@@ -2934,9 +2961,9 @@ sap.ui.define([
                     var bCompact = !!this.getView().$().closest(".sapUiSizeCompact").length;
                     _promiseResult = new Promise((resolve, reject) => {
                         MessageBox.information(
-                            "Proceed to Delete Vendor PO?",
+                            _captionList.CONF_PROCEED_DELETE_VPO,
                             {
-                                actions: ["Delete", MessageBox.Action.CLOSE],
+                                actions: [_captionList.DELETE, MessageBox.Action.CLOSE],
                                 styleClass: bCompact ? "sapUiSizeCompact" : "",
                                 onClose: function(sAction) {
                                     actionSel = sAction;
@@ -2946,8 +2973,8 @@ sap.ui.define([
                         );
                     })
                     await _promiseResult;
-                    if(actionSel === "Delete"){
-                        this.showLoadingDialog('Loading...')
+                    if(actionSel === _captionList.DELETE){
+                        this.showLoadingDialog(_captionList.LOADING)
                         var oParamInitParam = {}
                         var oParamDataPO = [];
                         var oParamDataPOClose = [];
@@ -2990,13 +3017,13 @@ sap.ui.define([
                         await _promiseResult;
 
                         if(frgke === "G"){
-                            MessageBox.error("PO is already released, use Cancel PO instead.")
+                            MessageBox.error(_captionList.INFO_PO_ALREADY_RELEASED_CANCEL)
                             bProceed = false
                         }
                         
                         if(this._validPOChange != 1){
                             if(bProceed){
-                                MessageBox.error("PO is not valid to Delete.")
+                                MessageBox.error(_captionList.INFO_PO_NOT_VALID_TO_DELETE)
                                 bProceed = false;
                             }    
                         }
@@ -3069,11 +3096,11 @@ sap.ui.define([
                                                     resolve()
                                                 }
                                             }else{
-                                                MessageBox.error("No Details to Delete.");
+                                                MessageBox.error(_captionList.INFO_NO_DTLS_TO_DELETE);
                                                 resolve()
                                             }
                                         },error: function(error){
-                                            MessageBox.error("Error Occured");
+                                            MessageBox.error(_captionList.INFO_ERROR);
                                             resolve()
                                         }
                                     })
@@ -3083,13 +3110,13 @@ sap.ui.define([
                             this.loadAllData()
                             this.getView().getModel("ui").setProperty("/dataMode", 'READ');
                         }else{
-                            MessageBox.error("PO is not valid to Delete.")
+                            MessageBox.error(_captionList.INFO_PO_NOT_VALID_TO_DELETE)
                         }
                         
                         this.closeLoadingDialog();
                     }
                 }else{
-                   MessageBox.error("PO is not valid for Editing.")
+                   MessageBox.error(_captionList.INFO_PO_NOT_VALID_TO_EDIT)
                 }
             },
             onCancelVPO: async function(){
@@ -3112,9 +3139,9 @@ sap.ui.define([
                     var bCompact = !!this.getView().$().closest(".sapUiSizeCompact").length;
                     _promiseResult = new Promise((resolve, reject) => {
                         MessageBox.information(
-                            "Proceed to Cancel Vendor PO?",
+                            _captionList.CONF_PROCEED_CANCEL_VPO,
                             {
-                                actions: ["Cancel PO", MessageBox.Action.CLOSE],
+                                actions: [_captionList.CANCELPO, MessageBox.Action.CLOSE],
                                 styleClass: bCompact ? "sapUiSizeCompact" : "",
                                 onClose: function(sAction) {
                                     actionSel = sAction;
@@ -3124,7 +3151,7 @@ sap.ui.define([
                         );
                     })
                     await _promiseResult;
-                    if(actionSel === "Cancel PO"){
+                    if(actionSel === _captionList.CANCELPO){
                         var oParamInitParam = {}
                         var oParamDataPO = [];
                         var oParamDataPOClose = [];
@@ -3168,21 +3195,21 @@ sap.ui.define([
                         
                         if(this._validPOChange != 1){
                             if(bProceed){
-                                MessageBox.error("PO is not valid to Cancel.")
+                                MessageBox.error(_captionList.INFO_PO_NOT_VALID_TO_CANCEL)
                                 bProceed = false;
                                 return;
                             }    
                         }
 
                         if(frgke !== "G"){
-                            MessageBox.error("PO is not yet released, use Delete PO instead.")
+                            MessageBox.error(_captionList.INFO_PO_NOT_YET_RELEASED_DELETE)
                             bProceed = false
                             return;
                         }
 
                         if(bProceed){
                             
-                            this.showLoadingDialog('Loading...')
+                            this.showLoadingDialog(_captionList.LOADING)
                             this.getView().getModel("ui").setProperty("/dataMode", 'CANCEL_PO');
                             oSelectedIndices.forEach(item => {
                                 oTmpSelectedIndices.push(oTable.getBinding("rows").aIndices[item])
@@ -3251,11 +3278,11 @@ sap.ui.define([
                                                     resolve()
                                                 }
                                             }else{
-                                                MessageBox.error("No Details to Cancel.");
+                                                MessageBox.error(_captionList.INFO_NO_DTLS_TO_CANCEL);
                                                 resolve()
                                             }
                                         },error: function(error){
-                                            MessageBox.error("Error Occured");
+                                            MessageBox.error(_captionList.INFO_ERROR);
                                             resolve()
                                         }
                                     })
@@ -3266,11 +3293,11 @@ sap.ui.define([
                             this.getView().getModel("ui").setProperty("/dataMode", 'READ');
                             this.closeLoadingDialog();
                         }else{
-                            MessageBox.error("PO is not valid to Cancel.")
+                            MessageBox.error(_captionList.INFO_PO_NOT_VALID_TO_CANCEL)
                         }
                     }
                 }else{
-                    MessageBox.error("PO is not valid for Editing.")
+                    MessageBox.error(_captionList.INFO_PO_NOT_VALID_TO_EDIT)
                 }
             },
             onSplitVPO: async function(){
@@ -3289,7 +3316,7 @@ sap.ui.define([
                 if(bProceed){
                     MessageToast.show("Split PO Function");
                 }else{
-                    MessageBox.error("PO is not valid for Editing.")
+                    MessageBox.error(_captionList.INFO_PO_NOT_VALID_TO_EDIT)
                 }
             },
             onEditPODtls: async function(){
@@ -3299,7 +3326,7 @@ sap.ui.define([
                 // if(this.getView().getModel("ui").getData().dataMode === 'NODATA'){
                 //     return;
                 // }
-                // this.showLoadingDialog('Loading...');
+                // this.showLoadingDialog(_captionList.LOADING);
                 
                 var me = this;
                 
@@ -3309,7 +3336,7 @@ sap.ui.define([
                 await _promiseResult;
 
                 if(this._validPOChange != 1){
-                    MessageBox.error("PO is not valid for Editing.")
+                    MessageBox.error(_captionList.INFO_PO_NOT_VALID_TO_EDIT)
                     return;
                 }
                 var oModel = this.getOwnerComponent().getModel();
@@ -3724,13 +3751,13 @@ sap.ui.define([
                 var shipMode = this.byId("f1ShipMode").getValue();
             
                 if (this._validationErrors.length != 0){
-                    MessageBox.error("Required Field Empty!");
+                    MessageBox.error(_captionList.INFO_REQUIRED_FIELD);
                     bProceed = false;
                 }
 
                 var message;
                 if(bProceed){
-                    this.showLoadingDialog('Loading...')
+                    this.showLoadingDialog(_captionList.LOADING)
                     oSelectedIndices.forEach(item => {
                         oTmpSelectedIndices.push(oTable.getBinding("rows").aIndices[item])
                     })
@@ -3793,7 +3820,7 @@ sap.ui.define([
                                         MessageBox.information(message);
                                         resolve()
                                     }else{
-                                        MessageBox.error("No Details to be saved.");
+                                        MessageBox.error(_captionList.INFO_NO_DTLS_TO_SAVE);
                                     }
                                 },error: function(error){
                                     //error message
@@ -4101,7 +4128,7 @@ sap.ui.define([
                     this.getView().addDependent(this._DiscardChangesDialog);
                 }
                 this._DiscardChangesDialog.open();
-                // this.showLoadingDialog('Loading...');
+                // this.showLoadingDialog(_captionList.LOADING);
                 // // this.byId("vpoSearchFieldDetails").setVisible(true);
                 // this.byId("vpoBtnAddPRtoPO").setVisible(true);
                 // this.byId("vpoBtnItemChanges").setVisible(true);
@@ -4136,7 +4163,7 @@ sap.ui.define([
                 //     }
                 //     this._DiscardChangesDialog.open();
                 // }else{
-                //     this.showLoadingDialog('Loading...');
+                //     this.showLoadingDialog(_captionList.LOADING);
                 //     // this.byId("vpoSearchFieldDetails").setVisible(true);
                 //     this.byId("vpoBtnAddPRtoPO").setVisible(true);
                 //     this.byId("vpoBtnItemChanges").setVisible(true);
@@ -4179,7 +4206,7 @@ sap.ui.define([
             onCloseDiscardChangesDialog: async function(){
                 var me = this;
                 this._DiscardChangesDialog.close();
-                this.showLoadingDialog('Loading...');
+                this.showLoadingDialog(_captionList.LOADING);
                 // this.byId("vpoSearchFieldDetails").setVisible(true);
                 this.byId("vpoBtnAddPRtoPO").setVisible(true);
                 this.byId("vpoBtnItemChanges").setVisible(true);
@@ -4210,7 +4237,7 @@ sap.ui.define([
                 // var me = this;
                 // if (this._isEdited) {
                 //     this._DiscardChangesDialog.close();
-                //     this.showLoadingDialog('Loading...');
+                //     this.showLoadingDialog(_captionList.LOADING);
                 //     // this.byId("vpoSearchFieldDetails").setVisible(true);
                 //     this.byId("vpoBtnAddPRtoPO").setVisible(true);
                 //     this.byId("vpoBtnItemChanges").setVisible(true);
@@ -4253,17 +4280,17 @@ sap.ui.define([
                 await _promiseResult;
 
                 if(this._validPOChange != 1){
-                    MessageBox.error("PO line cannot be deleted.")
+                    MessageBox.error(_captionList.INFO_PO_LINE_CANNOT_BE_DELETED)
                     bProceed = false;
                 }
                 // this.getView().getModel("VPODtlsVPODet").getProperty("/results").forEach(item => {
                 //     if(item.DELETED || item.CLOSED){
-                //         MessageBox.error("PO is already Closed or Deleted.")
+                //         MessageBox.error(_captionList.INFO_PO_CLOSED_DELETED)
                 //         bProceed = false;
                 //     }
                 // });
                 if(bProceed){
-                    this.showLoadingDialog('Loading...')
+                    this.showLoadingDialog(_captionList.LOADING)
                     var oTable = this.byId("vpoDetailsTab");
                     var oSelectedIndices = oTable.getSelectedIndices();
                     var oTmpSelectedIndices = [];
@@ -4326,7 +4353,7 @@ sap.ui.define([
                                     Ebakz: "" 
                                 })
                             }else{
-                                MessageBox.error("PO is already Closed or Deleted.");
+                                MessageBox.error(_captionList.INFO_PO_CLOSED_DELETED);
                             }
                         });
 
@@ -4353,7 +4380,7 @@ sap.ui.define([
                                                 resolve()
                                             }   
                                         }else{
-                                            MessageBox.error("No Details to Delete.");
+                                            MessageBox.error(_captionList.INFO_NO_DTLS_TO_DELETE);
                                         }
                                     },error: function(error){
                                         MessageBox.error(error);
@@ -4396,7 +4423,7 @@ sap.ui.define([
                 await _promiseResult;
 
                 if(this._validPOChange != 1){
-                    MessageBox.error("PO is not valid for Editing.")
+                    MessageBox.error(_captionList.INFO_PO_NOT_VALID_TO_EDIT)
                     bProceed = false;
                     return;
                 }
@@ -4468,7 +4495,7 @@ sap.ui.define([
                         }
                     });
                 }else{
-                    MessageBox.error("PO is not valid for Add PR to PO.")
+                    MessageBox.error(_captionList.INFO_PO_INVALID_ADD_PR_TO_PO)
                 }
             },
             onSaveAddPRtoPO: async function(){
@@ -4506,7 +4533,7 @@ sap.ui.define([
                 var poItemArr = [];
                 var poItemLastCnt = 0;
 
-                this.showLoadingDialog('Loading...')
+                this.showLoadingDialog(_captionList.LOADING)
                 
                 _promiseResult = new Promise((resolve, reject)=>{
                     oModel.read("/mainSet(PONO='" + poNo + "')", {
@@ -4537,7 +4564,7 @@ sap.ui.define([
                 await _promiseResult;
 
                 if(aSelIndices.length === 0 && bProceed){
-                    MessageBox.error("No Selected Record!")
+                    MessageBox.error(_captionList.INFO_NO_RECORD_SELECT)
                     bProceed = false;
                 }
                 if(bProceed){
@@ -4639,12 +4666,12 @@ sap.ui.define([
                                         resolve()
                                     }
                                 }else{
-                                    MessageBox.error("Error, No Data Changed");
+                                    MessageBox.error(_captionList.INFO_NO_DATA_MODIFIED);
                                     resolve()
                                 }
                             },error: function(error){
                                 //error message
-                                MessageBox.error("Error, No Data Changed");
+                                MessageBox.error(_captionList.INFO_NO_DATA_MODIFIED);
                                 resolve()
                             }
                         })
@@ -4668,13 +4695,13 @@ sap.ui.define([
                 await _promiseResult;
 
                 if(this._validPOChange != 1){
-                    MessageBox.error("PO is not valid for Editing.")
+                    MessageBox.error(_captionList.INFO_PO_NOT_VALID_TO_EDIT)
                     bProceed = false;
                     return;
                 }
                 this.getView().getModel("VPODtlsVPODet").getProperty("/results").forEach(item => {
                     if(item.DELETED || item.CLOSED){
-                        MessageBox.error("PO is already Closed or Deleted.")
+                        MessageBox.error(_captionList.INFO_PO_CLOSED_DELETED)
                         bProceed = false;
                         return;
                     }
@@ -4683,9 +4710,9 @@ sap.ui.define([
                 if(bProceed){
                     var bCompact = !!this.getView().$().closest(".sapUiSizeCompact").length;
                     MessageBox.information(
-                        "Proceed to delete selected record?",
+                        _captionList.CONF_PROCEED_DELETE_RECORD,
                         {
-                            actions: ["Delete", MessageBox.Action.CLOSE],
+                            actions: [_captionList.DELETE, MessageBox.Action.CLOSE],
                             styleClass: bCompact ? "sapUiSizeCompact" : "",
                             onClose: function(sAction) {
                                 //Action Here
@@ -4696,7 +4723,7 @@ sap.ui.define([
             },
 
             onRefresh: async function(){
-                this.showLoadingDialog('Loading...');
+                this.showLoadingDialog(_captionList.LOADING);
                 _promiseResult = new Promise((resolve, reject)=> {
                     resolve(this.loadAllData());
                 });
@@ -5140,12 +5167,12 @@ sap.ui.define([
                 oModel.create("/TableLayoutSet", oParam, {
                     method: "POST",
                     success: function(data, oResponse) {
-                        sap.m.MessageBox.information("Layout saved.");
+                        sap.m.MessageBox.information(_captionList.INFO_LAYOUT_SAVE);
                         //Common.showMessage(me._i18n.getText('t6'));
                     },
                     error: function(err) {
                         //Layout Error
-                        sap.m.MessageBox.error(err);
+                        sap.m.MessageBox.error(_captionList.INFO_NO_LAYOUT);
                     }
                 });                
             },
