@@ -16,6 +16,10 @@
         applyContentPadding="false">
         <items>
             <IconTabFilter id="vpoDetailsIconTab" text="{captionMsg>/DETAILS}">
+                <dependents>
+                    <core:CommandExecution id="comVpoDetailsEdit" command="Edit" enabled="true" execute="onEditPODtls" />
+                    <core:CommandExecution id="comVpoDetailsSave" command="Save" enabled="true" execute="onSaveEditPODtls" />
+                </dependents>
                 <uiT:Table id="vpoDetailsTab"
                     class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
                     visibleRowCountMode="Auto"

@@ -898,19 +898,23 @@ sap.ui.define([
 
                 });
 
-                //bind the data to the table
                 //sorting with Date Sort
                 oTable.attachSort(function(oEvent) {
          
                     var sPath = oEvent.getParameter("column").getSortProperty();
                     var bDescending = false;
-
+                    
+                    oEvent.getParameter("column").setSorted(true); //sort icon initiator
                     if (oEvent.getParameter("sortOrder") == "Descending") {
                         bDescending = true;
+                        oEvent.getParameter("column").setSortOrder("Descending") //sort icon Descending
+                    }else{
+                        oEvent.getParameter("column").setSortOrder("Ascending") //sort icon Ascending
                     }
-                    var oSorter = new sap.ui.model.Sorter(sPath, bDescending );
+
+                    var oSorter = new sap.ui.model.Sorter(sPath, bDescending ); //sorter(columnData, If Ascending(false) or Descending(True))
                     
-                    var columnType = oEvent.getParameter("column").getTemplate().getBindingInfo("text").columnType;
+                    var columnType = oEvent.getParameter("column").getTemplate().getBindingInfo("text") === undefined ? "" : oEvent.getParameter("column").getTemplate().getBindingInfo("text").columnType;
                     if (columnType === "DATETIME") {
                         oSorter.fnCompare = function(a, b) {
                         
@@ -940,6 +944,7 @@ sap.ui.define([
          
          
                 });
+                //bind the data to the table
                 oTable.bindRows("/rows");
                 
             },
