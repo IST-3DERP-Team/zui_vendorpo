@@ -16,6 +16,11 @@
                     id="vpoHeaderTxtRemarksTab"
                     text="{captionMsg>/REMARKS}"
                     key="itfDLVSCHED">
+                    <dependents>
+                        <core:CommandExecution id="comVpoHdrTextRNew" command="New" enabled="true" execute="onNewHdrTxt('Remarks')" />
+                        <core:CommandExecution id="comVpoHdrTextREdit" command="Edit" enabled="true" execute="onEditHdrTxt('Remarks')" />
+                        <core:CommandExecution id="comVpoHdrTextRSave" command="Save" enabled="true" execute="onSaveEditHdrTxt('Remarks')" />
+                    </dependents>
                     <uiT:Table id="RemarksTbl"
                         class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
                         visibleRowCountMode="Auto"
@@ -61,6 +66,11 @@
                     id="vpoHeaderTxtPkngInstTab"
                     text="{captionMsg>/PACKINSTRUCT}"
                     key="itfDLVSCHED">
+                    <dependents>
+                        <core:CommandExecution id="comVpoHdrTextPNew" command="New" enabled="true" execute="onNewHdrTxt('PkgInst')" />
+                        <core:CommandExecution id="comVpoHdrTextPEdit" command="Edit" enabled="true" execute="onEditHdrTxt('PkgInst')" />
+                        <core:CommandExecution id="comVpoHdrTextPSave" command="Save" enabled="true" execute="onSaveEditHdrTxt('PkgInst')" />
+                    </dependents>
                     <uiT:Table id="PackingInstTbl"
                         class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
                         visibleRowCountMode="Auto"

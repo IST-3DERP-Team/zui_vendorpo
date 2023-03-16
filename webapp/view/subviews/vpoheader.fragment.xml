@@ -19,6 +19,10 @@
         applyContentPadding="false"
         class="sapUiResponsivePadding iconTabPOHdrFrag" 
         expandable="false">
+            <dependents>
+                <core:CommandExecution id="comVpoHdrSave" command="Save" enabled="true" execute="onSaveVPOHeader" />
+                <core:CommandExecution id="comVpoHdrEdit" command="Edit" enabled="true" execute="onEditVPOHeader" />
+            </dependents>
             <content>
                 <OverflowToolbar id="_ovfToolBarIO" design="Transparent" >
                     <ToolbarSpacer/>
