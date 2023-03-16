@@ -863,7 +863,7 @@ sap.ui.define([
                         return new sap.ui.table.Column({
                             id: model+"-"+sColumnId,
                             label: sColumnLabel,
-                            template: me.columnTemplate(sColumnId), //default text
+                            template: me.columnTemplate(sColumnId, sColumnType), //default text
                             width: sColumnWidth + "px",
                             hAlign: me.columnSize(sColumnId),
                             sortProperty: sColumnId,
@@ -877,7 +877,14 @@ sap.ui.define([
                         return new sap.ui.table.Column({
                             id: model+"-"+sColumnId,
                             label: sColumnLabel,
-                            template: new sap.m.Text({ text: "{" + sColumnId + "}", wrapping: false, tooltip: "{" + sColumnId + "}" }), //default text
+                            template: new sap.m.Text({ 
+                                text: {
+                                    path: sColumnId,
+                                    columnType: sColumnType
+                                },
+                                wrapping: false, 
+                                tooltip: "{" + sColumnId + "}" 
+                            }), //default text
                             width: sColumnWidth + "px",
                             hAlign: "End",
                             sortProperty: sColumnId,
@@ -892,12 +899,62 @@ sap.ui.define([
                 });
 
                 //bind the data to the table
+                //sorting with Date Sort
+                oTable.attachSort(function(oEvent) {
+         
+                    var sPath = oEvent.getParameter("column").getSortProperty();
+                    var bDescending = false;
+
+                    if (oEvent.getParameter("sortOrder") == "Descending") {
+                        bDescending = true;
+                    }
+                    var oSorter = new sap.ui.model.Sorter(sPath, bDescending );
+                    
+                    var columnType = oEvent.getParameter("column").getTemplate().getBindingInfo("text").columnType;
+                    if (columnType === "DATETIME") {
+                        oSorter.fnCompare = function(a, b) {
+                        
+                            // parse to Date object
+                            var aDate = new Date(a);
+                            var bDate = new Date(b);
+                            
+                            if (bDate == null) {
+                                return -1;
+                            }
+                            if (aDate == null) {
+                                return 1;
+                            }
+                            if (aDate < bDate) {
+                                return -1;
+                            }
+                            if (aDate > bDate) {
+                                return 1;
+                            }
+                            return 0;
+                        };
+                    } 
+                    
+                    oTable.getBinding('rows').sort(oSorter);
+                     // prevent internal sorting by table
+                    oEvent.preventDefault();
+         
+         
+                });
                 oTable.bindRows("/rows");
                 
             },
-            columnTemplate: function(sColumnId){
+            columnTemplate: function(sColumnId, sColumnType){
                 var oColumnTemplate;
-                oColumnTemplate = new sap.m.Text({ text: "{" + sColumnId + "}", wrapping: false, tooltip: "{" + sColumnId + "}" }); //default text
+                
+                oColumnTemplate = new sap.m.Text({ 
+                    text: {
+                        path: sColumnId,
+                        columnType: sColumnType
+                    }, 
+                    wrapping: false, 
+                    tooltip: "{" + sColumnId + "}" 
+                }); //default text
+                
                 if (sColumnId === "DELETED") { 
                     //Manage button
                     oColumnTemplate = new sap.m.CheckBox({
@@ -997,8 +1054,9 @@ sap.ui.define([
                 var PONo = this.getView().getModel("ui").getProperty("/activePONo");
                 var CONDREC = this.getView().getModel("ui").getProperty("/activeCondRec");
                 var SBU = this.getView().getModel("ui").getData().sbu;
+
                 this._updUnlock = 0;
-                this.navToDetail(PONo, CONDREC, SBU);
+                this.navToDetail(PONo, SBU);
                 
             },
             navToDetail(PONo, SBU){
