@@ -22,6 +22,22 @@ sap.ui.define([
             onInit: async function () {
                 that = this;
                 this._oModel = this.getOwnerComponent().getModel();
+                
+                if (sap.ui.getCore().byId("backBtn") !== undefined) {
+                    this._fBackButton = sap.ui.getCore().byId("backBtn").mEventRegistry.press[0].fFunction;
+
+                    var oView = this.getView();
+                    oView.addEventDelegate({
+                        onAfterShow: function(oEvent){
+                            sap.ui.getCore().byId("backBtn").mEventRegistry.press[0].fFunction = that._fBackButton; 
+                            
+                            if (that._aParamLockPOdata.length > 0) {
+                                that.onPOUnlock();
+                            }
+                        }
+                    }, oView);
+                }
+
                 this.callCaptionsAPI();
                 this._counts = {
                     unreleasedpo: 0,
@@ -84,6 +100,7 @@ sap.ui.define([
                 this._updUnlock = 1;
                 this._zpoUnlock = 1
                 this._ediVendor; 
+                this._aParamLockPOdata = [];
 
                 this._tableFullScreenRender = "";
 
@@ -126,7 +143,6 @@ sap.ui.define([
                     this.byId("_IDGenMenuButton3").setVisible(false);
                 }
             },
-
             getAppAction: async function(){
                 if(sap.ushell.Container !==undefined){
                     const fullHash = new HashChanger().getHash();
@@ -1064,19 +1080,28 @@ sap.ui.define([
                 this.navToDetail(PONo, SBU);
                 
             },
-            navToDetail(PONo, SBU){
+            navToDetail: async function(PONo, SBU){
                 var me = this;
 
                 // if(CONDREC === undefined || CONDREC === "" || CONDREC ===null){
                 //     MessageBox.error("PO: "+ PONo +" has no Condition Record!")
                 // }else{
                 var oJSONModel = new JSONModel();
-                oJSONModel.setData(this.getView().getModel("captionMsg").getData());
-                this._router.navTo("vendorpodetail", {
-                    PONO: PONo,
-                    // CONDREC: CONDREC,
-                    SBU: SBU
+                this._aParamLockPOdata = [];
+
+                this._aParamLockPOdata.push({
+                    Pono: PONo
                 });
+
+                if(await this.onPOLock()){
+                    oJSONModel.setData(this.getView().getModel("captionMsg").getData());
+                    this._router.navTo("vendorpodetail", {
+                        PONO: PONo,
+                        // CONDREC: CONDREC,
+                        SBU: SBU
+                    });
+                }
+                // await this.onPOUnlock(PONo);
                 // }
             },
             onSaveTableLayout: function (table) {
@@ -1530,7 +1555,6 @@ sap.ui.define([
                 var oSplitter = this.byId("splitMain");
                 var oFirstPane = oSplitter.getRootPaneContainer().getPanes().at(0);
                 var oSecondPane = oSplitter.getRootPaneContainer().getPanes().at(1);
-                console.log(event)
                 if(this._tableFullScreenRender !== ""){
                     //hide Smart Filter Bar
                     this.byId('smartFilterBar').setVisible(true)
@@ -2103,6 +2127,71 @@ sap.ui.define([
                     }
                 });
             },
+
+            onPOLock: async function(){
+                var me = this;
+                var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_LOCK_SRV");
+                var sError = "";
+                var boolResult = true;
+
+                var oParam = {
+                    "N_LOCK_PO_ITEMTAB": this._aParamLockPOdata,
+                    "iv_count": 300, 
+                    "N_LOCK_PO_ENQ": [], 
+                    "N_LOCK_PO_OUTMESSAGES": [] 
+                }
+                await new Promise((resolve, reject) => {
+                    oModel.create("/Lock_POHdr_Set", oParam, {
+                        method: "POST",
+                        success: function(data, oResponse) {
+                            for(var item of data.N_LOCK_PO_OUTMESSAGES.results) {
+                                if (item.Type === "E") {
+                                    sError += item.Message + ". ";
+                                }
+                            }
+
+                            if (sError.length > 0) {
+                                boolResult = false;
+                                MessageBox.information(sError);
+                                me.closeLoadingDialog();
+                            }
+                            resolve();
+                        },
+                        error: function(err) {
+                            MessageBox.error(err);
+                            resolve();
+                            me.closeLoadingDialog();
+                        }
+                    });
+                    
+                });
+                return boolResult;
+            },
+
+            onPOUnlock: async function(){
+                var me = this;
+                var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_LOCK_SRV");
+
+                var oParam = {
+                    "N_UNLOCK_PO_ITEMTAB": this._aParamLockPOdata,
+                    "N_UNLOCK_PO_ENQ": [], 
+                    "N_UNLOCK_PO_MESSAGES": [] 
+                };
+
+                await new Promise((resolve, reject) => {
+                    oModel.create("/Unlock_POHdr_Set", oParam, {
+                        method: "POST",
+                        success: function(data, oResponse) {
+                            resolve();
+                        },
+                        error: function(err) {
+                            MessageBox.error(err);
+                            resolve();
+                            me.closeLoadingDialog();
+                        }
+                    });
+                });
+            }
 
         });
     });
