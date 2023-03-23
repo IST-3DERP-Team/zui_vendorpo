@@ -1092,14 +1092,23 @@ sap.ui.define([
                 this._aParamLockPOdata.push({
                     Pono: PONo
                 });
-
-                if(await this.onPOLock()){
+                if(this._appAction === "display"){
                     oJSONModel.setData(this.getView().getModel("captionMsg").getData());
                     this._router.navTo("vendorpodetail", {
                         PONO: PONo,
                         // CONDREC: CONDREC,
                         SBU: SBU
                     });
+                }
+                else{
+                    if(await this.onPOLock()){
+                        oJSONModel.setData(this.getView().getModel("captionMsg").getData());
+                        this._router.navTo("vendorpodetail", {
+                            PONO: PONo,
+                            // CONDREC: CONDREC,
+                            SBU: SBU
+                        });
+                    }
                 }
                 // await this.onPOUnlock(PONo);
                 // }
