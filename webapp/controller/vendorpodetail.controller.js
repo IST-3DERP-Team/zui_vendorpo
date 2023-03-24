@@ -3931,8 +3931,56 @@ sap.ui.define([
                                 success: function(oData, oResponse){
                                     message = ""
                                     if(oData.N_ChangePOReturn.results.length > 0){
+                                        var oParam = {};
                                         for(var errCount = 0; errCount <= oData.N_ChangePOReturn.results.length - 1; errCount++){
                                             message =+ oData.N_ChangePOReturn.results[errCount] === undefined ? "": oData.N_ChangePOReturn.results[errCount].Msgv1;
+                                            if (oData.N_ChangePOReturn.results[errCount].Msgtyp === 'S') {
+                                                var oModel = me.getOwnerComponent().getModel();
+                                                _promiseResult = new Promise((resolve, reject) => {
+                                                    oModel.read('/VPOCurrentRelGrpStatSet', {
+                                                        urlParameters: {
+                                                            "$filter": "EBELN eq '" + me._pono + "'"
+                                                        },
+                                                        success: function (data, response) {
+                                                            if (me.getView().getModel("topHeaderData").getData().EDIVENDOR === "L" ? true : false && data.results[0].FRGGR === me.getView().getModel("relStratData").getData().RELGRP && data.results[0].FRGSX === me.getView().getModel("relStratData").getData().RELSTRAT && data.results[0].FRGKE === "1") {
+                                                                sap.m.MessageBox.confirm("PO has been changed but release was not reset. Do you want this PO downloaded to the vendor?", {
+                                                                    actions: ["Yes", "No"],
+                                                                    onClose: function (sAction) {
+                                                                        if (sAction === "Yes") {
+                                                                            oParam = {
+                                                                                "EBELN": me._pono,
+                                                                                "EDI": "X",
+                                                                                "DOWNLOAD": ""
+                                                                            }
+                                                                        }
+                                                                        else {
+                                                                            oParam = {
+                                                                                "EBELN": me._pono,
+                                                                                "EDI": "X",
+                                                                                "DOWNLOAD": "N"
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                });
+                                                            }
+                                                            if (me.getView().getModel("topHeaderData").getData().EDIVENDOR !== "L" ? "1" : "0" && data.results[0].FRGGR === me.getView().getModel("relStratData").getData().RELGRP && data.results[0].FRGSX === me.getView().getModel("relStratData").getData().RELSTRAT && data.results[0].FRGKE === "1") {
+                                                                oParam = {
+                                                                    "EBELN": me._pono,
+                                                                    "EDI": "",
+                                                                    "DOWNLOAD": "N"
+                                                                }
+                                                            }
+
+                                                            resolve(me.onSaveChanges(oParam));
+                                                            resolve();
+                                                        }
+                                                    });
+                                                });
+
+                                                //console.log(me.getView().getModel("relStratData").getData().RELSTRAT);
+                                                //console.log(me.getView().getModel("currentRelStratData"));
+
+                                            }
                                         }
                                         // message = oData.N_ChangePOReturn.results[0].Msgv1;
                                         MessageBox.information(message);
@@ -3988,6 +4036,17 @@ sap.ui.define([
                     this.closeLoadingDialog();
                 }
 
+            },
+
+            onSaveChanges: async function (oParam) {
+                    var _oMovementTypeData = [];
+                    var oModel = this.getOwnerComponent().getModel();
+                    var _this = this;
+                    oModel.create("/VPODownloadedSet", oParam, {
+                    method: "POST",
+                    success: function (oResult, oResponse) {
+                    }
+                });
             },
 
             getPOTOlerance: async function(dataRow, selectedRow){
