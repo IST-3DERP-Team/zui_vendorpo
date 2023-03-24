@@ -321,6 +321,7 @@ sap.ui.define([
                                         me.getView().getModel("ui").setProperty("/activePONo", poNo);
                                         me.getView().getModel("ui").setProperty("/activeCondRec", condrec);
                                         me.getView().getModel("ui").setProperty("/activeDocTyp", docType)
+                                        resolve(me.getCounts());
                                         resolve(me.getPODetails2(poNo));
                                         resolve(me.getDelSchedule2(poNo));
                                         resolve(me.getDelInvoice2(poNo));
@@ -372,6 +373,21 @@ sap.ui.define([
                     
                 });
             },
+            getCounts: async function () {
+                var oModel = this.getOwnerComponent().getModel();
+                var me = this;
+                return new Promise((resolve, reject) => {
+                    oModel.read('/VPOCountSet', {
+                        success: function (data, response) {
+                            me._counts.unreleasedpo = data.results.filter(item => item.Stat === "UNRELEASED").length;
+                            me._counts.openlineitems = data.results.filter(item => item.Stat === "OPENLINE").length;
+                            me.getView().getModel("counts").setData(me._counts);
+                            resolve();
+                        }
+                    });
+                });
+            },
+            
             getPOHistory2: async function(PONO){
                 var oModel = this.getOwnerComponent().getModel();
                 var me = this;
