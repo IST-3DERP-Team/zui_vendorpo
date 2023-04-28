@@ -312,9 +312,21 @@ sap.ui.define([
                                         })
                                         
                                         /*data.results.sort((a,b) => (a.GMC > b.GMC ? 1 : -1));*/
-                                        poNo = oResults.results[0].PONO;
-                                        condrec = oResults.results[0].CONDREC;
-                                        docType = oResults.results[0].DOCTYPE;
+                                        if(oResults.results.length > 0){
+                                            if(oResults.results[0].SBU === vSBU){
+                                                poNo = oResults.results[0].PONO;
+                                                condrec = oResults.results[0].CONDREC;
+                                                docType = oResults.results[0].DOCTYPE;
+                                            }else{
+                                                poNo = "";
+                                                condrec = "";
+                                                docType = "";
+                                            }
+                                        }else{
+                                            poNo = "";
+                                            condrec = "";
+                                            docType = "";
+                                        }
                                         var oJSONModel = new sap.ui.model.json.JSONModel();
                                         oJSONModel.setData(oResults);
                                         me.getView().setModel(oJSONModel, "VPOHdr");
@@ -532,6 +544,7 @@ sap.ui.define([
                 var tblChange = this._tblChange;
                 var oJSONModel = new sap.ui.model.json.JSONModel();
                 var objectData = [];
+                var poItem = "";
                 return new Promise((resolve, reject)=>{
                     oModel.read('/VPODetailsSet', { 
                         urlParameters: {
@@ -547,11 +560,10 @@ sap.ui.define([
                                 objectData[0].sort((a,b) => (a.ITEM > b.ITEM) ? 1 : ((b.ITEM > a.ITEM) ? -1 : 0));
 
                                 oJSONModel.setData(data);
+                                poItem = data.results[0].ITEM;
+                                
                             }
-
-                            var poItem = data.results[0].ITEM;
                             me.getView().getModel("ui").setProperty("/activePOItem", poItem);
-
                             me.getView().setModel(oJSONModel, "VPODtls");
                             if(tblChange)
                                 resolve(me.setTableColumnsData('VPODTLS'));
@@ -624,7 +636,7 @@ sap.ui.define([
                 return new Promise((resolve, reject) => {
                     oModel.read("/ColumnsSet", {
                         success: async function (oData, oResponse) {
-                            
+
                             if (oData.results.length > 0) {
                                 me._columnLoadError = false;
                                 if (modCode === 'VENDORPO') {
@@ -700,6 +712,7 @@ sap.ui.define([
                                 me.getView().getModel("ui").setProperty("/dataMode", 'NODATA');
                                 me.getView().getModel("ui").setProperty("/activePONo", "");
                                 me.getView().getModel("ui").setProperty("/activePOItem", "");
+                                MessageBox.error(me.getView().getModel("captionMsg").getData()["INFO_NO_LAYOUT"])
                             }
                         },
                         error: function (err) {
@@ -803,20 +816,22 @@ sap.ui.define([
                             }
                         })
                     }else{
-                        oColumnsData.forEach((item, index) =>{
-                            if(item.ColumnName === "GMCDESC"){
-                                item.Visible = true;
-                            }
-                            if(item.ColumnName === "ADDTLDESC"){
-                                item.Visible = true;
-                            }
-                            if(item.ColumnName === "MERCHMATDESC"){
-                                item.Visible = true;
-                            }
-                            if(item.ColumnName === "SHORTTEXT"){
-                                item.Visible = false;
-                            }
-                        })
+                        if(oColumnsData.length > 0 || oColumnsData.length !== undefined){
+                            oColumnsData.forEach((item, index) =>{
+                                if(item.ColumnName === "GMCDESC"){
+                                    item.Visible = true;
+                                }
+                                if(item.ColumnName === "ADDTLDESC"){
+                                    item.Visible = true;
+                                }
+                                if(item.ColumnName === "MERCHMATDESC"){
+                                    item.Visible = true;
+                                }
+                                if(item.ColumnName === "SHORTTEXT"){
+                                    item.Visible = false;
+                                }
+                            })
+                        }
                     }
 
                     this.addColumns("detailsTab", oColumnsData, oData, "VPODtls");
@@ -1991,115 +2006,116 @@ sap.ui.define([
                 var vPONO = this.getView().getModel("ui").getProperty("/activePONo");
 
                 this.byId("mainTab").getModel().getData().rows.filter(fItem => fItem.PONO === vPONO).map(val => sVendor = val.VENDOR);
-
-                this.byId("detailsTab").getModel().getData().rows.forEach(item => {  
-                    iCounter++;
-
-                    var oChildren = [];
-                    var oGRItemData = oGRData.filter(fItem => fItem.EBELP === item.ITEM);
-                    var oInvItemData = oInvData.filter(fItem => fItem.EBELP === item.ITEM);
-
-                    oGRItemData.forEach((gr, idx) => oChildren.push(idx+1+iCounter));
-                    oInvItemData.forEach((inv, idx) => oChildren.push(idx+1+iCounter+oGRItemData.length));
-
-                    oNodes.push({
-                        id: iCounter + "",
-                        lane: "0",
-                        title: "Purchase Order " + item.PONO + "/" + item.ITEM,
-                        titleAbbreviation: "PO",
-                        children: oChildren,
-                        state: "Positive",
-                        stateText: "Follow-On Documents",
-                        focused: true,
-                        highlighted: false,
-                        texts: [ "Created On: " + dateFormat.format(new Date(item.CREATEDDT)), "Vendor: " + sVendor ]                        
-                    })
-                    
-                    oGRItemData.forEach(gr => {
+                if(this.byId("detailsTab").getModel().getData().rows !== undefined){
+                    this.byId("detailsTab").getModel().getData().rows.forEach(item => {  
                         iCounter++;
 
-                        var oState = "";
-                        var vBaseQty = 0;
+                        var oChildren = [];
+                        var oGRItemData = oGRData.filter(fItem => fItem.EBELP === item.ITEM);
+                        var oInvItemData = oInvData.filter(fItem => fItem.EBELP === item.ITEM);
 
-                        if (+gr.MENGE === 0) { oState = "Negative" }
-                        else if (+gr.MENGE > 0 && +gr.MENGE !== +item.POQTY) { oState = "Critical" }
-                        else if (+gr.MENGE === +item.POQTY) { oState = "Positive" }
-
-                        if (gr.BASEANDEC === 0) { vBaseQty = (+gr.MENGE).toFixed(gr.BASEANDEC) }
+                        oGRItemData.forEach((gr, idx) => oChildren.push(idx+1+iCounter));
+                        oInvItemData.forEach((inv, idx) => oChildren.push(idx+1+iCounter+oGRItemData.length));
 
                         oNodes.push({
                             id: iCounter + "",
-                            lane: "1",
-                            title: "Goods Receipt " + gr.MBLNR + "/" + gr.ZEILE,
-                            titleAbbreviation: "GR",
-                            children: [ ],
+                            lane: "0",
+                            title: "Purchase Order " + item.PONO + "/" + item.ITEM,
+                            titleAbbreviation: "PO",
+                            children: oChildren,
                             state: "Positive",
-                            stateText: "Completed",
+                            stateText: "Follow-On Documents",
                             focused: true,
                             highlighted: false,
-                            texts: [ "Posted On: " + dateFormat.format(new Date(gr.BUDAT)), 
-                                "Quantity (Base): " + vBaseQty + " " + gr.MEINS,
-                                "Quantity (Order): " + gr.ERFMG + " " + gr.ERFME],                            
+                            texts: [ "Created On: " + dateFormat.format(new Date(item.CREATEDDT)), "Vendor: " + sVendor ]                        
                         })
+                        
+                        oGRItemData.forEach(gr => {
+                            iCounter++;
 
-                        // processFlowGRData.push({
-                        //     NODEID: iCounter + "",
-                        //     DOCTYPE: "MD",
-                        //     EBELN: gr.EBELN,
-                        //     EBELP: gr.EBELP,
-                        //     MBLNR: gr.MBLNR,
-                        //     MJAHR: gr.MJAHR,
-                        //     ZEILE: gr.ZEILE
-                        // })
+                            var oState = "";
+                            var vBaseQty = 0;
 
-                        this._processFlowData.push({
-                            NODEID: iCounter + "",
-                            ITEM: {
+                            if (+gr.MENGE === 0) { oState = "Negative" }
+                            else if (+gr.MENGE > 0 && +gr.MENGE !== +item.POQTY) { oState = "Critical" }
+                            else if (+gr.MENGE === +item.POQTY) { oState = "Positive" }
+
+                            if (gr.BASEANDEC === 0) { vBaseQty = (+gr.MENGE).toFixed(gr.BASEANDEC) }
+
+                            oNodes.push({
+                                id: iCounter + "",
+                                lane: "1",
+                                title: "Goods Receipt " + gr.MBLNR + "/" + gr.ZEILE,
+                                titleAbbreviation: "GR",
+                                children: [ ],
+                                state: "Positive",
+                                stateText: "Completed",
+                                focused: true,
+                                highlighted: false,
+                                texts: [ "Posted On: " + dateFormat.format(new Date(gr.BUDAT)), 
+                                    "Quantity (Base): " + vBaseQty + " " + gr.MEINS,
+                                    "Quantity (Order): " + gr.ERFMG + " " + gr.ERFME],                            
+                            })
+
+                            // processFlowGRData.push({
+                            //     NODEID: iCounter + "",
+                            //     DOCTYPE: "MD",
+                            //     EBELN: gr.EBELN,
+                            //     EBELP: gr.EBELP,
+                            //     MBLNR: gr.MBLNR,
+                            //     MJAHR: gr.MJAHR,
+                            //     ZEILE: gr.ZEILE
+                            // })
+
+                            this._processFlowData.push({
                                 NODEID: iCounter + "",
-                                DOCTYPE: "MAT",
-                                EBELN: gr.EBELN,
-                                EBELP: gr.EBELP,
-                                MBLNR: gr.MBLNR,
-                                MJAHR: gr.MJAHR,
-                                ZEILE: gr.ZEILE
-                            }
+                                ITEM: {
+                                    NODEID: iCounter + "",
+                                    DOCTYPE: "MAT",
+                                    EBELN: gr.EBELN,
+                                    EBELP: gr.EBELP,
+                                    MBLNR: gr.MBLNR,
+                                    MJAHR: gr.MJAHR,
+                                    ZEILE: gr.ZEILE
+                                }
+                            })
+                        })
+                        
+                        oInvItemData.forEach(inv => {
+                            iCounter++;
+                            oNodes.push({
+                                id: iCounter + "",
+                                lane: "2",
+                                title: "Supplier Invoice " + inv.BELNR + "/" + inv.BUZEI,
+                                titleAbbreviation: "INV",
+                                children: [ ],
+                                state: "Positive",
+                                stateText: inv.BUDAT !== null ? "Posted" : "Not Yet Posted",
+                                focused: true,
+                                highlighted: false,
+                                texts: [ "Posted On: " + dateFormat.format(new Date(inv.BUDAT)), 
+                                    "Gross Amount: " + inv.RMWWR + " " + inv.WAERS]
+                            })
+
+                            // processFlowInvData.push({
+                            //     NODEID: iCounter + "",
+                            //     LANE: "2",
+                            //     BELNR : inv.BELNR ,
+                            //     GJAHR: inv.GJAHR
+                            // })
+
+                            this._processFlowData.push({
+                                NODEID: iCounter + "",
+                                ITEM: {
+                                    NODEID: iCounter + "",
+                                    DOCTYPE: "INV",
+                                    BELNR : inv.BELNR ,
+                                    GJAHR: inv.GJAHR
+                                }
+                            })
                         })
                     })
-                    
-                    oInvItemData.forEach(inv => {
-                        iCounter++;
-                        oNodes.push({
-                            id: iCounter + "",
-                            lane: "2",
-                            title: "Supplier Invoice " + inv.BELNR + "/" + inv.BUZEI,
-                            titleAbbreviation: "INV",
-                            children: [ ],
-                            state: "Positive",
-                            stateText: inv.BUDAT !== null ? "Posted" : "Not Yet Posted",
-                            focused: true,
-                            highlighted: false,
-                            texts: [ "Posted On: " + dateFormat.format(new Date(inv.BUDAT)), 
-                                "Gross Amount: " + inv.RMWWR + " " + inv.WAERS]
-                        })
-
-                        // processFlowInvData.push({
-                        //     NODEID: iCounter + "",
-                        //     LANE: "2",
-                        //     BELNR : inv.BELNR ,
-                        //     GJAHR: inv.GJAHR
-                        // })
-
-                        this._processFlowData.push({
-                            NODEID: iCounter + "",
-                            ITEM: {
-                                NODEID: iCounter + "",
-                                DOCTYPE: "INV",
-                                BELNR : inv.BELNR ,
-                                GJAHR: inv.GJAHR
-                            }
-                        })
-                    })
-                })
+                }
                 
                 this.getView().getModel("processFlow").setProperty("/nodes", oNodes);
                 // this.getView().setModel(new JSONModel(nodeLanes), "processFlow");
@@ -2154,6 +2170,7 @@ sap.ui.define([
             },
 
             onPOLock: async function(){
+                return true;
                 var me = this;
                 var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_LOCK_SRV");
                 var sError = "";
@@ -2194,6 +2211,7 @@ sap.ui.define([
             },
 
             onPOUnlock: async function(){
+                return;
                 var me = this;
                 var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_LOCK_SRV");
 
