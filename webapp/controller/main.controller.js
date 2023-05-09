@@ -309,6 +309,8 @@ sap.ui.define([
 
                                         oResults.results.forEach(item => {
                                             item.PODT = dateFormat.format(new Date(item.PODT));
+                                            item.UPDATEDDT = dateFormat.format(new Date(item.UPDATEDDT));
+                                            item.CREATEDDT = dateFormat.format(new Date(item.CREATEDDT));
                                         })
                                         
                                         /*data.results.sort((a,b) => (a.GMC > b.GMC ? 1 : -1));*/
@@ -1047,6 +1049,14 @@ sap.ui.define([
                     oColumnTemplate = new sap.m.CheckBox({
                         selected: "{" + sColumnId + "}",
                         editable: false
+                    });
+                }
+
+                if (sColumnId === "UPDATEDDT") { 
+                    //Manage button
+                    oColumnTemplate = new sap.m.DatePicker({
+                        displayFormat:"short",
+                        value: "{path: '" + sColumnId + "'}",
                     });
                 }
     
@@ -1938,6 +1948,7 @@ sap.ui.define([
                 oDDTextParam.push({CODE: "SAVELAYOUT"});
                 oDDTextParam.push({CODE: "FULLSCREEN"});
                 oDDTextParam.push({CODE: "EXPORTTOEXCEL"});
+                oDDTextParam.push({CODE: "CREATEDBY"});
 
                 
                 await oModel.create("/CaptionMsgSet", { CaptionMsgItems: oDDTextParam  }, {

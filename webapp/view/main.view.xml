@@ -45,6 +45,12 @@
                 <smartfilterbar:controlConfiguration>
                     <smartfilterbar:ControlConfiguration key="SHIPTOPLANT" label="{captionMsg>/SHIPTOPLANT}" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false" displayBehaviour ="idOnly"/>
                 </smartfilterbar:controlConfiguration>
+                <smartfilterbar:controlConfiguration>
+                    <smartfilterbar:ControlConfiguration key="PURCHGRP" label="{captionMsg>/PURCHGRP}" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false" displayBehaviour ="idOnly"/>
+                </smartfilterbar:controlConfiguration>
+                <smartfilterbar:controlConfiguration>
+                    <smartfilterbar:ControlConfiguration key="CREATEDBY" label="{captionMsg>/CREATEDBY}" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false" displayBehaviour ="idOnly"/>
+                </smartfilterbar:controlConfiguration>
                 <smartfilterbar:layoutData>
                     <FlexItemData growFactor="0"/>
                 </smartfilterbar:layoutData>
