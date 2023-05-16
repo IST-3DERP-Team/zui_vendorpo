@@ -20,6 +20,11 @@
         class="sapUiResponsivePadding iconTabPOHdrFrag" 
         expandable="false">
             <content>
+                <OverflowToolbar id="_ovfToolBarIO1" design="Transparent" >
+                    <ToolbarSpacer/>
+                    <Button id ="vpoBtnRefreshtRelStrat" type="Ghost"  icon="sap-icon://refresh" tooltip="{captionMsg>/REFRESH}" press=".onReleaseStratRefresh"/>
+                </OverflowToolbar>
+
                 <f:Form id="PORelStatDetailForm1" editable="false" class="sapUiNoContentPadding formHdr1">
                     <f:layout>
                         <f:ResponsiveGridLayout columnsXL="3" columnsL="3" columnsM="3" singleContainerFullSize="false" />
@@ -52,7 +57,7 @@
                             <f:formElements>
                                 <f:FormElement label="{captionMsg>/RELCD}" visible="true">
                                     <f:fields>
-                                        <Input id="PORelSRelCd" value="{relStratData>/RELCD}" editable="false" valueStateText="Required" 
+                                        <Input id="PORelSRelCd" value="{relStratData>/RELCD} - {relStratData>/DESCRIPTION}" editable="false" valueStateText="Required" 
                                             change="onHeaderChange" liveChange="onHeaderChange">
                                         </Input>
                                     </f:fields>

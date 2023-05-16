@@ -54,7 +54,8 @@
                                             id="idCondIconTabBar"
                                             text="{captionMsg>/CONDITIONS}"
                                             key="itfDLVSCHED">
-                                            <Text text="Conditions..." />
+                                            <!-- <Text text="Conditions..." /> -->
+                                            <core:Fragment fragmentName="zuivendorpo.view.subviews.vpoheaderconditions" type="XML"/>
                                         </IconTabFilter>
                                             
                                         <!-- Header Text -->
