@@ -109,17 +109,17 @@
                             <Button id="vpoBtnLineSplit" visible="true" text="{captionMsg>/LINESPLIT}" />
                             <Button id="vpoBtnEditDelSched" 
                                 icon="sap-icon://edit"
-                                press="onEditDelSched"
+                                press=".onEditPODelSched"
                                 tooltip="{captionMsg>/EDIT}"
                                 visible="true"/>
                             <Button id="vpoBtnSaveDelSched" 
                                 icon="sap-icon://save"
-                                press=".onSave('DelSched')" 
+                                press=".onSaveEditPODelSched" 
                                 tooltip="{captionMsg>/SAVE}"
                                 visible="false" />
                             <Button id="vpoBtnCancelDelSched" 
                                 icon="sap-icon://sys-cancel"
-                                press="onCancelDelSched" 
+                                press=".onCancelEditPODelSched" 
                                 tooltip="{captionMsg>/CANCEL}"
                                 visible="false" />                                        
                             <Button id="vpoBtnDeleteDelSched" 

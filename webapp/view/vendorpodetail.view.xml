@@ -73,6 +73,14 @@
                                             key="itfCOSTING">
                                             <Text text="Changes..." />
                                         </IconTabFilter>
+
+                                        <!-- Download History -->
+                                        <IconTabFilter
+                                            id="idPOHistIconTabBar"
+                                            text="Download History"
+                                            key="itfCOSTING">
+                                            <core:Fragment fragmentName="zuivendorpo.view.subviews.vpoheaderdownloadhist" type="XML"/>
+                                        </IconTabFilter>
                                     </items>
                             </IconTabBar>
                             <uiL:layoutData>
