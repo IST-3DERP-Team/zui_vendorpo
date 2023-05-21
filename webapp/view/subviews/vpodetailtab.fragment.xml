@@ -40,6 +40,7 @@
                                 width="15rem"/> -->
                             <Button id="vpoBtnAddPRtoPO" visible="true" text="{captionMsg>/ADDPRTOPO}" press=".onAddPRtoPODtls" />
                             <Button id="vpoBtnItemChanges" visible="true" text="{captionMsg>/ITEMCHANGES}" />
+                            <Button id="vpoBtnUpdatePrice" visible="true" text="Update Price{captionMsg>/UPDATEPRICE}" press=".onUpdatePricePODtls"/>
                             <Button id="vpoBtnEditDetails" 
                                 icon="sap-icon://edit"
                                 tooltip="{captionMsg>/EDIT}"
@@ -181,17 +182,17 @@
                                 visible="true" />
                             <Button id="vpoBtnEditDelInv" 
                                 icon="sap-icon://edit"
-                                press="onEditDelInv"
+                                press=".onEditDelInv"
                                 tooltip="{captionMsg>/EDIT}"
                                 visible="true"/>
                             <Button id="vpoBtnSaveDelInv" 
                                 icon="sap-icon://save"
-                                press=".onSave('DelInv')" 
+                                press=".onSaveEditDelInv" 
                                 tooltip="{captionMsg>/SAVE}"
                                 visible="false" />
                             <Button id="vpoBtnCancelDelInv" 
                                 icon="sap-icon://sys-cancel"
-                                press="onCancelDelInv" 
+                                press=".onCancelEditDelInv" 
                                 tooltip="{captionMsg>/CANCEL}"
                                 visible="false" />
                             <Button id="vpoBtnExportToExcelDelInv" 
@@ -199,7 +200,8 @@
                                 tooltip="{captionMsg>/EXPORTTOEXCEL}"
                                 press=".onExportToExcel"
                                 visible="true" />
-                            <Button icon="sap-icon://full-screen"
+                            <Button id="vpoBtnFullScreenDelInv" 
+                                icon="sap-icon://full-screen"
                                 tooltip="{captionMsg>/FULLSCREEN}"
                                 press=".onTableResize"
                                 visible="true" />
