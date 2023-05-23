@@ -2957,6 +2957,10 @@ sap.ui.define([
                     MessageBox.error(_captionList.INFO_PO_IS_DELETED)
                     return;
                 }
+                if(!bProceed){
+                    MessageBox.error(_captionList.INFO_PO_CLOSED_DELETED)
+                    return;
+                }
                 if(bProceed){
                     _promiseResult = new Promise((resolve, reject)=>{
                         resolve(me.validatePOChange());
