@@ -4968,7 +4968,7 @@ sap.ui.define([
                                                             "$filter": "EBELN eq '" + me._pono + "'"
                                                         },
                                                         success: function (data, response) {
-                                                            if (me.getView().getModel("topHeaderData").getData().EDIVENDOR === "L" ? true : false && data.results[0].FRGGR === me.getView().getModel("relStratData").getData().RELGRP && data.results[0].FRGSX === me.getView().getModel("relStratData").getData().RELSTRAT && data.results[0].FRGKE === "1") {
+                                                            if ((me.getView().getModel("topHeaderData").getData().EDIVENDOR === "L" ? true : false) && (data.results[0].FRGGR === me.getView().getModel("relStratData").getData().RELGRP) && (data.results[0].FRGSX === me.getView().getModel("relStratData").getData().RELSTRAT) && (data.results[0].FRGKE === "1")) {
                                                                 sap.m.MessageBox.confirm("PO has been changed but release was not reset. Do you want this PO downloaded to the vendor?", {
                                                                     actions: ["Yes", "No"],
                                                                     onClose: function (sAction) {
@@ -4978,6 +4978,19 @@ sap.ui.define([
                                                                                 "EDI": "X",
                                                                                 "DOWNLOAD": ""
                                                                             }
+                                                                            console.log(oParam);
+                                                                            var oEntitySet = "/VPODownloadedSet(EBELN='" + me._pono + "')";
+                                                                            oModel.update(oEntitySet, oParam, {
+                                                                                method: "PUT",
+                                                                                success: function (data, oResponse) {
+                                                                                    resolve(me.onSaveChanges(oParam));
+                                                                                    resolve();
+                                                                                },
+                                                                                error: function (err) {
+                                                                                    console.log(err);
+                                                                                }
+                                                                            });
+
                                                                         }
                                                                         else {
                                                                             oParam = {
@@ -4985,20 +4998,22 @@ sap.ui.define([
                                                                                 "EDI": "X",
                                                                                 "DOWNLOAD": "N"
                                                                             }
+                                                                            resolve(me.onSaveChanges(oParam));
+                                                                            resolve();
                                                                         }
                                                                     }
                                                                 });
                                                             }
-                                                            if (me.getView().getModel("topHeaderData").getData().EDIVENDOR !== "L" ? "1" : "0" && data.results[0].FRGGR === me.getView().getModel("relStratData").getData().RELGRP && data.results[0].FRGSX === me.getView().getModel("relStratData").getData().RELSTRAT && data.results[0].FRGKE === "1") {
+                                                            else if ((me.getView().getModel("topHeaderData").getData().EDIVENDOR !== "L" ? "1" : "0") && (data.results[0].FRGGR === me.getView().getModel("relStratData").getData().RELGRP) && (data.results[0].FRGSX === me.getView().getModel("relStratData").getData().RELSTRAT) && (data.results[0].FRGKE === "1")) {
                                                                 oParam = {
                                                                     "EBELN": me._pono,
                                                                     "EDI": "",
                                                                     "DOWNLOAD": "N"
                                                                 }
-                                                            }
 
-                                                            resolve(me.onSaveChanges(oParam));
-                                                            resolve();
+                                                                resolve(me.onSaveChanges(oParam));
+                                                                resolve();
+                                                            }
                                                         }
                                                     });
                                                 });
