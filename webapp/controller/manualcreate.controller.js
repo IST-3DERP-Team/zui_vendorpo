@@ -724,23 +724,28 @@ sap.ui.define([
                     actions: ["Yes", "No"],
                     onClose: function (sAction) {
                         if (sAction == "Yes") {
-                            _this.setControlEditMode("header", false)
+                            if (_oHeader.docType.length > 0) {
+                                _this.setControlEditMode("header", false)
 
-                            // Set header values
-                            _this.byId("iptPONo").setValue(_oHeader.poNumber);
-                            _this.byId("iptPODate").setValue(_oHeader.poDate);
-                            _this.byId("cmbDocType").setSelectedKey(_oHeader.docType);
-                            _this.byId("cmbPurchOrg").setSelectedKey(_oHeader.purchOrg);
-                            _this.byId("cmbVendor").setSelectedKey(_oHeader.vendor);
-                            _this.byId("cmbPurchGrp").setSelectedKey(_oHeader.purchGrp);
-                            _this.byId("cmbCompany").setSelectedKey(_oHeader.company);
-                            _this.byId("cmbPurchPlant").setSelectedKey(_oHeader.purchPlant);
-                            _this.byId("cmbShipToPlant").setSelectedKey(_oHeader.shipToPlant);
-                            _this.byId("cmbIncoTerms").setSelectedKey(_oHeader.incoTerms);
-                            _this.byId("iptCurrency").setValue(_oHeader.currency);
-                            _this.byId("cmbPayTerms").setSelectedKey(_oHeader.payTerms);
-                            _this.byId("iptDestination").setValue(_oHeader.destination);
-                            _this.byId("cmbShipMode").setSelectedKey(_oHeader.shipMode);
+                                // Set header values
+                                _this.byId("iptPONo").setValue(_oHeader.poNumber);
+                                _this.byId("iptPODate").setValue(_oHeader.poDate);
+                                _this.byId("cmbDocType").setSelectedKey(_oHeader.docType);
+                                _this.byId("cmbPurchOrg").setSelectedKey(_oHeader.purchOrg);
+                                _this.byId("cmbVendor").setSelectedKey(_oHeader.vendor);
+                                _this.byId("cmbPurchGrp").setSelectedKey(_oHeader.purchGrp);
+                                _this.byId("cmbCompany").setSelectedKey(_oHeader.company);
+                                _this.byId("cmbPurchPlant").setSelectedKey(_oHeader.purchPlant);
+                                _this.byId("cmbShipToPlant").setSelectedKey(_oHeader.shipToPlant);
+                                _this.byId("cmbIncoTerms").setSelectedKey(_oHeader.incoTerms);
+                                _this.byId("iptCurrency").setValue(_oHeader.currency);
+                                _this.byId("cmbPayTerms").setSelectedKey(_oHeader.payTerms);
+                                _this.byId("iptDestination").setValue(_oHeader.destination);
+                                _this.byId("cmbShipMode").setSelectedKey(_oHeader.shipMode);
+                            }
+                            else {
+                                _this.navBack();
+                            }
                         }
                     }
                 });
@@ -1519,6 +1524,11 @@ sap.ui.define([
                 if (pType == "header") {
                     var fields = ["feDocType", "fePurchOrg", "feVendor", "fePurchGrp", "feCompany", "fePurchPlant", "feShipToPlant",
                                 "feIncoTerms", "fePayTerms", "feDestination", "feShipMode"];
+
+                    fields.forEach(id => {
+                        this.byId(id).setLabel(this.byId(id).getLabel().replaceAll("*", ""));
+                        this.byId(id)._oLabel.removeStyleClass("requiredField");
+                    })
 
                     fields.forEach(id => {
                         if (pEditable) {
