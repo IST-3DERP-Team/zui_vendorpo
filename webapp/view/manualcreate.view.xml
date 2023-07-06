@@ -117,10 +117,15 @@
                                                                     id="iptVendor"
                                                                     type="Text"
                                                                     editable="{ui>/editModeHeader}"
+                                                                    showSuggestion="true"
                                                                     showValueHelp="true"
-                                                                    valueHelpOnly="true"
                                                                     valueHelpRequest="handleValueHelp"
-                                                                />
+                                                                    suggestionItems="{vendor>/results}"
+                                                                >
+                                                                <suggestionItems>
+                                                                    <core:ListItem key="{vendor>VENDORCD}" text="{vendor>VENDORCD} - ({vendor>VENDORNAME})"/>
+                                                                </suggestionItems>
+                                                                </Input>
                                                                 <!-- <ComboBox
                                                                     id="cmbVendor"
                                                                     showSecondaryValues= "true"

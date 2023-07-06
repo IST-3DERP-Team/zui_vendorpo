@@ -1405,8 +1405,6 @@ sap.ui.define([
                     if (_this._inputSource == "vendor") {
                         var oInputVendor = _this.byId("iptVendor");
                         oInputVendor.setSelectedKey(oSelectedItem.getTitle());
-                        oInputVendor.setValue(oSelectedItem.getTitle());
-				        //oInputVendor.setValue(oSelectedItem.getTitle() + " - (" + oSelectedItem.getDescription() + ")");
 
                         oEvent.getSource().getBinding("items").filter([]);
 
