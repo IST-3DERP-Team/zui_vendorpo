@@ -2,6 +2,7 @@
     xmlns:core="sap.ui.core"
     xmlns:uiT="sap.ui.table"
     xmlns="sap.m"
+    xmlns:f="sap.ui.layout.form" 
     displayBlock="false"> 
     <IconTabBar
         id="vpoHeaderTxtIconTab"
@@ -16,6 +17,11 @@
                     id="vpoHeaderTxtRemarksTab"
                     text="{captionMsg>/REMARKS}"
                     key="itfDLVSCHED">
+                    <dependents>
+                        <core:CommandExecution id="comVpoHdrTextRNew" command="New" enabled="true" execute="onNewHdrTxt('Remarks')" />
+                        <core:CommandExecution id="comVpoHdrTextREdit" command="Edit" enabled="true" execute="onEditHdrTxt('Remarks')" />
+                        <core:CommandExecution id="comVpoHdrTextRSave" command="Save" enabled="true" execute="onSaveEditHdrTxt('Remarks')" />
+                    </dependents>
                     <uiT:Table id="RemarksTbl"
                         class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
                         visibleRowCountMode="Auto"
@@ -61,6 +67,11 @@
                     id="vpoHeaderTxtPkngInstTab"
                     text="{captionMsg>/PACKINSTRUCT}"
                     key="itfDLVSCHED">
+                    <dependents>
+                        <core:CommandExecution id="comVpoHdrTextPNew" command="New" enabled="true" execute="onNewHdrTxt('PkgInst')" />
+                        <core:CommandExecution id="comVpoHdrTextPEdit" command="Edit" enabled="true" execute="onEditHdrTxt('PkgInst')" />
+                        <core:CommandExecution id="comVpoHdrTextPSave" command="Save" enabled="true" execute="onSaveEditHdrTxt('PkgInst')" />
+                    </dependents>
                     <uiT:Table id="PackingInstTbl"
                         class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
                         visibleRowCountMode="Auto"
@@ -101,6 +112,134 @@
                             </Toolbar>
                         </uiT:extension>
                     </uiT:Table>
+                </IconTabFilter>
+                <IconTabFilter
+                    id="vpoHeaderTxtFabSpecsTab"
+                    text="Fab Specs"
+                    key="itfDLVSCHED">
+                    <content>
+                        <OverflowToolbar design="Transparent" >
+                            <ToolbarSpacer/>
+                            <Button id ="vpoEditHdrTxtFabSpec" type="Ghost"  icon="sap-icon://edit" tooltip="{captionMsg>/EDIT}" press=".onEditFabSpecs"/>
+                            
+                            <Button id ="vpoSaveHdrTxtFabSpec" type="Ghost"  icon="sap-icon://save" visible="false" tooltip="{captionMsg>/SAVE}" press=".onSaveEditFabSpecs"/>
+                            <Button id ="vpoCancelHdrTxtFabSpec" type="Ghost"  icon="sap-icon://sys-cancel" visible="false" tooltip="{captionMsg>/CANCEL}" press=".onCancelEditFabSpecs"/>
+                        </OverflowToolbar>
+
+                        <MessageStrip text="" showIcon="true" showCloseButton="true" class="sapUiMediumMarginBottom" type="Error" visible="false"/>
+
+                        <f:Form id="POHeaderTextForm1" class="sapUiNoContentPadding formHdr1">
+                            <f:layout>
+                                <f:ResponsiveGridLayout columnsXL="3" columnsL="3" columnsM="5" singleContainerFullSize="false" />
+                            </f:layout>
+                            <f:formContainers>
+                                <f:FormContainer ariaLabelledBy="Grp1" class="sapUiNoContentPadding" >
+                                    <f:formElements>
+                                        <f:FormElement label="Hand Feel" visible="{= ${VisibleFieldsData>/HANDFEEL} === true ? true : false }">
+                                            <f:fields>
+                                                <Input id="f1HandFeel" value="{hdrTxtFabSpecsData>/HANDFEEL}" editable="{= ${EditableFieldsData>/HANDFEEL} === true ? true : false }" valueStateText="Required" 
+                                                    change="onHeaderInputChange" liveChange="onHeaderInputChange">
+                                                </Input>
+                                            </f:fields>
+                                        </f:FormElement>
+                                        <f:FormElement label="Shrinkage" visible="{= ${VisibleFieldsData>/SHRINKAGE} === true ? true : false }">
+                                            <f:fields>
+                                                <Input id="f1Shrinkage" value="{hdrTxtFabSpecsData>/SHRINKAGE}" editable="{= ${EditableFieldsData>/SHRINKAGE} === true ? true : false }" valueStateText="Required" 
+                                                    change="onHeaderInputChange" liveChange="onHeaderInputChange">
+                                                </Input>
+                                            </f:fields>
+                                        </f:FormElement>
+                                        <f:FormElement label="Change" visible="{= ${VisibleFieldsData>/CHANGE} === true ? true : false }">
+                                            <f:fields>
+                                                <Input id="f1Change" value="{hdrTxtFabSpecsData>/CHANGE}" editable="{= ${EditableFieldsData>/CHANGE} === true ? true : false }" valueStateText="Required" 
+                                                    change="onHeaderInputChange" liveChange="onHeaderInputChange">
+                                                </Input>
+                                            </f:fields>
+                                        </f:FormElement>
+                                        <f:FormElement label="Stain" visible="{= ${VisibleFieldsData>/STAIN} === true ? true : false }">
+                                            <f:fields>
+                                                <Input id="f1Stain" value="{hdrTxtFabSpecsData>/STAIN}" editable="{= ${EditableFieldsData>/STAIN} === true ? true : false }" valueStateText="Required" 
+                                                    change="onHeaderInputChange" liveChange="onHeaderInputChange">
+                                                </Input>
+                                            </f:fields>
+                                        </f:FormElement>
+                                    </f:formElements>
+                                </f:FormContainer>
+                            </f:formContainers>
+                            <f:formContainers>
+                                <f:FormContainer ariaLabelledBy="Grp2" class="sapUiNoContentPadding" >
+                                    <f:formElements>
+                                        <f:FormElement label="Dry" visible="{= ${VisibleFieldsData>/DRY} === true ? true : false }">
+                                            <f:fields>
+                                                <Input id="f1Dry" value="{hdrTxtFabSpecsData>/DRY}" editable="{= ${EditableFieldsData>/DRY} === true ? true : false }" valueStateText="Required" 
+                                                    change="onHeaderInputChange" liveChange="onHeaderInputChange">
+                                                </Input>
+                                            </f:fields>
+                                        </f:FormElement>
+                                        <f:FormElement label="Color Fastness to Washing" visible="{= ${VisibleFieldsData>/COLFASTWASH} === true ? true : false }">
+                                            <f:fields>
+                                                <Input id="f1ColFastWash" value="{hdrTxtFabSpecsData>/COLFASTWASH}" editable="{= ${EditableFieldsData>/COLFASTWASH} === true ? true : false }" valueStateText="Required" 
+                                                    change="onHeaderInputChange" liveChange="onHeaderInputChange">
+                                                </Input>
+                                            </f:fields>
+                                        </f:FormElement>
+                                        <f:FormElement label="Shipment Sample Req." visible="{= ${VisibleFieldsData>/SHPSAMPREQ} === true ? true : false }">
+                                            <f:fields>
+                                                <Input id="f1ShipSampReq" value="{hdrTxtFabSpecsData>/SHPSAMPREQ}" editable="{= ${EditableFieldsData>/SHPSAMPREQ} === true ? true : false }" valueStateText="Required" 
+                                                    change="onHeaderInputChange" liveChange="onHeaderInputChange">
+                                                </Input>
+                                            </f:fields>
+                                        </f:FormElement>
+                                        <f:FormElement label="Sample Shipment Date" visible="{= ${VisibleFieldsData>/SAMPSHIPDT} === true ? true : false }">
+                                            <f:fields>
+                                                <DatePicker id="f1SampShipDt" displayFormat="short" value="{hdrTxtFabSpecsData>/SAMPSHIPDT}" editable="{= ${EditableFieldsData>/SAMPSHIPDT} === true ? true : false }" valueStateText="Required" 
+                                                    change="onHeaderInputChange">
+                                                </DatePicker>
+                                            </f:fields>
+                                        </f:FormElement>
+                                    </f:formElements>
+                                </f:FormContainer>
+                            </f:formContainers>
+                            <f:formContainers>
+                                <f:FormContainer ariaLabelledBy="Grp3" class="sapUiNoContentPadding" >
+                                    <f:formElements>
+                                        <f:FormElement label="Prod. Month/Year" visible="{= ${VisibleFieldsData>/PRODMONTHYR} === true ? true : false }">
+                                            <f:fields>
+                                                <!-- <Input id="f1ProdMonthYr" value="{hdrTxtFabSpecsData>/PRODMONTHYR}" editable="{= ${EditableFieldsData>/PRODMONTHYR} === true ? true : false }" valueStateText="Required" 
+                                                    change="onHeaderInputChange" liveChange="onHeaderInputChange">
+                                                </Input> -->
+                                                 <DatePicker id="f1ProdMonthYr" displayFormat="MM/YYYY" value="{hdrTxtFabSpecsData>/PRODMONTHYR}" editable="{= ${EditableFieldsData>/SAMPSHIPDT} === true ? true : false }" valueStateText="Required" 
+                                                    change="onHeaderInputChange">
+                                                </DatePicker>
+                                            </f:fields>
+                                        </f:FormElement>
+                                        <f:FormElement label="Other Requirements 1" visible="{= ${VisibleFieldsData>/OTHERREQ1} === true ? true : false }">
+                                            <f:fields>
+                                                <Input id="f1OtherReq1" value="{hdrTxtFabSpecsData>/OTHERREQ1}" editable="{= ${EditableFieldsData>/OTHERREQ1} === true ? true : false }" valueStateText="Required" 
+                                                    change="onHeaderInputChange" liveChange="onHeaderInputChange">
+                                                </Input>
+                                            </f:fields>
+                                        </f:FormElement>
+                                        <f:FormElement label="Other Requirements 2" visible="{= ${VisibleFieldsData>/OTHERREQ2} === true ? true : false }">
+                                            <f:fields>
+                                                <Input id="f1OtherReq2" value="{hdrTxtFabSpecsData>/OTHERREQ2}" editable="{= ${EditableFieldsData>/OTHERREQ2} === true ? true : false }" valueStateText="Required" 
+                                                    change="onHeaderInputChange" liveChange="onHeaderInputChange">
+                                                </Input>
+                                            </f:fields>
+                                        </f:FormElement>
+                                        <f:FormElement label="Color Fastness to Crocking Wet" visible="{= ${VisibleFieldsData>/COLFASTCRWET} === true ? true : false }">
+                                            <f:fields>
+                                                <Input id="f1ColFastCrWet" value="{hdrTxtFabSpecsData>/COLFASTCRWET}" editable="{= ${EditableFieldsData>/COLFASTCRWET} === true ? true : false }" valueStateText="Required" 
+                                                    change="onHeaderInputChange" liveChange="onHeaderInputChange">
+                                                </Input>
+                                            </f:fields>
+                                        </f:FormElement>
+                                    </f:formElements>
+                                </f:FormContainer>
+                            </f:formContainers>
+
+                        </f:Form>
+                    </content>
                 </IconTabFilter>
             </items>
     </IconTabBar>

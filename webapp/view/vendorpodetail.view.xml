@@ -54,7 +54,8 @@
                                             id="idCondIconTabBar"
                                             text="{captionMsg>/CONDITIONS}"
                                             key="itfDLVSCHED">
-                                            <Text text="Conditions..." />
+                                            <!-- <Text text="Conditions..." /> -->
+                                            <core:Fragment fragmentName="zuivendorpo.view.subviews.vpoheaderconditions" type="XML"/>
                                         </IconTabFilter>
                                             
                                         <!-- Header Text -->
@@ -71,6 +72,14 @@
                                             text="{captionMsg>/CHANGES}"
                                             key="itfCOSTING">
                                             <Text text="Changes..." />
+                                        </IconTabFilter>
+
+                                        <!-- Download History -->
+                                        <IconTabFilter
+                                            id="idPOHistIconTabBar"
+                                            text="Download History"
+                                            key="itfCOSTING">
+                                            <core:Fragment fragmentName="zuivendorpo.view.subviews.vpoheaderdownloadhist" type="XML"/>
                                         </IconTabFilter>
                                     </items>
                             </IconTabBar>

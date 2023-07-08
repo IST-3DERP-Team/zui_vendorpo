@@ -1,15 +1,7 @@
 <core:FragmentDefinition 
-    xmlns:mvc="sap.ui.core.mvc" 
-    xmlns:c="zuivendorpo.control"
     xmlns:core="sap.ui.core"
-    xmlns:uiL="sap.ui.layout"
-    xmlns:uiT="sap.ui.table"
-    xmlns:plugins="sap.ui.table.plugins"
     xmlns="sap.m"
     xmlns:f="sap.ui.layout.form" 
-    xmlns:semantic="sap.m.semantic"
-    xmlns:smartfilterbar="sap.ui.comp.smartfilterbar"
-    xmlns:fb="sap.ui.comp.filterbar" 
     displayBlock="false"> 
     <IconTabBar
         id="vpoHeaderIconTab"
@@ -19,6 +11,10 @@
         applyContentPadding="false"
         class="sapUiResponsivePadding iconTabPOHdrFrag" 
         expandable="false">
+            <dependents>
+                <core:CommandExecution id="comVpoHdrSave" command="Save" enabled="true" execute="onSaveVPOHeader" />
+                <core:CommandExecution id="comVpoHdrEdit" command="Edit" enabled="true" execute="onEditVPOHeader" />
+            </dependents>
             <content>
                 <OverflowToolbar id="_ovfToolBarIO" design="Transparent" >
                     <ToolbarSpacer/>
@@ -64,7 +60,7 @@
                                 </f:FormElement>
                                 <f:FormElement label="{captionMsg>/DOCTYP}" visible="true">
                                     <f:fields>
-                                        <Input id="f1DocTyp" value="{topHeaderData>/DOCTYPE}" editable="{topHeaderDataEdit>/DOCTYPE}" valueStateText="Required" 
+                                        <Input id="f1DocTyp" value="{topHeaderData>/DOCTYPE}{topHeaderData>/DocTypDesc}" editable="{topHeaderDataEdit>/DOCTYPE}" valueStateText="Required" 
                                             change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
                                     </f:fields>
                                 </f:FormElement>
@@ -80,25 +76,25 @@
                             <f:formElements>
                                 <f:FormElement label="{captionMsg>/PURCHORG}" visible="true">
                                     <f:fields>
-                                        <Input id="f1PurOrg" value="{topHeaderData>/PURCHORG}" editable="{topHeaderDataEdit>/PURCHORG}" valueStateText="Required" 
+                                        <Input id="f1PurOrg" value="{topHeaderData>/PURCHORG}{topHeaderData>/PurchOrgDesc}" editable="{topHeaderDataEdit>/PURCHORG}" valueStateText="Required" 
                                             change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
                                     </f:fields>
                                 </f:FormElement>
                                 <f:FormElement label="{captionMsg>/PURCHGRP}" visible="true">
                                     <f:fields>
-                                        <Input id="f1PurGrp" value="{topHeaderData>/PURCHGRP}" editable="{topHeaderDataEdit>/PURCHGRP}" valueStateText="Required" 
+                                        <Input id="f1PurGrp" value="{topHeaderData>/PURCHGRP}{topHeaderData>/PurchGrpDesc}" editable="{topHeaderDataEdit>/PURCHGRP}" valueStateText="Required" 
                                             change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
                                     </f:fields>
                                 </f:FormElement>
                                 <f:FormElement label="{captionMsg>/COMPANY}" visible="true">
                                     <f:fields>
-                                        <Input id="f1Company" value="{topHeaderData>/COMPANY}" editable="{topHeaderDataEdit>/COMPANY}" valueStateText="Required" 
+                                        <Input id="f1Company" value="{topHeaderData>/COMPANY}{topHeaderData>/CompanyDesc}" editable="{topHeaderDataEdit>/COMPANY}" valueStateText="Required" 
                                             change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
                                     </f:fields>
                                 </f:FormElement>
                                 <f:FormElement label="{captionMsg>/PURCHPLANT}" visible="true">
                                     <f:fields>
-                                        <Input id="f1PurPlant" value="{topHeaderData>/PURCHPLANT}" editable="{topHeaderDataEdit>/PURCHPLANT}" valueStateText="Required" 
+                                        <Input id="f1PurPlant" value="{topHeaderData>/PURCHPLANT}{topHeaderData>/PurchPlantDesc}" editable="{topHeaderDataEdit>/PURCHPLANT}" valueStateText="Required" 
                                             change="onHeaderInputChange" liveChange="onHeaderInputChange">
                                         </Input>
                                     </f:fields>
@@ -108,13 +104,13 @@
                                         <ComboBox
                                             id="f1ShipToPlant"
                                             showSecondaryValues= "true"
-                                            value= "{topHeaderData>/SHIPTOPLANT}"
+                                            value= "{topHeaderData>/SHIPTOPLANT}{topHeaderData>/ShipToPlantDesc}"
                                             items="{
                                                 path: '/ZVB_3DERP_SHIPTOPLANT_SH'
                                             }"
                                             editable="{topHeaderDataEdit>/SHIPTOPLANT}"
                                             selectionChange="onHeaderInputChange">
-                                            <core:Item key="{ShipToPlant}" text="{ShipToPlant}"/>
+                                            <core:Item key="{ShipToPlant}" text="{ShipToPlant} - {DESCRIPTION}"/>
                                         </ComboBox>
                                         <!-- <Input id="f1ShipToPlant" value="{topHeaderData>/SHIPTOPLANT}" editable="{topHeaderDataEdit>/SHIPTOPLANT}" valueStateText="Required" 
                                             change="onHeaderChange" liveChange="onHeaderChange"/> -->
@@ -132,8 +128,19 @@
                                 </f:FormElement>
                                 <f:FormElement label="{captionMsg>/PAYMNTTERMS}" visible="true">
                                     <f:fields>
-                                        <Input id="f1PaymentTerms" value="{topHeaderData>/PAYMNTTERMS}" editable="{topHeaderDataEdit>/PAYMNTTERMS}" valueStateText="Required" 
-                                            change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
+                                        <ComboBox
+                                            id="f1PaymentTerms"
+                                            showSecondaryValues= "true"
+                                            value= "{topHeaderData>/PAYMNTTERMS}{topHeaderData>/PaymnttermsDesc}"
+                                            items="{
+                                                path: '/ZVB_3DERP_VPO_PAYMNTTERMS_SH'
+                                            }"
+                                            editable="{topHeaderDataEdit>/PAYMNTTERMS}"
+                                            selectionChange="onHeaderInputChange">
+                                            <core:Item key="{PAYMNTTERMS}" text="{PAYMNTTERMS} - {DESCRIPTION}"/>
+                                        </ComboBox>
+                                        <!-- <Input id="f1PaymentTerms" value="{topHeaderData>/PAYMNTTERMS}{topHeaderData>/PaymnttermsDesc}" editable="{topHeaderDataEdit>/PAYMNTTERMS}" valueStateText="Required" 
+                                            change="onHeaderInputChange" liveChange="onHeaderInputChange"/> -->
                                     </f:fields>
                                 </f:FormElement>
                                 <f:FormElement label="{captionMsg>/INCOTERMS}" visible="true">
@@ -141,7 +148,7 @@
                                         <ComboBox
                                             id="f1Incoterms"
                                             showSecondaryValues= "true"
-                                            value= "{topHeaderData>/INCOTERMS}"
+                                            value= "{topHeaderData>/INCOTERMS}{topHeaderData>/IncotermsDesc}"
                                             items="{
                                                 path: '/ZVB_3DERP_INCOTERMS'
                                             }"
@@ -161,7 +168,7 @@
                                 </f:FormElement>
                                 <f:FormElement label="{captionMsg>/SHIPMODE}" visible="true">
                                     <f:fields>
-                                        <Input id="f1ShipMode" value="{topHeaderData>/SHIPMODE}" editable="{topHeaderDataEdit>/SHIPMODE}" valueStateText="Required" 
+                                        <Input id="f1ShipMode" value="{topHeaderData>/SHIPMODE}{topHeaderData>/ShipModeDesc}" editable="{topHeaderDataEdit>/SHIPMODE}" valueStateText="Required" 
                                             change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
                                     </f:fields>
                                 </f:FormElement>

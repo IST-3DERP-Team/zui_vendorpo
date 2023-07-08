@@ -1,18 +1,16 @@
 <mvc:View controllerName="zuivendorpo.controller.main"
     xmlns:mvc="sap.ui.core.mvc" 
-    xmlns:c="zuivendorpo.control"
     xmlns:core="sap.ui.core"
     xmlns:uiL="sap.ui.layout"
     xmlns:uiT="sap.ui.table"
-    xmlns:plugins="sap.ui.table.plugins"
     xmlns="sap.m"
-    xmlns:f="sap.f"
-    xmlns:semantic="sap.m.semantic"
     xmlns:smartfilterbar="sap.ui.comp.smartfilterbar"
-    xmlns:fb="sap.ui.comp.filterbar" 
     xmlns:sUIC="sap.suite.ui.commons"
     displayBlock="true"> 
     <Page id="page" title="{i18n>title}" showHeader="false">
+        <dependents>
+            <core:CommandExecution id="comVpoMain" command="Edit" enabled="true" execute=".onClickEdit" />
+        </dependents>
         <content>
             
             <smartfilterbar:SmartFilterBar id="smartFilterBar" entitySet="ZVB_3DERP_VPO_FILTERS" search="onSearch" showClearOnFB="true" persistencyKey="3DERP_StylesPKey" filterContainerWidth="15rem">
@@ -46,6 +44,12 @@
                 </smartfilterbar:controlConfiguration>
                 <smartfilterbar:controlConfiguration>
                     <smartfilterbar:ControlConfiguration key="SHIPTOPLANT" label="{captionMsg>/SHIPTOPLANT}" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false" displayBehaviour ="idOnly"/>
+                </smartfilterbar:controlConfiguration>
+                <smartfilterbar:controlConfiguration>
+                    <smartfilterbar:ControlConfiguration key="PURCHGRP" label="{captionMsg>/PURCHGRP}" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false" displayBehaviour ="idOnly"/>
+                </smartfilterbar:controlConfiguration>
+                <smartfilterbar:controlConfiguration>
+                    <smartfilterbar:ControlConfiguration key="CREATEDBY" label="{captionMsg>/CREATEDBY}" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false" displayBehaviour ="idOnly"/>
                 </smartfilterbar:controlConfiguration>
                 <smartfilterbar:layoutData>
                     <FlexItemData growFactor="0"/>

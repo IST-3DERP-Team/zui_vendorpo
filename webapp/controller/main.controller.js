@@ -22,6 +22,22 @@ sap.ui.define([
             onInit: async function () {
                 that = this;
                 this._oModel = this.getOwnerComponent().getModel();
+                
+                if (sap.ui.getCore().byId("backBtn") !== undefined) {
+                    this._fBackButton = sap.ui.getCore().byId("backBtn").mEventRegistry.press[0].fFunction;
+
+                    var oView = this.getView();
+                    oView.addEventDelegate({
+                        onAfterShow: function(oEvent){
+                            sap.ui.getCore().byId("backBtn").mEventRegistry.press[0].fFunction = that._fBackButton; 
+                            
+                            if (that._aParamLockPOdata.length > 0) {
+                                that.onPOUnlock();
+                            }
+                        }
+                    }, oView);
+                }
+
                 this.callCaptionsAPI();
                 this._counts = {
                     unreleasedpo: 0,
@@ -78,12 +94,13 @@ sap.ui.define([
                 this._columnLoadError = false;
                 var _oComponent = this.getOwnerComponent();
                 this._router = _oComponent.getRouter();
+                this._router.getRoute("Routemain").attachPatternMatched(this._routePatternMatched, this);
                 this.getView().setModel(new JSONModel({dataMode: 'NODATA',}), "ui");
-
                 
                 this._updUnlock = 1;
                 this._zpoUnlock = 1
                 this._ediVendor; 
+                this._aParamLockPOdata = [];
 
                 this._tableFullScreenRender = "";
 
@@ -125,6 +142,10 @@ sap.ui.define([
 
                     this.byId("_IDGenMenuButton3").setVisible(false);
                 }
+            },
+
+            _routePatternMatched: function (oEvent) {
+                //this.onRefresh();
             },
 
             getAppAction: async function(){
@@ -293,18 +314,33 @@ sap.ui.define([
 
                                         oResults.results.forEach(item => {
                                             item.PODT = dateFormat.format(new Date(item.PODT));
+                                            item.UPDATEDDT = dateFormat.format(new Date(item.UPDATEDDT));
+                                            item.CREATEDDT = dateFormat.format(new Date(item.CREATEDDT));
                                         })
                                         
                                         /*data.results.sort((a,b) => (a.GMC > b.GMC ? 1 : -1));*/
-                                        poNo = oResults.results[0].PONO;
-                                        condrec = oResults.results[0].CONDREC;
-                                        docType = oResults.results[0].DOCTYPE;
+                                        if(oResults.results.length > 0){
+                                            if(oResults.results[0].SBU === vSBU){
+                                                poNo = oResults.results[0].PONO;
+                                                condrec = oResults.results[0].CONDREC;
+                                                docType = oResults.results[0].DOCTYPE;
+                                            }else{
+                                                poNo = "";
+                                                condrec = "";
+                                                docType = "";
+                                            }
+                                        }else{
+                                            poNo = "";
+                                            condrec = "";
+                                            docType = "";
+                                        }
                                         var oJSONModel = new sap.ui.model.json.JSONModel();
                                         oJSONModel.setData(oResults);
                                         me.getView().setModel(oJSONModel, "VPOHdr");
                                         me.getView().getModel("ui").setProperty("/activePONo", poNo);
                                         me.getView().getModel("ui").setProperty("/activeCondRec", condrec);
                                         me.getView().getModel("ui").setProperty("/activeDocTyp", docType)
+                                        resolve(me.getCounts());
                                         resolve(me.getPODetails2(poNo));
                                         resolve(me.getDelSchedule2(poNo));
                                         resolve(me.getDelInvoice2(poNo));
@@ -356,6 +392,21 @@ sap.ui.define([
                     
                 });
             },
+            getCounts: async function () {
+                var oModel = this.getOwnerComponent().getModel();
+                var me = this;
+                return new Promise((resolve, reject) => {
+                    oModel.read('/VPOCountSet', {
+                        success: function (data, response) {
+                            me._counts.unreleasedpo = data.results.filter(item => item.Stat === "UNRELEASED").length;
+                            me._counts.openlineitems = data.results.filter(item => item.Stat === "OPENLINE").length;
+                            me.getView().getModel("counts").setData(me._counts);
+                            resolve();
+                        }
+                    });
+                });
+            },
+            
             getPOHistory2: async function(PONO){
                 var oModel = this.getOwnerComponent().getModel();
                 var me = this;
@@ -500,6 +551,7 @@ sap.ui.define([
                 var tblChange = this._tblChange;
                 var oJSONModel = new sap.ui.model.json.JSONModel();
                 var objectData = [];
+                var poItem = "";
                 return new Promise((resolve, reject)=>{
                     oModel.read('/VPODetailsSet', { 
                         urlParameters: {
@@ -515,11 +567,10 @@ sap.ui.define([
                                 objectData[0].sort((a,b) => (a.ITEM > b.ITEM) ? 1 : ((b.ITEM > a.ITEM) ? -1 : 0));
 
                                 oJSONModel.setData(data);
+                                poItem = data.results[0].ITEM;
+                                
                             }
-
-                            var poItem = data.results[0].ITEM;
                             me.getView().getModel("ui").setProperty("/activePOItem", poItem);
-
                             me.getView().setModel(oJSONModel, "VPODtls");
                             if(tblChange)
                                 resolve(me.setTableColumnsData('VPODTLS'));
@@ -592,7 +643,7 @@ sap.ui.define([
                 return new Promise((resolve, reject) => {
                     oModel.read("/ColumnsSet", {
                         success: async function (oData, oResponse) {
-                            
+
                             if (oData.results.length > 0) {
                                 me._columnLoadError = false;
                                 if (modCode === 'VENDORPO') {
@@ -668,6 +719,7 @@ sap.ui.define([
                                 me.getView().getModel("ui").setProperty("/dataMode", 'NODATA');
                                 me.getView().getModel("ui").setProperty("/activePONo", "");
                                 me.getView().getModel("ui").setProperty("/activePOItem", "");
+                                MessageBox.error(me.getView().getModel("captionMsg").getData()["INFO_NO_LAYOUT"])
                             }
                         },
                         error: function (err) {
@@ -771,20 +823,22 @@ sap.ui.define([
                             }
                         })
                     }else{
-                        oColumnsData.forEach((item, index) =>{
-                            if(item.ColumnName === "GMCDESC"){
-                                item.Visible = true;
-                            }
-                            if(item.ColumnName === "ADDTLDESC"){
-                                item.Visible = true;
-                            }
-                            if(item.ColumnName === "MERCHMATDESC"){
-                                item.Visible = true;
-                            }
-                            if(item.ColumnName === "SHORTTEXT"){
-                                item.Visible = false;
-                            }
-                        })
+                        if(oColumnsData.length > 0 || oColumnsData.length !== undefined){
+                            oColumnsData.forEach((item, index) =>{
+                                if(item.ColumnName === "GMCDESC"){
+                                    item.Visible = true;
+                                }
+                                if(item.ColumnName === "ADDTLDESC"){
+                                    item.Visible = true;
+                                }
+                                if(item.ColumnName === "MERCHMATDESC"){
+                                    item.Visible = true;
+                                }
+                                if(item.ColumnName === "SHORTTEXT"){
+                                    item.Visible = false;
+                                }
+                            })
+                        }
                     }
 
                     this.addColumns("detailsTab", oColumnsData, oData, "VPODtls");
@@ -860,54 +914,31 @@ sap.ui.define([
                     var sColumnSortOrder = context.getObject().SortOrder;
                     var sColumnWidth = context.getObject().ColumnWidth;
                     if (sColumnType === "STRING" || sColumnType === "DATETIME"|| sColumnType === "BOOLEAN") {
-                        console.log(sColumnId)
-                        if (sColumnId === "PRNO") {
-                            oControl = new sap.m.Link({
-                                text: "{" + sColumnId + "}",
-                                wrapping: false, 
-                                // tooltip: "{" + sColumnId + "}",
-                                press: function(oEvent) {
-                                    const vLinkData =  oEvent.oSource.mProperties.text;
-                                    console.log(vLinkData);
-                                    // window.open(`https://ltd.luenthai.com:44300/sap/bc/ui2/flp#ZSO_3DERP_INV_GMC-display&/${that._sbu}/${vLinkData}` , "_blank");
-                                },
-                            })
-                            oControl.addStyleClass("hyperlink");
-
-                            return new sap.ui.table.Column({
-                                id: model+"-"+sColumnId,
-                                label: sColumnLabel,
-                                template: me.columnTemplate(sColumnId), //default text
-                                width: sColumnWidth + "px",
-                                hAlign: me.columnSize(sColumnId),
-                                sortProperty: sColumnId,
-                                filterProperty: sColumnId,
-                                autoResizable: true,
-                                visible: sColumnVisible,
-                                sorted: sColumnSorted,
-                                sortOrder: ((sColumnSorted === true) ? sColumnSortOrder : "Ascending" )
-                            });
-                        }
-                        else {
-                            return new sap.ui.table.Column({
-                                id: model+"-"+sColumnId,
-                                label: sColumnLabel,
-                                template: me.columnTemplate(sColumnId), //default text
-                                width: sColumnWidth + "px",
-                                hAlign: me.columnSize(sColumnId),
-                                sortProperty: sColumnId,
-                                filterProperty: sColumnId,
-                                autoResizable: true,
-                                visible: sColumnVisible,
-                                sorted: sColumnSorted,
-                                sortOrder: ((sColumnSorted === true) ? sColumnSortOrder : "Ascending" )
-                            });
-                        }
+                        return new sap.ui.table.Column({
+                            id: model+"-"+sColumnId,
+                            label: sColumnLabel,
+                            template: me.columnTemplate(sColumnId, sColumnType), //default text
+                            width: sColumnWidth + "px",
+                            hAlign: me.columnSize(sColumnId),
+                            sortProperty: sColumnId,
+                            filterProperty: sColumnId,
+                            autoResizable: true,
+                            visible: sColumnVisible,
+                            sorted: sColumnSorted,
+                            sortOrder: ((sColumnSorted === true) ? sColumnSortOrder : "Ascending" )
+                        });
                     }else if (sColumnType === "NUMBER") {
                         return new sap.ui.table.Column({
                             id: model+"-"+sColumnId,
                             label: sColumnLabel,
-                            template: new sap.m.Text({ text: "{" + sColumnId + "}", wrapping: false, tooltip: "{" + sColumnId + "}" }), //default text
+                            template: new sap.m.Text({ 
+                                text: {
+                                    path: sColumnId,
+                                    columnType: sColumnType
+                                },
+                                wrapping: false, 
+                                tooltip: "{" + sColumnId + "}" 
+                            }), //default text
                             width: sColumnWidth + "px",
                             hAlign: "End",
                             sortProperty: sColumnId,
@@ -921,13 +952,68 @@ sap.ui.define([
 
                 });
 
+                //sorting with Date Sort
+                oTable.attachSort(function(oEvent) {
+         
+                    var sPath = oEvent.getParameter("column").getSortProperty();
+                    var bDescending = false;
+                    
+                    oEvent.getParameter("column").setSorted(true); //sort icon initiator
+                    if (oEvent.getParameter("sortOrder") == "Descending") {
+                        bDescending = true;
+                        oEvent.getParameter("column").setSortOrder("Descending") //sort icon Descending
+                    }else{
+                        oEvent.getParameter("column").setSortOrder("Ascending") //sort icon Ascending
+                    }
+
+                    var oSorter = new sap.ui.model.Sorter(sPath, bDescending ); //sorter(columnData, If Ascending(false) or Descending(True))
+                    
+                    var columnType = oEvent.getParameter("column").getTemplate().getBindingInfo("text") === undefined ? "" : oEvent.getParameter("column").getTemplate().getBindingInfo("text").columnType;
+                    if (columnType === "DATETIME") {
+                        oSorter.fnCompare = function(a, b) {
+                        
+                            // parse to Date object
+                            var aDate = new Date(a);
+                            var bDate = new Date(b);
+                            
+                            if (bDate == null) {
+                                return -1;
+                            }
+                            if (aDate == null) {
+                                return 1;
+                            }
+                            if (aDate < bDate) {
+                                return -1;
+                            }
+                            if (aDate > bDate) {
+                                return 1;
+                            }
+                            return 0;
+                        };
+                    } 
+                    
+                    oTable.getBinding('rows').sort(oSorter);
+                     // prevent internal sorting by table
+                    oEvent.preventDefault();
+         
+         
+                });
                 //bind the data to the table
                 oTable.bindRows("/rows");
                 
             },
-            columnTemplate: function(sColumnId){
+            columnTemplate: function(sColumnId, sColumnType){
                 var oColumnTemplate;
-                oColumnTemplate = new sap.m.Text({ text: "{" + sColumnId + "}", wrapping: false, tooltip: "{" + sColumnId + "}" }); //default text
+                
+                oColumnTemplate = new sap.m.Text({ 
+                    text: {
+                        path: sColumnId,
+                        columnType: sColumnType
+                    }, 
+                    wrapping: false, 
+                    tooltip: "{" + sColumnId + "}" 
+                }); //default text
+                
                 if (sColumnId === "DELETED") { 
                     //Manage button
                     oColumnTemplate = new sap.m.CheckBox({
@@ -968,6 +1054,14 @@ sap.ui.define([
                     oColumnTemplate = new sap.m.CheckBox({
                         selected: "{" + sColumnId + "}",
                         editable: false
+                    });
+                }
+
+                if (sColumnId === "UPDATEDDT") { 
+                    //Manage button
+                    oColumnTemplate = new sap.m.DatePicker({
+                        displayFormat:"short",
+                        value: "{path: '" + sColumnId + "'}",
                     });
                 }
     
@@ -1027,23 +1121,42 @@ sap.ui.define([
                 var PONo = this.getView().getModel("ui").getProperty("/activePONo");
                 var CONDREC = this.getView().getModel("ui").getProperty("/activeCondRec");
                 var SBU = this.getView().getModel("ui").getData().sbu;
+
                 this._updUnlock = 0;
-                this.navToDetail(PONo, CONDREC, SBU);
+                this.navToDetail(PONo, SBU);
                 
             },
-            navToDetail(PONo, SBU){
+            navToDetail: async function(PONo, SBU){
                 var me = this;
 
                 // if(CONDREC === undefined || CONDREC === "" || CONDREC ===null){
                 //     MessageBox.error("PO: "+ PONo +" has no Condition Record!")
                 // }else{
                 var oJSONModel = new JSONModel();
-                oJSONModel.setData(this.getView().getModel("captionMsg").getData());
-                this._router.navTo("vendorpodetail", {
-                    PONO: PONo,
-                    // CONDREC: CONDREC,
-                    SBU: SBU
+                this._aParamLockPOdata = [];
+
+                this._aParamLockPOdata.push({
+                    Pono: PONo
                 });
+                if(this._appAction === "display"){
+                    oJSONModel.setData(this.getView().getModel("captionMsg").getData());
+                    this._router.navTo("vendorpodetail", {
+                        PONO: PONo,
+                        // CONDREC: CONDREC,
+                        SBU: SBU
+                    });
+                }
+                else{
+                    if(await this.onPOLock()){
+                        oJSONModel.setData(this.getView().getModel("captionMsg").getData());
+                        this._router.navTo("vendorpodetail", {
+                            PONO: PONo,
+                            // CONDREC: CONDREC,
+                            SBU: SBU
+                        });
+                    }
+                }
+                // await this.onPOUnlock(PONo);
                 // }
             },
             onSaveTableLayout: function (table) {
@@ -1497,7 +1610,6 @@ sap.ui.define([
                 var oSplitter = this.byId("splitMain");
                 var oFirstPane = oSplitter.getRootPaneContainer().getPanes().at(0);
                 var oSecondPane = oSplitter.getRootPaneContainer().getPanes().at(1);
-                console.log(event)
                 if(this._tableFullScreenRender !== ""){
                     //hide Smart Filter Bar
                     this.byId('smartFilterBar').setVisible(true)
@@ -1841,6 +1953,7 @@ sap.ui.define([
                 oDDTextParam.push({CODE: "SAVELAYOUT"});
                 oDDTextParam.push({CODE: "FULLSCREEN"});
                 oDDTextParam.push({CODE: "EXPORTTOEXCEL"});
+                oDDTextParam.push({CODE: "CREATEDBY"});
 
                 
                 await oModel.create("/CaptionMsgSet", { CaptionMsgItems: oDDTextParam  }, {
@@ -1909,115 +2022,116 @@ sap.ui.define([
                 var vPONO = this.getView().getModel("ui").getProperty("/activePONo");
 
                 this.byId("mainTab").getModel().getData().rows.filter(fItem => fItem.PONO === vPONO).map(val => sVendor = val.VENDOR);
-
-                this.byId("detailsTab").getModel().getData().rows.forEach(item => {  
-                    iCounter++;
-
-                    var oChildren = [];
-                    var oGRItemData = oGRData.filter(fItem => fItem.EBELP === item.ITEM);
-                    var oInvItemData = oInvData.filter(fItem => fItem.EBELP === item.ITEM);
-
-                    oGRItemData.forEach((gr, idx) => oChildren.push(idx+1+iCounter));
-                    oInvItemData.forEach((inv, idx) => oChildren.push(idx+1+iCounter+oGRItemData.length));
-
-                    oNodes.push({
-                        id: iCounter + "",
-                        lane: "0",
-                        title: "Purchase Order " + item.PONO + "/" + item.ITEM,
-                        titleAbbreviation: "PO",
-                        children: oChildren,
-                        state: "Positive",
-                        stateText: "Follow-On Documents",
-                        focused: true,
-                        highlighted: false,
-                        texts: [ "Created On: " + dateFormat.format(new Date(item.CREATEDDT)), "Vendor: " + sVendor ]                        
-                    })
-                    
-                    oGRItemData.forEach(gr => {
+                if(this.byId("detailsTab").getModel().getData().rows !== undefined){
+                    this.byId("detailsTab").getModel().getData().rows.forEach(item => {  
                         iCounter++;
 
-                        var oState = "";
-                        var vBaseQty = 0;
+                        var oChildren = [];
+                        var oGRItemData = oGRData.filter(fItem => fItem.EBELP === item.ITEM);
+                        var oInvItemData = oInvData.filter(fItem => fItem.EBELP === item.ITEM);
 
-                        if (+gr.MENGE === 0) { oState = "Negative" }
-                        else if (+gr.MENGE > 0 && +gr.MENGE !== +item.POQTY) { oState = "Critical" }
-                        else if (+gr.MENGE === +item.POQTY) { oState = "Positive" }
-
-                        if (gr.BASEANDEC === 0) { vBaseQty = (+gr.MENGE).toFixed(gr.BASEANDEC) }
+                        oGRItemData.forEach((gr, idx) => oChildren.push(idx+1+iCounter));
+                        oInvItemData.forEach((inv, idx) => oChildren.push(idx+1+iCounter+oGRItemData.length));
 
                         oNodes.push({
                             id: iCounter + "",
-                            lane: "1",
-                            title: "Goods Receipt " + gr.MBLNR + "/" + gr.ZEILE,
-                            titleAbbreviation: "GR",
-                            children: [ ],
+                            lane: "0",
+                            title: "Purchase Order " + item.PONO + "/" + item.ITEM,
+                            titleAbbreviation: "PO",
+                            children: oChildren,
                             state: "Positive",
-                            stateText: "Completed",
+                            stateText: "Follow-On Documents",
                             focused: true,
                             highlighted: false,
-                            texts: [ "Posted On: " + dateFormat.format(new Date(gr.BUDAT)), 
-                                "Quantity (Base): " + vBaseQty + " " + gr.MEINS,
-                                "Quantity (Order): " + gr.ERFMG + " " + gr.ERFME],                            
+                            texts: [ "Created On: " + dateFormat.format(new Date(item.CREATEDDT)), "Vendor: " + sVendor ]                        
                         })
+                        
+                        oGRItemData.forEach(gr => {
+                            iCounter++;
 
-                        // processFlowGRData.push({
-                        //     NODEID: iCounter + "",
-                        //     DOCTYPE: "MD",
-                        //     EBELN: gr.EBELN,
-                        //     EBELP: gr.EBELP,
-                        //     MBLNR: gr.MBLNR,
-                        //     MJAHR: gr.MJAHR,
-                        //     ZEILE: gr.ZEILE
-                        // })
+                            var oState = "";
+                            var vBaseQty = 0;
 
-                        this._processFlowData.push({
-                            NODEID: iCounter + "",
-                            ITEM: {
+                            if (+gr.MENGE === 0) { oState = "Negative" }
+                            else if (+gr.MENGE > 0 && +gr.MENGE !== +item.POQTY) { oState = "Critical" }
+                            else if (+gr.MENGE === +item.POQTY) { oState = "Positive" }
+
+                            if (gr.BASEANDEC === 0) { vBaseQty = (+gr.MENGE).toFixed(gr.BASEANDEC) }
+
+                            oNodes.push({
+                                id: iCounter + "",
+                                lane: "1",
+                                title: "Goods Receipt " + gr.MBLNR + "/" + gr.ZEILE,
+                                titleAbbreviation: "GR",
+                                children: [ ],
+                                state: "Positive",
+                                stateText: "Completed",
+                                focused: true,
+                                highlighted: false,
+                                texts: [ "Posted On: " + dateFormat.format(new Date(gr.BUDAT)), 
+                                    "Quantity (Base): " + vBaseQty + " " + gr.MEINS,
+                                    "Quantity (Order): " + gr.ERFMG + " " + gr.ERFME],                            
+                            })
+
+                            // processFlowGRData.push({
+                            //     NODEID: iCounter + "",
+                            //     DOCTYPE: "MD",
+                            //     EBELN: gr.EBELN,
+                            //     EBELP: gr.EBELP,
+                            //     MBLNR: gr.MBLNR,
+                            //     MJAHR: gr.MJAHR,
+                            //     ZEILE: gr.ZEILE
+                            // })
+
+                            this._processFlowData.push({
                                 NODEID: iCounter + "",
-                                DOCTYPE: "MAT",
-                                EBELN: gr.EBELN,
-                                EBELP: gr.EBELP,
-                                MBLNR: gr.MBLNR,
-                                MJAHR: gr.MJAHR,
-                                ZEILE: gr.ZEILE
-                            }
+                                ITEM: {
+                                    NODEID: iCounter + "",
+                                    DOCTYPE: "MAT",
+                                    EBELN: gr.EBELN,
+                                    EBELP: gr.EBELP,
+                                    MBLNR: gr.MBLNR,
+                                    MJAHR: gr.MJAHR,
+                                    ZEILE: gr.ZEILE
+                                }
+                            })
+                        })
+                        
+                        oInvItemData.forEach(inv => {
+                            iCounter++;
+                            oNodes.push({
+                                id: iCounter + "",
+                                lane: "2",
+                                title: "Supplier Invoice " + inv.BELNR + "/" + inv.BUZEI,
+                                titleAbbreviation: "INV",
+                                children: [ ],
+                                state: "Positive",
+                                stateText: inv.BUDAT !== null ? "Posted" : "Not Yet Posted",
+                                focused: true,
+                                highlighted: false,
+                                texts: [ "Posted On: " + dateFormat.format(new Date(inv.BUDAT)), 
+                                    "Gross Amount: " + inv.RMWWR + " " + inv.WAERS]
+                            })
+
+                            // processFlowInvData.push({
+                            //     NODEID: iCounter + "",
+                            //     LANE: "2",
+                            //     BELNR : inv.BELNR ,
+                            //     GJAHR: inv.GJAHR
+                            // })
+
+                            this._processFlowData.push({
+                                NODEID: iCounter + "",
+                                ITEM: {
+                                    NODEID: iCounter + "",
+                                    DOCTYPE: "INV",
+                                    BELNR : inv.BELNR ,
+                                    GJAHR: inv.GJAHR
+                                }
+                            })
                         })
                     })
-                    
-                    oInvItemData.forEach(inv => {
-                        iCounter++;
-                        oNodes.push({
-                            id: iCounter + "",
-                            lane: "2",
-                            title: "Supplier Invoice " + inv.BELNR + "/" + inv.BUZEI,
-                            titleAbbreviation: "INV",
-                            children: [ ],
-                            state: "Positive",
-                            stateText: inv.BUDAT !== null ? "Posted" : "Not Yet Posted",
-                            focused: true,
-                            highlighted: false,
-                            texts: [ "Posted On: " + dateFormat.format(new Date(inv.BUDAT)), 
-                                "Gross Amount: " + inv.RMWWR + " " + inv.WAERS]
-                        })
-
-                        // processFlowInvData.push({
-                        //     NODEID: iCounter + "",
-                        //     LANE: "2",
-                        //     BELNR : inv.BELNR ,
-                        //     GJAHR: inv.GJAHR
-                        // })
-
-                        this._processFlowData.push({
-                            NODEID: iCounter + "",
-                            ITEM: {
-                                NODEID: iCounter + "",
-                                DOCTYPE: "INV",
-                                BELNR : inv.BELNR ,
-                                GJAHR: inv.GJAHR
-                            }
-                        })
-                    })
-                })
+                }
                 
                 this.getView().getModel("processFlow").setProperty("/nodes", oNodes);
                 // this.getView().setModel(new JSONModel(nodeLanes), "processFlow");
@@ -2070,6 +2184,73 @@ sap.ui.define([
                     }
                 });
             },
+
+            onPOLock: async function(){
+                return true;
+                var me = this;
+                var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_LOCK_SRV");
+                var sError = "";
+                var boolResult = true;
+
+                var oParam = {
+                    "N_LOCK_PO_ITEMTAB": this._aParamLockPOdata,
+                    "iv_count": 300, 
+                    "N_LOCK_PO_ENQ": [], 
+                    "N_LOCK_PO_OUTMESSAGES": [] 
+                }
+                await new Promise((resolve, reject) => {
+                    oModel.create("/Lock_POHdr_Set", oParam, {
+                        method: "POST",
+                        success: function(data, oResponse) {
+                            for(var item of data.N_LOCK_PO_OUTMESSAGES.results) {
+                                if (item.Type === "E") {
+                                    sError += item.Message + ". ";
+                                }
+                            }
+
+                            if (sError.length > 0) {
+                                boolResult = false;
+                                MessageBox.information(sError);
+                                me.closeLoadingDialog();
+                            }
+                            resolve();
+                        },
+                        error: function(err) {
+                            MessageBox.error(err);
+                            resolve();
+                            me.closeLoadingDialog();
+                        }
+                    });
+                    
+                });
+                return boolResult;
+            },
+
+            onPOUnlock: async function(){
+                return;
+                var me = this;
+                var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_LOCK_SRV");
+
+                var oParam = {
+                    "N_UNLOCK_PO_ITEMTAB": this._aParamLockPOdata,
+                    "N_UNLOCK_PO_ENQ": [], 
+                    "N_UNLOCK_PO_MESSAGES": [] 
+                };
+
+                await new Promise((resolve, reject) => {
+                    oModel.create("/Unlock_POHdr_Set", oParam, {
+                        method: "POST",
+                        success: function(data, oResponse) {
+                            resolve();
+                        },
+                        error: function(err) {
+                            MessageBox.error(err);
+                            resolve();
+                            me.closeLoadingDialog();
+                        }
+                    });
+                });
+            }
 
         });
     });

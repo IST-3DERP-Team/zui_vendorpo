@@ -1,0 +1,22 @@
+<core:FragmentDefinition 
+    xmlns:core="sap.ui.core"
+    xmlns:uiT="sap.ui.table"
+    xmlns="sap.m"
+    xmlns:f="sap.ui.layout.form" 
+    displayBlock="false"> 
+    <uiT:Table id="HdrDownloadHistTbl"
+        class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
+        visibleRowCountMode="Auto"
+        showColumnVisibilityMenu="true"
+        enableColumnFreeze="true"
+        selectionMode="Single"
+        selectionBehavior="Row"
+        >
+        <uiT:extension>
+            <Toolbar>
+                <ToolbarSpacer/>
+            </Toolbar>
+        </uiT:extension>
+    </uiT:Table>
+    
+</core:FragmentDefinition>

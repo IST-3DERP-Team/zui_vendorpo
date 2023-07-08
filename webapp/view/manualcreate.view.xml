@@ -113,7 +113,20 @@
                                                         </f:FormElement>
                                                         <f:FormElement id="feVendor" label="{ddtext>/VENDOR}">
                                                             <f:fields>
-                                                                <ComboBox
+                                                                <Input
+                                                                    id="iptVendor"
+                                                                    type="Text"
+                                                                    editable="{ui>/editModeHeader}"
+                                                                    showSuggestion="true"
+                                                                    showValueHelp="true"
+                                                                    valueHelpRequest="handleValueHelp"
+                                                                    suggestionItems="{vendor>/results}"
+                                                                >
+                                                                <suggestionItems>
+                                                                    <core:ListItem key="{vendor>VENDORCD}" text="{vendor>VENDORCD} - ({vendor>VENDORNAME})"/>
+                                                                </suggestionItems>
+                                                                </Input>
+                                                                <!-- <ComboBox
                                                                     id="cmbVendor"
                                                                     showSecondaryValues= "true"
                                                                     items="{
@@ -123,10 +136,7 @@
                                                                     editable="{ui>/editModeHeader}"
                                                                     selectionChange="onDropdownSelectionChange">
                                                                     <core:ListItem id="liVendor" key="{vendor>VENDORCD}" text="{vendor>VENDORCD} - ({vendor>VENDORNAME})"/>
-                                                                    <!-- <layoutData>
-                                                                        <uiL:GridData span="L3 M3 S4" />
-                                                                    </layoutData> -->
-                                                                </ComboBox>
+                                                                </ComboBox> -->
                                                                 <!-- <Input id="iptVendor" editable="false" /> -->
                                                             </f:fields>
                                                         </f:FormElement>
