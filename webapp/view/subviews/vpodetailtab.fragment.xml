@@ -213,7 +213,27 @@
             </IconTabFilter>
             <IconTabFilter id="vpoProcFlowIconTab" text="{captionMsg>/PROCFLOW}">
                 <Toolbar>
+                    <!-- <Label text="Item: " />
+                    <MultiInput id="iptFilterPOItem"
+                        type="Text" 
+                        value="" 
+                        showValueHelp="true"
+                        valueHelpRequest="handleValueHelp" 
+                        showSuggestion="true" 
+                        suggestionItems="{path: 'poitem>/', length: 10000, templateShareable: false}" 
+                        change="onValueHelpInputChange"
+                        width="215px"
+                        editable="true">
+                        <suggestionItems>
+                            <core:Item key="{poitem>ITEM}" text="{poitem>ITEM}" />
+                        </suggestionItems>
+                    </MultiInput> -->
                     <ToolbarSpacer/>
+                    <Button id="btnFilterProcFlow" 
+                        icon="sap-icon://filter"
+                        press=".onFilter"
+                        tooltip="{captionMsg>/FILTER}"
+                        visible="true" />                    
                     <Button id="btnRefreshProcFlow" 
                         icon="sap-icon://refresh"
                         press=".onRefresh"

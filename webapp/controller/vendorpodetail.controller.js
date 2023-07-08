@@ -9,11 +9,12 @@ sap.ui.define([
     'jquery.sap.global',
     'sap/ui/core/routing/HashChanger',
     "../js/Utils",
+    'sap/m/Token',
 ],
     /**
      * @param {typeof sap.ui.core.mvc.Controller} Controller
      */
-    function (Controller, Filter, JSONModel, MessageBox, MessageToast, jQuery, HashChanger, Utils) {
+    function (Controller, Filter, JSONModel, MessageBox, MessageToast, jQuery, HashChanger, Utils, Token) {
         "use strict";
 
         var that;
@@ -5331,13 +5332,15 @@ sap.ui.define([
             setProcessFlow: function(oGRData, oInvData) {
                 this._processFlowData = [];
 
+                var oPOItem = [];
                 var oNodes = [];
                 var iCounter = 0;
                 var sVendor = this.getView().getModel("topHeaderData").getData().VENDOR;          
 
                 this.byId("vpoDetailsTab").getModel().getData().rows.forEach(item => {  
                     iCounter++;
-                    
+                    oPOItem.push({ ITEM: item.ITEM });
+
                     var oChildren = [];
                     var oGRItemData = oGRData.filter(fItem => fItem.EBELP === item.ITEM);
                     var oInvItemData = oInvData.filter(fItem => fItem.EBELP === item.ITEM);
@@ -5357,7 +5360,7 @@ sap.ui.define([
                         highlighted: false,
                         texts: [ "Created On: " + dateFormat.format(new Date(item.CREATEDDT)), "Vendor: " + sVendor ]                        
                     })
-                    
+
                     oGRItemData.forEach(gr => {
                         iCounter++;
 
@@ -5384,16 +5387,6 @@ sap.ui.define([
                                 "Quantity (Base): " + vBaseQty + " " + gr.MEINS,
                                 "Quantity (Order): " + gr.ERFMG + " " + gr.ERFME],                            
                         })
-
-                        // processFlowGRData.push({
-                        //     NODEID: iCounter + "",
-                        //     DOCTYPE: "MD",
-                        //     EBELN: gr.EBELN,
-                        //     EBELP: gr.EBELP,
-                        //     MBLNR: gr.MBLNR,
-                        //     MJAHR: gr.MJAHR,
-                        //     ZEILE: gr.ZEILE
-                        // })
 
                         this._processFlowData.push({
                             NODEID: iCounter + "",
@@ -5425,13 +5418,6 @@ sap.ui.define([
                                 "Gross Amount: " + inv.RMWWR + " " + inv.WAERS]
                         })
 
-                        // processFlowInvData.push({
-                        //     NODEID: iCounter + "",
-                        //     LANE: "2",
-                        //     BELNR : inv.BELNR ,
-                        //     GJAHR: inv.GJAHR
-                        // })
-
                         this._processFlowData.push({
                             NODEID: iCounter + "",
                             ITEM: {
@@ -5443,54 +5429,21 @@ sap.ui.define([
                         })
                     })
                 })
-
-                // var nodeLanes = 
-                // {
-                //     "nodes": oNodes,
-                //     "lanes": [
-                //         {
-                //             "id": "0",
-                //             "icon": "sap-icon://order-status",
-                //             "label": "Ordering",
-                //             "position": 0
-                //         }, {
-                //             "id": "1",
-                //             "icon": "sap-icon://shipping-status",
-                //             "label": "Goods Receiving",
-                //             "position": 1
-                //         }, {
-                //             "id": "2",
-                //             "icon": "sap-icon://payment-approval",
-                //             "label": "Invoicing",
-                //             "position": 2
-                //         }
-                //     ]
-                // }
                 
                 this.getView().getModel("vpoProcessFlow").setProperty("/nodes", oNodes);
-                // this.getView().setModel(new JSONModel(nodeLanes), "vpoProcessFlow");
                 this.byId("vpoProcessFlowPO").setZoomLevel("One")
+                this.getView().setModel(new JSONModel(oPOItem), "poitem");
             },
 
             onNodePress: function(oEvent) {
                 var oData = this._processFlowData.filter(fItem => fItem.NODEID === oEvent.getParameters().getNodeId());
                 this.viewDoc(oData[0].ITEM); 
-
-                // if (oData[0].ITEM.DOCTYPE === "MAT") { 
-                //     this.viewMatDoc(oData[0].ITEM); 
-                // }
-                // else if (oData[0].ITEM.DOCTYPE === "INV") { 
-                //     this.viewInvoiceDoc(oData[0].ITEM); 
-                // }
             },
 
             viewDoc: function(oData) {
                 var oCrossAppNavigator = sap.ushell.Container.getService("CrossApplicationNavigation");
 
                 if (oData.DOCTYPE === "MAT") {
-                    // var vMatDoc = oData[0].MBLNR;
-                    // var vMatDocYear = oData[0].MJAHR;
-    
                     var hash = (oCrossAppNavigator && oCrossAppNavigator.hrefForExternal({
                         target: {
                             semanticObject: "ZSO_3DERP_INV_MIGO_DIALOG",
@@ -5525,51 +5478,97 @@ sap.ui.define([
                 });
             },
 
-            viewMatDoc: function(oData) {
-                var oCrossAppNavigator = sap.ushell.Container.getService("CrossApplicationNavigation");
-                var vMatDoc = oData[0].MBLNR;
-                var vMatDocYear = oData[0].MJAHR;
+            handleValueHelp: function(oEvent) { 
+                var oSource = oEvent.getSource();
+                var oData = [];
+                var sTitle = "";
 
-                var hash = (oCrossAppNavigator && oCrossAppNavigator.hrefForExternal({
-                    target: {
-                        semanticObject: "PurchaseOrder",
-                        action: "displayMaterialDocument?GODYNPRO-MAT_DOC=4900000380;GODYNPRO-DOC_YEAR=2022;DYNP_OKCODE=OK_GO"
-                    }
-                    // params: {
-                    //     "styleno": vStyle,
-                    //     "sbu": "VER"
-                    // }
-                })) || ""; // generate the Hash to display style
+                this._inputId = oSource.getId();
+                this._inputValue = oSource.getValue();
+                this._inputSource = oSource;
 
-                oCrossAppNavigator.toExternal({
-                    target: {
-                        shellHash: hash
+                if (this._inputId.indexOf("iptFilterPOItem") >= 0) {
+                    oData = this.getView().getModel("poitem").getData();
+                    oData.forEach(item => {
+                        item.VHTitle = item.ITEM;
+                        item.VHSelected = (item.UOM === this._inputValue);
+                    })
+                    sTitle = "Item";
+
+                    oData.sort((a,b) => (a.VHTitle > b.VHTitle ? 1 : -1));
+                }
+
+                var oVHModel = new JSONModel({
+                    items: oData,
+                    title: sTitle,
+                    multiSelect: true
+                }); 
+    
+                // create value help dialog
+                if (!this._valueHelpDialog) {
+                    this._valueHelpDialog = sap.ui.xmlfragment(
+                        "zuivendorpo.view.fragments.dialog.ValueHelpDialog",
+                        this
+                    );
+                    
+                    this._valueHelpDialog.setModel(oVHModel);
+                    this.getView().addDependent(this._valueHelpDialog);
+                }
+                else {
+                    this._valueHelpDialog.setModel(oVHModel);
+                }                            
+    
+                this._valueHelpDialog.open();            
+            },
+    
+            handleValueHelpClose : function (oEvent) {
+                var me = this;
+
+                if (oEvent.sId === "confirm") {
+                    var aSelectedItems = oEvent.getParameter("selectedItems");
+
+                    if (aSelectedItems) {
+                        // this._inputSource.setValue(aSelectedItems.getTitle());
+
+                        aSelectedItems.forEach(function (oItem) {
+                            me._inputSource.addToken(new Token({
+                                text: oItem.getTitle()
+                            }));
+                        });
+                    }   
+    
+                    this._inputSource.setValueState("None");
+                    // console.log(this._inputSource.getTokens())
+                }
+                else if (oEvent.sId === "cancel") {
+    
+                }
+            },
+    
+            onValueHelpInputChange: function(oEvent) {
+                var oSource = oEvent.getSource();
+                var isInvalid = !oSource.getSelectedKey() && oSource.getValue().trim();
+                oSource.setValueState(isInvalid ? "Error" : "None");
+    
+                oSource.getSuggestionItems().forEach(item => {
+                    if (item.getProperty("key") === oSource.getValue().trim()) {
+                        isInvalid = false;
+                        oSource.setValueState(isInvalid ? "Error" : "None");
                     }
-                }); // navigate to Supplier application
+                })
+    
+                if (isInvalid) this._validationErrors.push(oEvent.getSource().getId());
+                else {
+                    this._validationErrors.forEach((item, index) => {
+                        if (item === oEvent.getSource().getId()) {
+                            this._validationErrors.splice(index, 1)
+                        }
+                    })
+                }
+    
+                console.log(oSource.getTokens())
             },
 
-            viewInvoiceDoc: function(oData) {
-                var oCrossAppNavigator = sap.ushell.Container.getService("CrossApplicationNavigation");
-                // var vMatDoc = oData[0].MBLNR;
-                // var vMatDocYear = oData[0].MJAHR;
-
-                var hash = (oCrossAppNavigator && oCrossAppNavigator.hrefForExternal({
-                    target: {
-                        semanticObject: "SupplierInvoice",
-                        action: "displayAdvanced"
-                    }
-                    // params: {
-                    //     "styleno": vStyle,
-                    //     "sbu": "VER"
-                    // }
-                })) || ""; // generate the Hash to display style
-
-                oCrossAppNavigator.toExternal({
-                    target: {
-                        shellHash: hash
-                    }
-                }); // navigate to Supplier application
-            },
-
+            
         });
     });

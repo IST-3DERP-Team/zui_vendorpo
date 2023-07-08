@@ -297,3 +297,7 @@ span[data-row-active-class=X] {
 .vendorPODtl .sapUiLoSplitterContent {
     overflow: hidden;
 }
+
+.vendorPO .sapMLIBSelectM {
+    align-self: flex-start;
+}

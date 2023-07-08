@@ -860,19 +860,49 @@ sap.ui.define([
                     var sColumnSortOrder = context.getObject().SortOrder;
                     var sColumnWidth = context.getObject().ColumnWidth;
                     if (sColumnType === "STRING" || sColumnType === "DATETIME"|| sColumnType === "BOOLEAN") {
-                        return new sap.ui.table.Column({
-                            id: model+"-"+sColumnId,
-                            label: sColumnLabel,
-                            template: me.columnTemplate(sColumnId), //default text
-                            width: sColumnWidth + "px",
-                            hAlign: me.columnSize(sColumnId),
-                            sortProperty: sColumnId,
-                            filterProperty: sColumnId,
-                            autoResizable: true,
-                            visible: sColumnVisible,
-                            sorted: sColumnSorted,
-                            sortOrder: ((sColumnSorted === true) ? sColumnSortOrder : "Ascending" )
-                        });
+                        console.log(sColumnId)
+                        if (sColumnId === "PRNO") {
+                            oControl = new sap.m.Link({
+                                text: "{" + sColumnId + "}",
+                                wrapping: false, 
+                                // tooltip: "{" + sColumnId + "}",
+                                press: function(oEvent) {
+                                    const vLinkData =  oEvent.oSource.mProperties.text;
+                                    console.log(vLinkData);
+                                    // window.open(`https://ltd.luenthai.com:44300/sap/bc/ui2/flp#ZSO_3DERP_INV_GMC-display&/${that._sbu}/${vLinkData}` , "_blank");
+                                },
+                            })
+                            oControl.addStyleClass("hyperlink");
+
+                            return new sap.ui.table.Column({
+                                id: model+"-"+sColumnId,
+                                label: sColumnLabel,
+                                template: me.columnTemplate(sColumnId), //default text
+                                width: sColumnWidth + "px",
+                                hAlign: me.columnSize(sColumnId),
+                                sortProperty: sColumnId,
+                                filterProperty: sColumnId,
+                                autoResizable: true,
+                                visible: sColumnVisible,
+                                sorted: sColumnSorted,
+                                sortOrder: ((sColumnSorted === true) ? sColumnSortOrder : "Ascending" )
+                            });
+                        }
+                        else {
+                            return new sap.ui.table.Column({
+                                id: model+"-"+sColumnId,
+                                label: sColumnLabel,
+                                template: me.columnTemplate(sColumnId), //default text
+                                width: sColumnWidth + "px",
+                                hAlign: me.columnSize(sColumnId),
+                                sortProperty: sColumnId,
+                                filterProperty: sColumnId,
+                                autoResizable: true,
+                                visible: sColumnVisible,
+                                sorted: sColumnSorted,
+                                sortOrder: ((sColumnSorted === true) ? sColumnSortOrder : "Ascending" )
+                            });
+                        }
                     }else if (sColumnType === "NUMBER") {
                         return new sap.ui.table.Column({
                             id: model+"-"+sColumnId,
