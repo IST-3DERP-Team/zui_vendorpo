@@ -155,7 +155,9 @@ sap.ui.define([
             },
 
             _routePatternMatched: function (oEvent) {
-                //this.onRefresh();
+                console.log("_routePatternMatched")
+                this.setSmartFilterModel();
+                this.onRefresh();
             },
 
             getAppAction: async function(){

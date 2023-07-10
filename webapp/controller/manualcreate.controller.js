@@ -725,7 +725,7 @@ sap.ui.define([
                         actions: ["Yes", "No"],
                         onClose: function (sAction) {
                             if (sAction == "Yes") {
-                                _this.setControlEditMode("header", false)
+                                _this.setControlEditMode("header", false);
 
                                 // Set header values
                                 _this.byId("iptPONo").setValue(_oHeader.poNumber);
@@ -751,6 +751,7 @@ sap.ui.define([
                         actions: ["Yes", "No"],
                         onClose: function (sAction) {
                             if (sAction == "Yes") {
+                                _this.setControlEditMode("header", false);
                                 _this.navBack();
                             }
                         }
