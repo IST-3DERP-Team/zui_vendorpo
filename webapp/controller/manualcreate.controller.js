@@ -1459,6 +1459,20 @@ sap.ui.define([
                 }
             },
 
+            handleSuggestionItemSelected(oEvent) {
+                var oSelectedItem = oEvent.getParameter("selectedItem");
+
+                // From onDropdownSelectionChange
+                _this.getResources("VPOManualIncoRscSet", "incoTerms", "");
+                _this.getResources("VPOManualPayTermsRscSet", "payTerms", "");
+
+                var oVendor = (_this.getView().getModel("vendor").getData().results.filter(x => x.VENDORCD == oSelectedItem.getKey()))[0];
+                this.byId("cmbIncoTerms").setSelectedKey(oVendor.INCOTERMS);
+                this.byId("iptCurrency").setValue(oVendor.CURRENCY);
+                this.byId("cmbPayTerms").setSelectedKey(oVendor.PAYTERMS);
+                this.byId("iptDestination").setValue(oVendor.DESTINATION);
+            },
+
             addRemoveValueState(pIsValid, pId) {
                 //console.log("addRemoveValueState", this._aInvalidValueState, pIsValid, pId)
                 if (!pIsValid) {

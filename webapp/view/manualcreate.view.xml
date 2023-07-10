@@ -121,6 +121,7 @@
                                                                     showValueHelp="true"
                                                                     valueHelpRequest="handleValueHelp"
                                                                     suggestionItems="{vendor>/results}"
+                                                                    suggestionItemSelected="handleSuggestionItemSelected"
                                                                 >
                                                                 <suggestionItems>
                                                                     <core:ListItem key="{vendor>VENDORCD}" text="{vendor>VENDORCD} - ({vendor>VENDORNAME})"/>
