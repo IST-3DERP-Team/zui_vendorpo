@@ -19,5 +19,5 @@ builder:
         app:
           name: ZUI_VENDORPO
           description: Vendor PO Maintenance
-          package: ZPK_LTH_3DERP
-          transport: LTDK909214
+          package: zpk_lth_3derp
+          transport: LTDK910860

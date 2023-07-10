@@ -13,9 +13,10 @@
         selectionBehavior="Row"
         >
         <uiT:extension>
-            <Toolbar>
+            <OverflowToolbar design="Transparent">
+                <Text text="{ui>/poVendorVendName}" class="selHdrKeyFontStyle" />
                 <ToolbarSpacer/>
-            </Toolbar>
+            </OverflowToolbar>
         </uiT:extension>
     </uiT:Table>
 </core:FragmentDefinition>

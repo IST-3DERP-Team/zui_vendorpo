@@ -287,6 +287,16 @@
                                                     <Text text="{captionMsg>/PONO}: {ui>/activePONo}," class="selHdrKeyFontStyle" />
                                                     <Text text="{captionMsg>/POITEM}: {ui>/activePOItem}" class="selHdrKeyFontStyle" />
                                                     <ToolbarSpacer/>
+                                                    <Button id="btnArrUpDelInv" 
+                                                        icon="sap-icon://slim-arrow-up"
+                                                        press="onKeyUpDelInv"
+                                                        tooltip="{captionMsg>/ARROWUP}"
+                                                        visible="true" />
+                                                    <Button id="btnArrDownDelInv" 
+                                                        icon="sap-icon://slim-arrow-down"
+                                                        press="onKeyDownDelInv"
+                                                        tooltip="{captionMsg>/ARROWDOWN}"
+                                                        visible="true" />
                                                     <Button id="btnRefresDelInv" 
                                                         icon="sap-icon://refresh"
                                                         press=".onRefresh"
@@ -375,6 +385,16 @@
                                                     <Text text="{captionMsg>/PONO}: {ui>/activePONo}," class="selHdrKeyFontStyle" />
                                                     <Text text="{captionMsg>/POITEM}: {ui>/activePOItem}" class="selHdrKeyFontStyle" />
                                                     <ToolbarSpacer/>
+                                                    <Button id="btnArrUpPOHistory" 
+                                                        icon="sap-icon://slim-arrow-up"
+                                                        press=".onKeyUpPOHistory"
+                                                        tooltip="{captionMsg>/ARROWUP}"
+                                                        visible="true" />
+                                                    <Button id="btnArrDownPOHistory" 
+                                                        icon="sap-icon://slim-arrow-down"
+                                                        press=".onKeyDownPOHistory"
+                                                        tooltip="{captionMsg>/ARROWDOWN}"
+                                                        visible="true" />
                                                     <Button id="btnRefreshPOHistory" 
                                                         icon="sap-icon://refresh"
                                                         press=".onRefresh"
@@ -413,8 +433,21 @@
                                             sort="onSorted">
                                             <uiT:extension>
                                                 <Toolbar>
-                                                    <Text text="{captionMsg>/CONDREC}: {ui>/activeCondRec}" class="selHdrKeyFontStyle" />
+                                                    <Text text="{captionMsg>/CONDREC}: {ui>/activeCondRec}," class="selHdrKeyFontStyle" />
+                                                    <Text text="{captionMsg>/POITEM}: {ui>/activePOItem}," class="selHdrKeyFontStyle" />
+                                                    <Text text="{captionMsg>/MATNO}: {ui>/condMatNo}," class="selHdrKeyFontStyle" />
+                                                    <Text text="{captionMsg>/SHORTTEXT}: {ui>/condShortText}" class="selHdrKeyFontStyle" />
                                                     <ToolbarSpacer/>
+                                                    <Button id="btnArrUpConditions" 
+                                                        icon="sap-icon://slim-arrow-up"
+                                                        press=".onKeyUpCond"
+                                                        tooltip="{captionMsg>/ARROWUP}"
+                                                        visible="true" />
+                                                    <Button id="btnArrDownConditions" 
+                                                        icon="sap-icon://slim-arrow-down"
+                                                        press=".onKeyDownCond"
+                                                        tooltip="{captionMsg>/ARROWDOWN}"
+                                                        visible="true" />
                                                     <Button id="btnRefreshConditions" 
                                                         icon="sap-icon://refresh"
                                                         press=".onRefresh"
