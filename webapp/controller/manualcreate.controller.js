@@ -103,7 +103,7 @@ sap.ui.define([
                 this.byId("iptPODate").setValue(sCurrentDate);
                 this.byId("cmbDocType").setSelectedKey(_oHeader.docType);
                 this.byId("cmbPurchOrg").setSelectedKey(_oHeader.purchOrg);
-                this.byId("cmbVendor").setSelectedKey(_oHeader.vendor);
+                this.byId("iptVendor").setSelectedKey(_oHeader.vendor);
                 this.byId("cmbPurchGrp").setSelectedKey(_oHeader.purchGrp);
                 this.byId("cmbCompany").setSelectedKey(_oHeader.company);
                 this.byId("cmbPurchPlant").setSelectedKey(_oHeader.purchPlant);
@@ -666,7 +666,7 @@ sap.ui.define([
             },
 
             onCloseHeader() {
-                sap.m.MessageBox.confirm(_oCaption.CONFIRM_DISREGARD_CHANGE, { //CONFIRM_PROCEED_CLOSE
+                sap.m.MessageBox.confirm(_oCaption.PROCEED_CANCEL_DOC, { //CONFIRM_PROCEED_CLOSE
                     actions: ["Yes", "No"],
                     onClose: function (sAction) {
                         if (sAction == "Yes") {
@@ -682,7 +682,7 @@ sap.ui.define([
 
                 if (!this.byId("cmbDocType").getSelectedKey()) sErrMsg = _oCaption.DOCTYPE;
                 else if (!this.byId("cmbPurchOrg").getSelectedKey()) sErrMsg = _oCaption.PURCHORG;
-                else if (!this.byId("cmbVendor").getSelectedKey()) sErrMsg = _oCaption.VENDOR;
+                else if (!this.byId("iptVendor").getSelectedKey()) sErrMsg = _oCaption.VENDOR;
                 else if (!this.byId("cmbPurchGrp").getSelectedKey()) sErrMsg = _oCaption.PURCHGRP;
                 else if (!this.byId("cmbCompany").getSelectedKey()) sErrMsg = _oCaption.COMPANY;
                 else if (!this.byId("cmbPurchPlant").getSelectedKey()) sErrMsg = _oCaption.PURCHPLANT;
@@ -700,7 +700,7 @@ sap.ui.define([
 
                 _oHeader.docType = this.byId("cmbDocType").getSelectedKey();
                 _oHeader.purchOrg = this.byId("cmbPurchOrg").getSelectedKey();
-                _oHeader.vendor = this.byId("cmbVendor").getSelectedKey();
+                _oHeader.vendor = this.byId("iptVendor").getSelectedKey();
                 _oHeader.purchGrp = this.byId("cmbPurchGrp").getSelectedKey();
                 _oHeader.company = this.byId("cmbCompany").getSelectedKey();
                 _oHeader.purchPlant = this.byId("cmbPurchPlant").getSelectedKey();
@@ -720,30 +720,42 @@ sap.ui.define([
             },
 
             onCancelHeader() {
-                sap.m.MessageBox.confirm(_oCaption.CONFIRM_PROCEED_CLOSE, {
-                    actions: ["Yes", "No"],
-                    onClose: function (sAction) {
-                        if (sAction == "Yes") {
-                            _this.setControlEditMode("header", false)
+                if (_oHeader.docType.length > 0) {
+                    sap.m.MessageBox.confirm(_oCaption.CONFIRM_DISREGARD_CHANGE, {
+                        actions: ["Yes", "No"],
+                        onClose: function (sAction) {
+                            if (sAction == "Yes") {
+                                _this.setControlEditMode("header", false)
 
-                            // Set header values
-                            _this.byId("iptPONo").setValue(_oHeader.poNumber);
-                            _this.byId("iptPODate").setValue(_oHeader.poDate);
-                            _this.byId("cmbDocType").setSelectedKey(_oHeader.docType);
-                            _this.byId("cmbPurchOrg").setSelectedKey(_oHeader.purchOrg);
-                            _this.byId("cmbVendor").setSelectedKey(_oHeader.vendor);
-                            _this.byId("cmbPurchGrp").setSelectedKey(_oHeader.purchGrp);
-                            _this.byId("cmbCompany").setSelectedKey(_oHeader.company);
-                            _this.byId("cmbPurchPlant").setSelectedKey(_oHeader.purchPlant);
-                            _this.byId("cmbShipToPlant").setSelectedKey(_oHeader.shipToPlant);
-                            _this.byId("cmbIncoTerms").setSelectedKey(_oHeader.incoTerms);
-                            _this.byId("iptCurrency").setValue(_oHeader.currency);
-                            _this.byId("cmbPayTerms").setSelectedKey(_oHeader.payTerms);
-                            _this.byId("iptDestination").setValue(_oHeader.destination);
-                            _this.byId("cmbShipMode").setSelectedKey(_oHeader.shipMode);
+                                // Set header values
+                                _this.byId("iptPONo").setValue(_oHeader.poNumber);
+                                _this.byId("iptPODate").setValue(_oHeader.poDate);
+                                _this.byId("cmbDocType").setSelectedKey(_oHeader.docType);
+                                _this.byId("cmbPurchOrg").setSelectedKey(_oHeader.purchOrg);
+                                _this.byId("iptVendor").setSelectedKey(_oHeader.vendor);
+                                _this.byId("cmbPurchGrp").setSelectedKey(_oHeader.purchGrp);
+                                _this.byId("cmbCompany").setSelectedKey(_oHeader.company);
+                                _this.byId("cmbPurchPlant").setSelectedKey(_oHeader.purchPlant);
+                                _this.byId("cmbShipToPlant").setSelectedKey(_oHeader.shipToPlant);
+                                _this.byId("cmbIncoTerms").setSelectedKey(_oHeader.incoTerms);
+                                _this.byId("iptCurrency").setValue(_oHeader.currency);
+                                _this.byId("cmbPayTerms").setSelectedKey(_oHeader.payTerms);
+                                _this.byId("iptDestination").setValue(_oHeader.destination);
+                                _this.byId("cmbShipMode").setSelectedKey(_oHeader.shipMode);
+                            }
                         }
-                    }
-                });
+                    });
+                }
+                else {
+                    sap.m.MessageBox.confirm(_oCaption.PROCEED_CANCEL_DOC, {
+                        actions: ["Yes", "No"],
+                        onClose: function (sAction) {
+                            if (sAction == "Yes") {
+                                _this.navBack();
+                            }
+                        }
+                    });
+                }
             },
 
             onCancel(pModel) {
@@ -1217,30 +1229,20 @@ sap.ui.define([
 
             handleValueHelp: function(oEvent) {
                 var oModel = this.getOwnerComponent().getModel();
-                var oSource = oEvent.getSource();
-                var sEntity = oSource.getBindingInfo("suggestionItems").path;
-                var sModel = oSource.getBindingInfo("value").parts[0].model;
+                if (oEvent.mParameters.id.indexOf("iptVendor") > -1) {
+                    //this._inputId = oSource.getId();
+                    //this._inputValue = oSource.getValue();
+                    this._inputSource = "vendor";
+                    //this._inputField = oSource.getBindingInfo("value").parts[0].path;
 
-                this._inputId = oSource.getId();
-                this._inputValue = oSource.getValue();
-                this._inputSource = oSource;
-                this._inputField = oSource.getBindingInfo("value").parts[0].path;
-
-                if (sEntity.includes("/results")) {
-                    var vCellPath = _this._inputField;
-                    var vColProp = _this._aColumns[sModel].filter(item => item.name === vCellPath);
-                    var vItemValue = vColProp[0].valueHelp.items.value;
-                    var vItemDesc = vColProp[0].valueHelp.items.text;
-
-                    var listModel = oSource.getBindingInfo("suggestionItems").model;
-                    _this.getView().getModel(listModel).getData().results.forEach(item => {
-                        item.VHTitle = item[vItemValue];
-                        item.VHDesc = item[vItemDesc];
-                        item.VHSelected = (item[vItemValue] === _this._inputValue);
+                    // create value help dialog
+                    var aItem = (_this.getView().getModel("vendor") ? _this.getView().getModel("vendor").getProperty("/results") : []);
+                    aItem.forEach(item => {
+                        item.VHTitle = item["VENDORCD"];
+                        item.VHDesc = item["VENDORNAME"];
+                        //item.VHSelected = (item[vItemValue] === _this._inputValue);
                     });
-
                     if (!_this._valueHelpDialog) {
-
                         _this._valueHelpDialog = sap.ui.xmlfragment(
                             "zuivendorpo.view.fragments.dialog.ValueHelpDialog",
                             _this
@@ -1248,86 +1250,138 @@ sap.ui.define([
 
                         _this._valueHelpDialog.setModel(
                             new JSONModel({
-                                items: _this.getView().getModel(listModel).getData().results,
-                                title: vColProp[0].label,
-                                table: sModel
+                                items: (aItem.length > 0 ? aItem : []),
+                                title: "Vendor",
+                                table: "vendor"
                             })
                         )
 
                         _this.getView().addDependent(_this._valueHelpDialog);
-                    } else {
+                    }
+                    else {
                         _this._valueHelpDialog.setModel(
                             new JSONModel({
-                                items: _this.getView().getModel(listModel).getData().results,
-                                title: vColProp[0].label,
-                                table: sModel
+                                items: (aItem.length > 0 ? aItem : []),
+                                title: "Vendor",
+                                table: "vendor"
                             })
                         )
-
-                        _this.getView().addDependent(_this._valueHelpDialog);
                     }
 
                     _this._valueHelpDialog.open();
                 }
                 else {
-                    var vCellPath = _this._inputField;
-                    var vColProp = _this._aColumns[sModel].filter(item => item.name === vCellPath);
-                    var vItemValue = vColProp[0].valueHelp.items.value;
-                    var vItemDesc = vColProp[0].valueHelp.items.text;
-
-                    var sFilter = "";
-
-                    if (vCellPath == "ORDERNO") {
-                        sFilter = "SBU eq '" + _sbu + "'";
-                    }
-
-                    oModel.read(sEntity, {
-                        urlParameters: {
-                            "$filter": sFilter
-                        },
-                        success: function (data, response) {
-
-                            data.results.forEach(item => {
-                                item.VHTitle = item[vItemValue];
-                                item.VHDesc = item[vItemDesc];
-                                item.VHSelected = (item[vItemValue] === _this._inputValue);
-                            });
-
-                            // create value help dialog
-                            if (!_this._valueHelpDialog) {
-                                _this._valueHelpDialog = sap.ui.xmlfragment(
-                                    "zuivendorpo.view.fragments.dialog.ValueHelpDialog",
-                                    _this
-                                );
-
-                                _this._valueHelpDialog.setModel(
-                                    new JSONModel({
-                                        items: data.results,
-                                        title: vColProp[0].label,
-                                        table: sModel
-                                    })
-                                )
-
-                                _this.getView().addDependent(_this._valueHelpDialog);
-                            }
-                            else {
-                                _this._valueHelpDialog.setModel(
-                                    new JSONModel({
-                                        items: data.results,
-                                        title: vColProp[0].label,
-                                        table: sModel
-                                    })
-                                )
-                            }
-
-                            _this._valueHelpDialog.open();
-                        },
-                        error: function (err) {
-                            _this.closeLoadingDialog();
+                    var oSource = oEvent.getSource();
+                    var sEntity = oSource.getBindingInfo("suggestionItems").path;
+                    var sModel = oSource.getBindingInfo("value").parts[0].model;
+    
+                    this._inputId = oSource.getId();
+                    this._inputValue = oSource.getValue();
+                    this._inputSource = oSource;
+                    this._inputField = oSource.getBindingInfo("value").parts[0].path;
+                    
+                    if (sEntity.includes("/results")) {
+                        var vCellPath = _this._inputField;
+                        var vColProp = _this._aColumns[sModel].filter(item => item.name === vCellPath);
+                        var vItemValue = vColProp[0].valueHelp.items.value;
+                        var vItemDesc = vColProp[0].valueHelp.items.text;
+    
+                        var listModel = oSource.getBindingInfo("suggestionItems").model;
+                        _this.getView().getModel(listModel).getData().results.forEach(item => {
+                            item.VHTitle = item[vItemValue];
+                            item.VHDesc = item[vItemDesc];
+                            item.VHSelected = (item[vItemValue] === _this._inputValue);
+                        });
+    
+                        if (!_this._valueHelpDialog) {
+    
+                            _this._valueHelpDialog = sap.ui.xmlfragment(
+                                "zuivendorpo.view.fragments.dialog.ValueHelpDialog",
+                                _this
+                            );
+    
+                            _this._valueHelpDialog.setModel(
+                                new JSONModel({
+                                    items: _this.getView().getModel(listModel).getData().results,
+                                    title: vColProp[0].label,
+                                    table: sModel
+                                })
+                            )
+    
+                            _this.getView().addDependent(_this._valueHelpDialog);
+                        } else {
+                            _this._valueHelpDialog.setModel(
+                                new JSONModel({
+                                    items: _this.getView().getModel(listModel).getData().results,
+                                    title: vColProp[0].label,
+                                    table: sModel
+                                })
+                            )
+    
+                            _this.getView().addDependent(_this._valueHelpDialog);
                         }
-                    })
+    
+                        _this._valueHelpDialog.open();
+                    }
+                    else {
+                        var vCellPath = _this._inputField;
+                        var vColProp = _this._aColumns[sModel].filter(item => item.name === vCellPath);
+                        var vItemValue = vColProp[0].valueHelp.items.value;
+                        var vItemDesc = vColProp[0].valueHelp.items.text;
+    
+                        var sFilter = "";
+    
+                        if (vCellPath == "ORDERNO") {
+                            sFilter = "SBU eq '" + _sbu + "'";
+                        }
+    
+                        oModel.read(sEntity, {
+                            urlParameters: {
+                                "$filter": sFilter
+                            },
+                            success: function (data, response) {
+    
+                                data.results.forEach(item => {
+                                    item.VHTitle = item[vItemValue];
+                                    item.VHDesc = item[vItemDesc];
+                                    item.VHSelected = (item[vItemValue] === _this._inputValue);
+                                });
+    
+                                // create value help dialog
+                                if (!_this._valueHelpDialog) {
+                                    _this._valueHelpDialog = sap.ui.xmlfragment(
+                                        "zuivendorpo.view.fragments.dialog.ValueHelpDialog",
+                                        _this
+                                    );
+    
+                                    _this._valueHelpDialog.setModel(
+                                        new JSONModel({
+                                            items: data.results,
+                                            title: vColProp[0].label,
+                                            table: sModel
+                                        })
+                                    )
+    
+                                    _this.getView().addDependent(_this._valueHelpDialog);
+                                }
+                                else {
+                                    _this._valueHelpDialog.setModel(
+                                        new JSONModel({
+                                            items: data.results,
+                                            title: vColProp[0].label,
+                                            table: sModel
+                                        })
+                                    )
+                                }
+    
+                                _this._valueHelpDialog.open();
+                            },
+                            error: function (err) {
+                                _this.closeLoadingDialog();
+                            }
+                        })
+                    }
                 }
-
             },
 
             handleValueHelpSearch : function (oEvent) {
@@ -1347,25 +1401,44 @@ sap.ui.define([
             handleValueHelpClose : function (oEvent) {
                 if (oEvent.sId === "confirm") {
                     var oSelectedItem = oEvent.getParameter("selectedItem");
-                    //var sTable = this._oViewSettingsDialog["zuimattype3.view.fragments.ValueHelpDialog"].getModel().getData().table;
-                    var sTable = this._valueHelpDialog.getModel().getData().table;
 
-                    if (oSelectedItem) {
-                        this._inputSource.setValue(oSelectedItem.getTitle());
+                    if (_this._inputSource == "vendor") {
+                        var oInputVendor = _this.byId("iptVendor");
+                        oInputVendor.setSelectedKey(oSelectedItem.getTitle());
 
-                        if (this._inputValue !== oSelectedItem.getTitle()) {
-                            var sRowPath = this._inputSource.getBindingInfo("value").binding.oContext.sPath;
-                            this.getView().getModel(sTable).setProperty(sRowPath + '/EDITED', true);
+                        oEvent.getSource().getBinding("items").filter([]);
 
-                            if (this._inputSource.mBindingInfos.value.parts[0].path == "UOM") {
-                                this.getView().getModel(sTable).setProperty(sRowPath + '/ORDERPRICEUNIT',
-                                    oEvent.getParameters().selectedItem.mProperties.title);
+                        // From onDropdownSelectionChange
+                        _this.getResources("VPOManualIncoRscSet", "incoTerms", "");
+                        _this.getResources("VPOManualPayTermsRscSet", "payTerms", "");
+
+                        var oVendor = (_this.getView().getModel("vendor").getData().results.filter(x => x.VENDORCD == oSelectedItem.getTitle()))[0];
+                        this.byId("cmbIncoTerms").setSelectedKey(oVendor.INCOTERMS);
+                        this.byId("iptCurrency").setValue(oVendor.CURRENCY);
+                        this.byId("cmbPayTerms").setSelectedKey(oVendor.PAYTERMS);
+                        this.byId("iptDestination").setValue(oVendor.DESTINATION);
+                    }
+                    else {
+                        //var sTable = this._oViewSettingsDialog["zuimattype3.view.fragments.ValueHelpDialog"].getModel().getData().table;
+                        var sTable = this._valueHelpDialog.getModel().getData().table;
+
+                        if (oSelectedItem) {
+                            this._inputSource.setValue(oSelectedItem.getTitle());
+
+                            if (this._inputValue !== oSelectedItem.getTitle()) {
+                                var sRowPath = this._inputSource.getBindingInfo("value").binding.oContext.sPath;
+                                this.getView().getModel(sTable).setProperty(sRowPath + '/EDITED', true);
+
+                                if (this._inputSource.mBindingInfos.value.parts[0].path == "UOM") {
+                                    this.getView().getModel(sTable).setProperty(sRowPath + '/ORDERPRICEUNIT',
+                                        oEvent.getParameters().selectedItem.mProperties.title);
+                                }
                             }
                         }
-                    }
 
-                    this._inputSource.setValueState("None");
-                    this.addRemoveValueState(true, this._inputSource.getId());
+                        this._inputSource.setValueState("None");
+                        this.addRemoveValueState(true, this._inputSource.getId());
+                    }
                 }
                 else if (oEvent.sId === "cancel") {
                     // console.log(oEvent.getSource().getBinding("items"));
@@ -1425,8 +1498,8 @@ sap.ui.define([
                         } else if (pModel == "acctAssCat" && data.results.length > 0) {
                             _oHeader.acctAssCat = data.results[0].FIELD3;
                         } else if (pModel == "vendor") {
-                            if (data.results.length > 0) _this.byId("cmbVendor").setPlaceholder("");
-                            //else _this.byId("cmbVendor").setPlaceholder("No data for selected " + _oCaption.PURCHORG);
+                            if (data.results.length > 0) _this.byId("iptVendor").setPlaceholder("");
+                            //else _this.byId("iptVendor").setPlaceholder("No data for selected " + _oCaption.PURCHORG);
                         } else if (pModel == "shipToPlant") {
                             if (data.results.length > 0) _this.byId("cmbShipToPlant").setPlaceholder("");
                             //else _this.byId("cmbShipToPlant").setPlaceholder("No data for selected " + _oCaption.PURCHORG);
@@ -1466,7 +1539,7 @@ sap.ui.define([
                     _oHeader.grBasedIV = (oDocType.GRBASEDIV == "" ? false : true);
                 } else if (sModel == "purchOrg") {
                     this.getResources("VPOManualVendorRscSet", "vendor", "PURCHORG eq '" + sKey + "'");
-                    // this.byId("cmbVendor").setEditable(true);
+                    // this.byId("iptVendor").setEditable(true);
 
                     if (_this.byId("cmbPurchOrg").getSelectedKey() && _this.byId("cmbCompany").getSelectedKey()) {
                         this.getResources("VPOManualShipToPlantRscSet", "shipToPlant", "PURCHORG eq '" + _this.byId("cmbPurchOrg").getSelectedKey() + 
@@ -1519,6 +1592,11 @@ sap.ui.define([
                 if (pType == "header") {
                     var fields = ["feDocType", "fePurchOrg", "feVendor", "fePurchGrp", "feCompany", "fePurchPlant", "feShipToPlant",
                                 "feIncoTerms", "fePayTerms", "feDestination", "feShipMode"];
+
+                    fields.forEach(id => {
+                        this.byId(id).setLabel(this.byId(id).getLabel().replaceAll("*", ""));
+                        this.byId(id)._oLabel.removeStyleClass("requiredField");
+                    })
 
                     fields.forEach(id => {
                         if (pEditable) {
@@ -1631,12 +1709,12 @@ sap.ui.define([
 
             setPlaceholder() {
                 if (!this.byId("cmbPurchOrg").getSelectedKey()) {
-                    this.byId("cmbVendor").setPlaceholder(_oCaption.PURCHORG + " is required.");
+                    this.byId("iptVendor").setPlaceholder(_oCaption.PURCHORG + " is required.");
                 } else {
-                    this.byId("cmbVendor").setPlaceholder("");
+                    this.byId("iptVendor").setPlaceholder("");
                 }
 
-                if (!this.byId("cmbVendor").getSelectedKey()) {
+                if (!this.byId("iptVendor").getSelectedKey()) {
                     this.byId("cmbIncoTerms").setPlaceholder(_oCaption.VENDOR + " is required.");
                     this.byId("cmbPayTerms").setPlaceholder(_oCaption.VENDOR + " is required.");
                 } else {
@@ -1824,6 +1902,7 @@ sap.ui.define([
                 oDDTextParam.push({CODE: "CONFIRM_PROCEED_EXECUTE"});
                 oDDTextParam.push({CODE: "CONFIRM_PROCEED_CLOSE"});
                 oDDTextParam.push({CODE: "WARN_DOC_NO_ITEMS"});
+                oDDTextParam.push({CODE: "PROCEED_CANCEL_DOC"});
 
                 oModel.create("/CaptionMsgSet", { CaptionMsgItems: oDDTextParam  }, {
                     method: "POST",

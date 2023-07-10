@@ -278,9 +278,14 @@ span[data-row-active-class=X] {
 }
 /* END: Spacing Between Forms */
 
-.sapMListItems {
+/* .sapMListItems {
     max-height: 250px;
     overflow: auto;
+} */
+
+.sapMComboBoxList {
+    max-height: 250px !important;
+    overflow: auto !important;
 }
 
 .vendorPO .sapMITBContent,

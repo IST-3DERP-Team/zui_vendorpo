@@ -96,8 +96,8 @@ sap.ui.define([
                 this._columnLoadError = false;
                 var _oComponent = this.getOwnerComponent();
                 this._router = _oComponent.getRouter();
+                this._router.getRoute("Routemain").attachPatternMatched(this._routePatternMatched, this);
                 this.getView().setModel(new JSONModel({dataMode: 'NODATA',}), "ui");
-
                 
                 this._updUnlock = 1;
                 this._zpoUnlock = 1;
@@ -153,6 +153,11 @@ sap.ui.define([
                     this.byId("_IDGenMenuButton3").setVisible(false);
                 }
             },
+
+            _routePatternMatched: function (oEvent) {
+                //this.onRefresh();
+            },
+
             getAppAction: async function(){
                 if(sap.ushell.Container !==undefined){
                     const fullHash = new HashChanger().getHash();
