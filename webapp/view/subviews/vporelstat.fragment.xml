@@ -21,6 +21,7 @@
         expandable="false">
             <content>
                 <OverflowToolbar id="_ovfToolBarIO1" design="Transparent" >
+                    <Text text="{ui>/poVendorVendName}" class="selHdrKeyFontStyle" />
                     <ToolbarSpacer/>
                     <Button id ="vpoBtnRefreshtRelStrat" type="Ghost"  icon="sap-icon://refresh" tooltip="{captionMsg>/REFRESH}" press=".onReleaseStratRefresh"/>
                 </OverflowToolbar>

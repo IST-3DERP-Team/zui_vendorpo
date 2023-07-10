@@ -40,7 +40,8 @@
                                 width="15rem"/> -->
                             <Button id="vpoBtnAddPRtoPO" visible="true" text="{captionMsg>/ADDPRTOPO}" press=".onAddPRtoPODtls" />
                             <Button id="vpoBtnItemChanges" visible="true" text="{captionMsg>/ITEMCHANGES}" />
-                            <Button id="vpoBtnUpdatePrice" visible="true" text="Update Price{captionMsg>/UPDATEPRICE}" press=".onUpdatePricePODtls"/>
+                            <Button id="vpoBtnUpdatePrice" visible="true" text="{captionMsg>/UPDATEPRICE}" press=".onUpdatePricePODtls"/>
+                            <Button id="vpoBtnDelCompleteDetails" visible="true" text="{captionMsg>/DLVCOMPLETE}" press=".onDelCompletePODtls"/>
                             <Button id="vpoBtnEditDetails" 
                                 icon="sap-icon://edit"
                                 tooltip="{captionMsg>/EDIT}"
@@ -175,6 +176,16 @@
                                 value=""
                                 search="filterGlobally"
                                 width="15rem"/> -->
+                            <Button id="vpoBtnArrUpDelInv" 
+                                icon="sap-icon://slim-arrow-up"
+                                press="onKeyUpDelInv"
+                                tooltip="{captionMsg>/ARROWUP}"
+                                visible="true" />
+                            <Button id="vpoBtnArrDownDelInv" 
+                                icon="sap-icon://slim-arrow-down"
+                                press="onKeyDownDelInv"
+                                tooltip="{captionMsg>/ARROWDOWN}"
+                                visible="true" />
                             <Button id="vpoBtnRefresDelInv" 
                                 icon="sap-icon://refresh"
                                 press=".onRefresh"
@@ -220,6 +231,16 @@
             <IconTabFilter id="vpoProcFlowIconTab" text="{captionMsg>/PROCFLOW}">
                 <Toolbar>
                     <ToolbarSpacer/>
+                    <Button id="btnArrUpProcFlow" 
+                        icon="sap-icon://slim-arrow-up"
+                        press=".onKeyUpProcFlow"
+                        tooltip="{captionMsg>/ARROWUP}"
+                        visible="true" />
+                    <Button id="btnArrDownProcFlow" 
+                        icon="sap-icon://slim-arrow-down"
+                        press=".onKeyDownProcFlow"
+                        tooltip="{captionMsg>/ARROWDOWN}"
+                        visible="true" />
                     <Button id="btnRefreshProcFlow" 
                         icon="sap-icon://refresh"
                         press=".onRefresh"
@@ -281,6 +302,16 @@
                                 value=""
                                 search="filterGlobally"
                                 width="15rem"/> -->
+                            <Button id="vpoBtnArrUpPOHistory" 
+                                icon="sap-icon://slim-arrow-up"
+                                press=".onKeyUpPOHistory"
+                                tooltip="{captionMsg>/ARROWUP}"
+                                visible="true" />
+                            <Button id="vpoBtnArrDownPOHistory" 
+                                icon="sap-icon://slim-arrow-down"
+                                press=".onKeyDownPOHistory"
+                                tooltip="{captionMsg>/ARROWDOWN}"
+                                visible="true" />
                             <Button id="vpoBtnRefresPOHistory" 
                                 icon="sap-icon://refresh"
                                 press=".onRefresh"
@@ -318,7 +349,10 @@
                     sort="onSorted">
                     <uiT:extension>
                         <Toolbar>
-                            <Text text="{captionMsg>/CONDREC}: {ui>/activeCondRec}" class="selHdrKeyFontStyle" />
+                            <Text text="{captionMsg>/CONDREC}: {ui>/activeCondRec}," class="selHdrKeyFontStyle" />
+                            <Text text="{captionMsg>/POITEM}: {ui>/activePOItem}," class="selHdrKeyFontStyle" />
+                            <Text text="{captionMsg>/MATNO}: {ui>/condMatNo}," class="selHdrKeyFontStyle" />
+                            <Text text="{captionMsg>/SHORTTEXT}: {ui>/condShortText}" class="selHdrKeyFontStyle" />
                             <ToolbarSpacer/>
                             <!-- <SearchField
                                 id="vpoSearchFieldConditions"
@@ -326,6 +360,16 @@
                                 value=""
                                 search="filterGlobally"
                                 width="15rem"/> -->
+                            <Button id="vpoBtnArrUpConditions" 
+                                icon="sap-icon://slim-arrow-up"
+                                press=".onKeyUpCond"
+                                tooltip="{captionMsg>/ARROWUP}"
+                                visible="true" />
+                            <Button id="vpoBtnArrDownConditions" 
+                                icon="sap-icon://slim-arrow-down"
+                                press=".onKeyDownCond"
+                                tooltip="{captionMsg>/ARROWDOWN}"
+                                visible="true" />
                             <Button id="vpoBtnRefreshConditions" 
                                 icon="sap-icon://refresh"
                                 press=".onRefresh"

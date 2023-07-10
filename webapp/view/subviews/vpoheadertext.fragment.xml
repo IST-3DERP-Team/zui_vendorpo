@@ -32,7 +32,8 @@
                         selectionBehavior="Row"
                         >
                         <uiT:extension>
-                            <Toolbar>
+                            <OverflowToolbar design="Transparent" >
+                                <Text text="{ui>/poVendorVendName}" class="selHdrKeyFontStyle" />
                                 <ToolbarSpacer/>
                                 <Button id="vpoNewHdrTxtRemarks" 
                                     icon="sap-icon://add-document"
@@ -59,7 +60,7 @@
                                     press=".onCancelEditHdrTxt('Remarks')" 
                                     tooltip="{captionMsg>/CANCEL}"
                                     visible="false" />
-                            </Toolbar>
+                            </OverflowToolbar>
                         </uiT:extension>
                     </uiT:Table>
                 </IconTabFilter>
@@ -82,7 +83,8 @@
                         selectionBehavior="Row"
                         >
                         <uiT:extension>
-                            <Toolbar>
+                            <OverflowToolbar design="Transparent" >
+                                <Text text="{ui>/poVendorVendName}" class="selHdrKeyFontStyle" />
                                 <ToolbarSpacer/>
                                 <Button id="vpoNewHdrTxtPkgInst" 
                                     icon="sap-icon://add-document"
@@ -109,7 +111,7 @@
                                     press=".onCancelEditHdrTxt('PkgInst')" 
                                     tooltip="{captionMsg>/CANCEL}"
                                     visible="false" />
-                            </Toolbar>
+                            </OverflowToolbar>
                         </uiT:extension>
                     </uiT:Table>
                 </IconTabFilter>
@@ -119,6 +121,7 @@
                     key="itfDLVSCHED">
                     <content>
                         <OverflowToolbar design="Transparent" >
+                            <Text text="{ui>/poVendorVendName}" class="selHdrKeyFontStyle" />
                             <ToolbarSpacer/>
                             <Button id ="vpoEditHdrTxtFabSpec" type="Ghost"  icon="sap-icon://edit" tooltip="{captionMsg>/EDIT}" press=".onEditFabSpecs"/>
                             

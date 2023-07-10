@@ -48,6 +48,8 @@ sap.ui.define([
                     activePONo:'',
                     activePOItem:'',
                     activeCondRec:'',
+                    condMatNo: '',
+                    condShortText: '',
                     activeDocTyp: ''
                 }), "ui");
 
@@ -98,11 +100,19 @@ sap.ui.define([
                 this.getView().setModel(new JSONModel({dataMode: 'NODATA',}), "ui");
                 
                 this._updUnlock = 1;
-                this._zpoUnlock = 1
+                this._zpoUnlock = 1;
                 this._ediVendor; 
                 this._aParamLockPOdata = [];
 
                 this._tableFullScreenRender = "";
+
+                //store PO Item/MatNo/ShortText for Condition Record arrow up and arrow down function
+                this._condPOItemMatNoStore = []; //Store PO Items and Material No. 
+                this._condPOItemCount = 0; //Store Count every time user click arrow button in Condition Table
+
+                //store PO Item for PO History arrow up and arrow down function
+                this._poHistPOItemStore = []; //Store PO Items. 
+                this._poHistPOItemCount = 0; //Store Count every time user click arrow button in PO History
 
                 var nodeLanes = 
                 {
@@ -241,14 +251,16 @@ sap.ui.define([
                         var PONo = this.getView().getModel("ui").getProperty("/activePONo");
                         var condrec = this.getView().getModel("ui").getProperty("/activeCondRec");
 
-                        _promiseResult = new Promise((resolve,reject)=> {
+                        _promiseResult = new Promise(async(resolve,reject)=> {
                         
                             this._tblChange = true;
-                            this.getPODetails2(PONo)
-                            this.getDelSchedule2(PONo)
-                            this.getDelInvoice2(PONo)
-                            this.getPOHistory2(PONo)
-                            this.getConditions2(condrec)
+                            await this.getPODetails2(PONo)
+                            await this.getDelSchedule2(PONo)
+                            await this.getDelInvoice2(PONo)
+                            
+                            var poItem = this.getView().getModel("ui").getProperty("/activePOItem");
+                            await this.getPOHistory2(PONo, poItem)
+                            await this.getConditions2(condrec, poItem)
                             resolve();
                         })
                         await _promiseResult;;
@@ -344,8 +356,11 @@ sap.ui.define([
                                         resolve(me.getPODetails2(poNo));
                                         resolve(me.getDelSchedule2(poNo));
                                         resolve(me.getDelInvoice2(poNo));
-                                        resolve(me.getPOHistory2(poNo));
-                                        resolve(me.getConditions2(condrec));
+
+                                        
+                                        var poItem = me.getView().getModel("ui").getProperty("/activePOItem");
+                                        resolve(me.getPOHistory2(poNo, poItem));
+                                        resolve(me.getConditions2(condrec, poItem));
                                         resolve();
                                     }
                                 })
@@ -407,7 +422,7 @@ sap.ui.define([
                 });
             },
             
-            getPOHistory2: async function(PONO){
+            getPOHistory2: async function(PONO, POITEM){
                 var oModel = this.getOwnerComponent().getModel();
                 var me = this;
                 var tblChange = this._tblChange;
@@ -416,7 +431,7 @@ sap.ui.define([
                 return new Promise((resolve, reject)=>{
                     oModel.read('/VPOHistSet', { 
                         urlParameters: {
-                            "$filter": "PONO eq '" + PONO + "'"
+                            "$filter": "PONO eq '" + PONO + "' and ITEM2 eq '"+ POITEM +"'"
                         },
                         success: function (data, response) {
                             if (data.results.length > 0) {
@@ -473,7 +488,7 @@ sap.ui.define([
                 });
                 
             },
-            getConditions2: async function(CONDREC){
+            getConditions2: async function(CONDREC, POITEM){
                 var oModel = this.getOwnerComponent().getModel();
                 var me = this;
                 var tblChange = this._tblChange;
@@ -481,7 +496,7 @@ sap.ui.define([
                 return new Promise((resolve, reject)=>{
                     oModel.read('/VPOConditionsSet', { 
                         urlParameters: {
-                            "$filter": "KNUMV eq '" + CONDREC + "'"
+                            "$filter": "KNUMV eq '" + CONDREC + "' and KPOSN eq '"+ POITEM +"'"
                         },
                         success: function (data, response) {
                             if (data.results.length > 0) {
@@ -548,6 +563,9 @@ sap.ui.define([
             getPODetails2: async function(PONO){
                 var oModel = this.getOwnerComponent().getModel();
                 var me = this;
+
+                this._condPOItemMatNoStore = [];
+                this._poHistPOItemStore = [];
                 var tblChange = this._tblChange;
                 var oJSONModel = new sap.ui.model.json.JSONModel();
                 var objectData = [];
@@ -562,7 +580,26 @@ sap.ui.define([
                                 data.results.forEach(item => {
                                     item.DELDT = dateFormat.format(new Date(item.DELDT));
                                     item.DELETED = item.DELETED === "L" ? true : false;
+                                    me._condPOItemMatNoStore.push({
+                                        poItem: item.ITEM,
+                                        matNo: item.MATNO,
+                                        shortText: item.SHORTTEXT
+                                    });
+
+                                    me._poHistPOItemStore.push({
+                                        poItem: item.ITEM,
+                                    })
                                 })
+                                //sort by PO Item
+                                me._condPOItemMatNoStore.sort(function(a, b) {
+                                    return a.poItem.localeCompare(b.poItem);
+                                });
+
+                                //sort by PO Item
+                                me._poHistPOItemStore.sort(function(a, b) {
+                                    return a.poItem.localeCompare(b.poItem);
+                                });
+                                
                                 objectData.push(data.results);
                                 objectData[0].sort((a,b) => (a.ITEM > b.ITEM) ? 1 : ((b.ITEM > a.ITEM) ? -1 : 0));
 
@@ -570,7 +607,12 @@ sap.ui.define([
                                 poItem = data.results[0].ITEM;
                                 
                             }
+                            var poItem = data.results[0].ITEM;
+                            var matNo = data.results[0].MATNO;
+                            var shortText = data.results[0].SHORTTEXT;
                             me.getView().getModel("ui").setProperty("/activePOItem", poItem);
+                            me.getView().getModel("ui").setProperty("/condMatNo", matNo);
+                            me.getView().getModel("ui").setProperty("/condShortText", shortText);
                             me.getView().setModel(oJSONModel, "VPODtls");
                             if(tblChange)
                                 resolve(me.setTableColumnsData('VPODTLS'));
@@ -1254,14 +1296,16 @@ sap.ui.define([
 
                     PONo = this.getView().getModel("ui").getProperty("/activePONo");
                     condrec = this.getView().getModel("ui").getProperty("/activeCondRec");
-                    _promiseResult = new Promise((resolve,reject)=> {
+                    _promiseResult = new Promise(async(resolve,reject)=> {
                         
                         me._tblChange = true;
-                        me.getPODetails2(PONo)
-                        me.getDelSchedule2(PONo)
-                        me.getDelInvoice2(PONo)
-                        me.getPOHistory2(PONo)
-                        me.getConditions2(condrec)
+                        await me.getPODetails2(PONo)
+                        await me.getDelSchedule2(PONo)
+                        await me.getDelInvoice2(PONo)
+                        
+                        var poItem = me.getView().getModel("ui").getProperty("/activePOItem");
+                        await me.getPOHistory2(PONo, poItem)
+                        await me.getConditions2(condrec, poItem)
                         resolve();
                     })
                     await _promiseResult;;
@@ -1330,8 +1374,11 @@ sap.ui.define([
                             resolve(me.getPODetails2(oRow.PONO));
                             resolve(me.getDelSchedule2(oRow.PONO));
                             resolve(me.getDelInvoice2(oRow.PONO));
-                            resolve(me.getPOHistory2(oRow.PONO));
-                            resolve(me.getConditions2(oRow.CONDREC));
+
+                            
+                            var poItem = me.getView().getModel("ui").getProperty("/activePOItem");
+                            resolve(me.getPOHistory2(oRow.PONO, poItem));
+                            resolve(me.getConditions2(oRow.CONDREC, poItem));
                             oTable.getRows().forEach(row => {
                                 if(row.getBindingContext().sPath.replace("/rows/", "") === index[2]){
                                     resolve(row.addStyleClass("activeRow"));
@@ -1438,6 +1485,124 @@ sap.ui.define([
                     // oTable.setSelectedIndex(parseInt(index[2]));
                 }
             },
+
+            onKeyUpDelInv: async function(){
+                var me = this;
+                var count = 0;
+                var oRow = this.getView().getModel("VPODelInv");
+                var oTable = this.byId("delInvTab");
+                var iSelectedIndex = oTable.getSelectedIndex();
+                var poItem = this.getView().getModel("ui").getProperty("/activePOItem");
+                if (iSelectedIndex > 0) {
+                    var selectedIndexCount = iSelectedIndex - 1;
+                    let sPath = "/results/"+ selectedIndexCount +""
+                    oRow = this.getView().getModel("VPODelInv").getProperty(sPath);
+                    oTable.setSelectedIndex(iSelectedIndex - 1);
+                    this.getView().getModel("ui").setProperty("/activePOItem", oRow.ITEM)
+                }
+
+            },
+
+            onKeyDownDelInv: async function(){
+                var me = this;
+                var count = 0;
+                var oRow = this.getView().getModel("VPODelInv");
+                var oTable = this.byId("delInvTab");
+                var iSelectedIndex = oTable.getSelectedIndex();
+                var iVisibleRowCount = oTable.getVisibleRowCount();
+                var poItem = this.getView().getModel("ui").getProperty("/activePOItem");
+                if (iSelectedIndex < iVisibleRowCount - 1) {
+                    var selectedIndexCount = iSelectedIndex + 1;
+                    let sPath = "/results/"+ selectedIndexCount +""
+                    oRow = this.getView().getModel("VPODelInv").getProperty(sPath);
+                    oTable.setSelectedIndex(iSelectedIndex + 1);
+                    this.getView().getModel("ui").setProperty("/activePOItem", oRow.ITEM)
+                }
+            },
+
+            onKeyUpPOHistory: async function(){
+                var me = this;
+                var poNo = this.getView().getModel("ui").getProperty("/activePONo");
+
+                if (this._poHistPOItemCount <= 0) {
+                    this._poHistPOItemCount++;
+                }
+                if(this._poHistPOItemCount <= this._poHistPOItemStore.length){
+                    this._poHistPOItemCount--;
+                    var poItem = this._poHistPOItemStore[this._poHistPOItemCount].poItem;
+                    var matNo = this._poHistPOItemStore[this._poHistPOItemCount].matNo;
+                    var shortText = this._poHistPOItemStore[this._poHistPOItemCount].shortText;
+
+                    this.getView().getModel("ui").setProperty("/activePOItem", poItem);
+                    await this.getPOHistory2(poNo, poItem)
+                    await this.setTableColumnsData("VPOHISTORY");
+                    
+                }
+            },
+            onKeyDownPOHistory: async function(){
+                var me = this;
+                var poNo = this.getView().getModel("ui").getProperty("/activePONo");
+                
+                if (this._poHistPOItemCount ===  this._poHistPOItemStore.length -1) {
+                    this._poHistPOItemCount--;
+                }
+
+                if(this._poHistPOItemCount != this._poHistPOItemStore.length - 1){
+                    this._poHistPOItemCount++;
+                    var poItem = this._poHistPOItemStore[this._poHistPOItemCount].poItem;
+                    var matNo = this._poHistPOItemStore[this._poHistPOItemCount].matNo;
+                    var shortText = this._poHistPOItemStore[this._poHistPOItemCount].shortText;
+
+                    this.getView().getModel("ui").setProperty("/activePOItem", poItem);
+                    await this.getPOHistory2(poNo, poItem)
+                    await this.setTableColumnsData("VPOHISTORY");
+                    
+                }
+            },
+
+            onKeyUpCond: async function(){
+                var me = this;
+                var condrec = this.getView().getModel("ui").getProperty("/activeCondRec");
+                if (this._condPOItemCount <= 0) {
+                    this._condPOItemCount++;
+                }
+                if(this._condPOItemCount <= this._condPOItemMatNoStore.length){
+                    this._condPOItemCount--;
+                    var poItem = this._condPOItemMatNoStore[this._condPOItemCount].poItem;
+                    var matNo = this._condPOItemMatNoStore[this._condPOItemCount].matNo;
+                    var shortText = this._condPOItemMatNoStore[this._condPOItemCount].shortText;
+
+                    this.getView().getModel("ui").setProperty("/activePOItem", poItem);
+                    this.getView().getModel("ui").setProperty("/condMatNo", matNo);
+                    this.getView().getModel("ui").setProperty("/condShortText", shortText);
+                    await this.getConditions2(condrec, poItem)
+                    await this.setTableColumnsData("VPOCOND");
+                    
+                }
+            },
+            onKeyDownCond: async function(){
+                var me = this;
+                var condrec = this.getView().getModel("ui").getProperty("/activeCondRec");
+                
+                if (this._condPOItemCount ===  this._condPOItemMatNoStore.length -1) {
+                    this._condPOItemCount--;
+                }
+
+                if(this._condPOItemCount != this._condPOItemMatNoStore.length - 1){
+                    this._condPOItemCount++;
+                    var poItem = this._condPOItemMatNoStore[this._condPOItemCount].poItem;
+                    var matNo = this._condPOItemMatNoStore[this._condPOItemCount].matNo;
+                    var shortText = this._condPOItemMatNoStore[this._condPOItemCount].shortText;
+
+                    this.getView().getModel("ui").setProperty("/activePOItem", poItem);
+                    this.getView().getModel("ui").setProperty("/condMatNo", matNo);
+                    this.getView().getModel("ui").setProperty("/condShortText", shortText);
+                    await this.getConditions2(condrec, poItem)
+                    await this.setTableColumnsData("VPOCOND");
+                    
+                }
+            },
+
             onColumnUpdated(oEvent){
                 var oTable = oEvent.getSource();
                 var sModel;
@@ -1460,6 +1625,7 @@ sap.ui.define([
                 }, 1);
             },
             onFirstVisibleRowChanged: function (oEvent) {
+                return
                 var oTable = oEvent.getSource();
                 var sModel;
 
@@ -1506,14 +1672,15 @@ sap.ui.define([
 
                     PONo = this.getView().getModel("ui").getProperty("/activePONo");
                     condrec = this.getView().getModel("ui").getProperty("/activeCondRec");
-                    _promiseResult = new Promise((resolve,reject)=> {
+                    _promiseResult = new Promise(async(resolve,reject)=> {
                         
                         me._tblChange = true;
-                        me.getPODetails2(PONo)
-                        me.getDelSchedule2(PONo)
-                        me.getDelInvoice2(PONo)
-                        me.getPOHistory2(PONo)
-                        me.getConditions2(condrec)
+                        await me.getPODetails2(PONo)
+                        await me.getDelSchedule2(PONo)
+                        await me.getDelInvoice2(PONo)
+                        var poItem = me.getView().getModel("ui").getProperty("/activePOItem");
+                        await me.getPOHistory2(PONo, poItem)
+                        await me.getConditions2(condrec, poItem)
                         resolve();
                     })
                     await _promiseResult;
@@ -1955,6 +2122,12 @@ sap.ui.define([
                 oDDTextParam.push({CODE: "EXPORTTOEXCEL"});
                 oDDTextParam.push({CODE: "CREATEDBY"});
 
+                oDDTextParam.push({CODE: "MATNO"});
+                oDDTextParam.push({CODE: "SHORTTEXT"});
+
+                oDDTextParam.push({CODE: "ARROWUP"});
+                oDDTextParam.push({CODE: "ARROWDOWN"});
+                oDDTextParam.push({CODE: "POPRINT"});
                 
                 await oModel.create("/CaptionMsgSet", { CaptionMsgItems: oDDTextParam  }, {
                     method: "POST",
