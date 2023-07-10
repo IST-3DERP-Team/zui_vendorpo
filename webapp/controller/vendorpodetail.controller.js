@@ -1303,8 +1303,8 @@ sap.ui.define([
                                     MBLNR: vMatDocNo,
                                     MJAHR: vMatDocYr,
                                     ZEILE: vMatDocItem,
-                                    EBELN: vPONo,
-                                    EBELP: vPOItem
+                                    EBELN: "",
+                                    EBELP: ""
                                 }
 
                                 me.viewDoc(oData);
