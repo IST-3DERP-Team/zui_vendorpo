@@ -85,7 +85,11 @@ sap.ui.define([
                     activePONo: '',
                     activePOItem: '',
                     activeCondRec: '',
-                    totalCondValue: 0
+                    condMatNo: '',
+                    condShortText: '',
+                    totalCondValue: 0,
+                    poVendorVendName: '',
+                    ifZfab: false
                 }), "ui");
 
                 // this.getView().setModel(new JSONModel(), "VisibleFieldsData");
@@ -123,6 +127,15 @@ sap.ui.define([
                 this.updateZERPPOUnlock();
 
                 this._tableFullScreenRender = "";
+
+                //store PO Item/MatNo/ShortText for Condition Record arrow up and arrow down function
+                this._condPOItemMatNoStore = []; //Store PO Items and Material No. 
+                this._condPOItemCount = 0; //Store Count every time user click arrow button in Condition Table
+
+                //store PO Item for PO History arrow up and arrow down function
+                this._poItemStore = []; //Store PO Items. 
+                this._poHistPOItemCount = 0; //Store Count every time user click arrow button in PO History
+                this._procFlowPOItemCount = 0; //Store Count every time user click arrow button in PO Proccess Flow
 
                 this._appAction = "" //global variable of Application Action if Display or Change
                 await this.getAppAction(); //Get the Application actions if Display or Change in LTD
@@ -220,6 +233,13 @@ sap.ui.define([
                 await _promiseResult;
 
                 this.getView().getModel("ui").setProperty("/dataMode", 'READ');
+
+                var chkIfZfab = await this.getView().getModel("ui").getProperty("/ifZfab");
+                if(!chkIfZfab){
+                    this.byId("vpoHeaderTxtFabSpecsTab").setVisible(false);
+                }else{
+                    this.byId("vpoHeaderTxtFabSpecsTab").setVisible(true);
+                }
                 
                 // var oTable = this.byId("vpoDetailsTab");
                 // _promiseResult = new Promise((resolve, reject)=>{
@@ -242,9 +262,11 @@ sap.ui.define([
                 // //Attachments
                 // this.bindUploadCollection();
                 // this.getView().getModel("FileModel").refresh();
-                await this.getProcessFlow();
+                var poItem = this.getView().getModel("ui").getProperty("/activePOItem"); 
+                await this.getProcessFlow(poItem);
                 this.closeLoadingDialog();
             },
+
             loadAllData: async function(){
                 var me = this;
                 // //Load header
@@ -264,7 +286,8 @@ sap.ui.define([
                 });
                 await _promiseResult;
                 
-                this.getProcessFlow();
+                var poItem = this.getView().getModel("ui").getProperty("/activePOItem"); 
+                this.getProcessFlow(poItem);
                 this.hdrTextLoadCol();
                 _promiseResult = new Promise((resolve, reject)=>{
                     resolve(me.pkngInstTblLoad());
@@ -330,6 +353,8 @@ sap.ui.define([
                 oDDTextParam.push({CODE: "CONDITIONS"});
                 oDDTextParam.push({CODE: "HEADERTEXT"});
                 oDDTextParam.push({CODE: "CHANGES"});
+                oDDTextParam.push({CODE: "DLVCOMPLETE"});
+                oDDTextParam.push({CODE: "UPDATEPRICE"});
 
                 oDDTextParam.push({CODE: "POACTIONS"});
                 oDDTextParam.push({CODE: "CHANGEDELVDATE"});
@@ -405,6 +430,13 @@ sap.ui.define([
                 
                 oDDTextParam.push({CODE: "PROCFLOW"});
 
+                oDDTextParam.push({CODE: "MATNO"});
+                oDDTextParam.push({CODE: "SHORTTEXT"});
+
+                oDDTextParam.push({CODE: "ARROWUP"});
+                oDDTextParam.push({CODE: "ARROWDOWN"});
+                oDDTextParam.push({CODE: "POPRINT"});
+
                 await oModel.create("/CaptionMsgSet", { CaptionMsgItems: oDDTextParam  }, {
                     method: "POST",
                     success: function(oData, oResponse) {
@@ -461,15 +493,22 @@ sap.ui.define([
                             }
                             
                             me._ediVendor = oData.EDIVENDOR;
+                            var poVendorVendorName = oData.PONO + " - " + oData.VENDOR + "(" + oData.NAME + ")";
+                            me.getView().getModel("ui").setProperty("/poVendorVendName", poVendorVendorName);
                             
                             me.getView().getModel("ui").setProperty("/activeCondRec", oData.CONDREC);
+                            if(oData.DOCTYPE === "ZFAB"){
+                                me.getView().getModel("ui").setProperty("/ifZfab", true);
+                            }else{
+                                me.getView().getModel("ui").setProperty("/ifZfab", false);
+                            }
                             
-
                             oJSONEdit.setData(edditableFields);
-                            // console.log(oView.getModel("topHeaderData"))
+                            //  (oView.getModel("topHeaderData"))
                             
                             oView.setModel(oJSONModel, "topHeaderData");
                             oView.setModel(oJSONEdit, "topHeaderDataEdit");
+                            
                             
                             resolve();
                             // me.setChangeStatus(false);
@@ -690,6 +729,7 @@ sap.ui.define([
                 var _this = this;
                 var poNo = this._pono;
                 var condrec = this.getView().getModel("ui").getProperty("/activeCondRec");
+                let poItem = "";
                 return new Promise(async (resolve, reject) => {
                     _this.getView().setModel(new JSONModel({
                         results: []
@@ -721,15 +761,16 @@ sap.ui.define([
                     resolve(await _this.getPODetails2(poNo));
                     resolve(await _this.getDelSchedule2(poNo));
                     resolve(await _this.getDelInvoice2(poNo));
-                    resolve(await _this.getPOHistory2(poNo));
-                    resolve(await _this.getConditions2(condrec));
+                    poItem = _this.getView().getModel("ui").getProperty("/activePOItem");
+                    resolve(await _this.getPOHistory2(poNo, poItem));
+                    resolve(await _this.getConditions2(condrec, poItem));
                     resolve(await _this.onLoadHeaderConditions(condrec));
                     resolve(await _this.onLoadHeaderDownloadHist(poNo));
                     resolve();
                 });
             },
 
-            getPOHistory2: async function(PONO){
+            getPOHistory2: async function(PONO, POITEM){
                 var oModel = this.getOwnerComponent().getModel();
                 var me = this;
                 var oJSONModel = new sap.ui.model.json.JSONModel();
@@ -737,7 +778,7 @@ sap.ui.define([
                 return new Promise((resolve, reject)=>{
                     oModel.read('/VPOHistSet', { 
                         urlParameters: {
-                            "$filter": "PONO eq '" + PONO + "'"
+                            "$filter": "PONO eq '" + PONO + "' and ITEM2 eq '"+ POITEM +"'"
                         },
                         success: function (data, response) {
                             if (data.results.length > 0) {
@@ -784,14 +825,14 @@ sap.ui.define([
                 });
                 
             },
-            getConditions2: async function(CONDREC){
+            getConditions2: async function(CONDREC, POITEM){
                 var oModel = this.getOwnerComponent().getModel();
                 var me = this;
                 var oJSONModel = new sap.ui.model.json.JSONModel();
                 return new Promise((resolve, reject)=>{
                     oModel.read('/VPOConditionsSet', { 
                         urlParameters: {
-                            "$filter": "KNUMV eq '" + CONDREC + "'"
+                            "$filter": "KNUMV eq '" + CONDREC + "' and KPOSN eq '"+ POITEM +"'"
                         },
                         success: function (data, response) {
                             if (data.results.length > 0) {
@@ -862,14 +903,38 @@ sap.ui.define([
                                     item.DELDT = dateFormat.format(new Date(item.DELDT));
                                     item.CREATEDDT = dateFormat.format(new Date(item.CREATEDDT)) + " " + timeFormat.format(new Date(item.CREATEDTM.ms + TZOffsetMs));
                                     item.DELETED = item.DELETED === "L" ? true : false;
+                                    me._condPOItemMatNoStore.push({
+                                        poItem: item.ITEM,
+                                        matNo: item.MATNO,
+                                        shortText: item.SHORTTEXT
+                                    });
+
+                                    me._poItemStore.push({
+                                        poItem: item.ITEM,
+                                    })
                                 })
+                                
+                                //sort by PO Item
+                                me._condPOItemMatNoStore.sort(function(a, b) {
+                                    return a.poItem.localeCompare(b.poItem);
+                                });
+
+                                //sort by PO Item
+                                me._poItemStore.sort(function(a, b) {
+                                    return a.poItem.localeCompare(b.poItem);
+                                });
+
                                 objectData.push(data.results);
                                 objectData[0].sort((a,b) => (a.ITEM > b.ITEM) ? 1 : ((b.ITEM > a.ITEM) ? -1 : 0));
                                 
                                 oJSONModel.setData(data);
                             }
                             var poItem = data.results[0].ITEM;
+                            var matNo = data.results[0].MATNO;
+                            var shortText = data.results[0].SHORTTEXT;
                             me.getView().getModel("ui").setProperty("/activePOItem", poItem);
+                            me.getView().getModel("ui").setProperty("/condMatNo", matNo);
+                            me.getView().getModel("ui").setProperty("/condShortText", shortText);
 
                             me.getView().setModel(oJSONModel, "VPODtlsVPODet");
                             resolve();
@@ -2857,6 +2922,11 @@ sap.ui.define([
                         },
                         success: function (data, response) {
                             if (data.results.length > 0) {
+                                data.results.forEach(item => {
+                                    item.CREATEDDT = dateFormat.format(item.CREATEDDT) + " " + timeFormat.format(new Date(item.CREATEDTM.ms + TZOffsetMs));
+                                    item.UPDATEDDT = dateFormat.format(item.UPDATEDDT) + " " + timeFormat.format(new Date(item.UPDATEDTM.ms + TZOffsetMs));
+                                    item.RELDT = dateFormat.format(item.RELDT);
+                                })
                                 oJSONModel.setData(data);
                             }
                             me.getView().setModel(oJSONModel, "VPOHdrDownloadHist");
@@ -2867,6 +2937,14 @@ sap.ui.define([
                         }
                     });
                 });
+            },
+
+            onRefreshDownloadHist: async function(){
+                var poNo = this._pono;
+                this.showLoadingDialog(_captionList.LOADING)
+                await this.onLoadHeaderDownloadHist(poNo)
+                await this.setTableColumnsData("VPOHDRDOWNLOADHIST");
+                this.closeLoadingDialog();
             },
 
             validatePOChange: async function(){
@@ -2883,8 +2961,6 @@ sap.ui.define([
                         },
                         success: async function (data, response) {
                             if(data.results[0].WithGR !== "X"){
-                                resolve(me._validPOChange = 1)
-                            }else{
                                 var count = me.getView().getModel("VPODtlsVPODet").getProperty("/results").length;
                                 var itemCount = 0;
                                 var isValidObj = [];
@@ -2922,6 +2998,8 @@ sap.ui.define([
                                 }else{
                                     resolve(me._validPOChange = 0)
                                 }
+                            }else{
+                                resolve(me._validPOChange = 0)
                             }
                         },
                         error: function(error){
@@ -4320,7 +4398,7 @@ sap.ui.define([
                                         if (aData.at(item).DELETED === false && (aData.at(item).CLOSED === false)) {
                                             bProceed = true;
                                             aDataToEdit.push(aData.at(item));
-
+                                            
                                             //Check if Net Price is Editable
                                             await me.checkNetPriceIfEdittable(aData.at(item).MATTYP);
                                             if(me._mattyp == 1){
@@ -4388,6 +4466,9 @@ sap.ui.define([
                                                 me.byId("vpoBtnSaveDetails").setVisible(true);
                                                 me.byId("vpoBtnCancelDetails").setVisible(true);
 
+                                                me.byId("vpoBtnUpdatePrice").setVisible(false);
+                                                me.byId("vpoBtnDelCompleteDetails").setVisible(false);
+
                                                 me.disableOtherTabsChild("idIconTabBarInlineMode");
                                                 me.disableOtherTabsChild("vpoHeaderTxtIconTab");
                                                 me.byId("vpoDelSchedIconTab").setEnabled(false);
@@ -4414,7 +4495,7 @@ sap.ui.define([
                                                 
                                             }
                                         }else{
-                                            MessageBox.error("PO already Closed or Deleted.")
+                                            MessageBox.error(_captionList.INFO_PO_CLOSED_DELETED);
                                         }
                                     }
                                 });
@@ -4538,7 +4619,7 @@ sap.ui.define([
                                                 
                                             }
                                         }else{
-                                            MessageBox.error("PO already Closed or Deleted.")
+                                            MessageBox.error(_captionList.INFO_PO_CLOSED_DELETED);
                                         }
                                     }
                                 });
@@ -5160,7 +5241,153 @@ sap.ui.define([
                 }
 
             },
+            onDelCompletePODtls: async function(){
+                var me = this;
+                
+                _promiseResult = new Promise((resolve, reject)=>{
+                    resolve(me.validatePOChange());
+                })
+                await _promiseResult;
 
+                if(this._validPOChange != 1){
+                    MessageBox.error(_captionList.INFO_PO_NOT_VALID_TO_EDIT)
+                    return;
+                }
+
+                var oModel = this.getOwnerComponent().getModel();
+                var rfcModel = this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
+                var oEntitySet = "/VPODetailsSet";
+
+                var poNo;
+                var oTable = this.byId("vpoDetailsTab");
+                var aSelIndices = oTable.getSelectedIndices();
+                var oTmpSelectedIndices = [];
+
+                var aData = this.getView().getModel("VPODtlsVPODet").getData().results;
+                var iCounter = 0;
+                var bProceed = true;
+                var oParamInitParam = {}
+                var oParamDataPO = [];
+                var oParamDataPOClose = [];
+                var oParam = {};
+                var shipToPlant = this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
+                var incoTerms = this.byId("f1Incoterms").getValue().split('-')[0].trim();
+                var destination = this.byId("f1Destination").getValue();
+                var shipMode = this.byId("f1ShipMode").getValue().split('-')[0].trim();
+                var message = "";
+
+                if (aSelIndices.length > 0) {
+                    aSelIndices.forEach(item => {
+                        oTmpSelectedIndices.push(oTable.getBinding("rows").aIndices[item])
+                    });
+
+                    aSelIndices = oTmpSelectedIndices;
+
+                    for(var item in aSelIndices){
+                        poNo = aData.at(item).PONO;
+                        oModel.read(oEntitySet, {
+                            urlParameters: {
+                                "$filter": "PONO eq '" + poNo + "'"
+                            },
+                            success: async function (data, response) {
+                                data.results.forEach(async dataItem => {
+                                    if(aData.at(item).ITEM == dataItem.ITEM){
+                                        iCounter++;
+                                        if (aData.at(item).DELETED === false && (aData.at(item).CLOSED === false)) {
+                                            bProceed = true;
+
+                                            oParamInitParam = {
+                                                IPoNumber: me._pono,
+                                                IDoDownload: "N",
+                                                IChangeonlyHdrplants: "N",
+                                            }
+                                            oParamDataPO.push({
+                                                Banfn: aData.at(item).PRNO, //PRNO
+                                                Bnfpo: aData.at(item).PRITM, //PRITM
+                                                Ebeln: me._pono,//pono
+                                                Unsez: shipToPlant, //shipToPlant
+                                                Inco1: incoTerms, // Incoterms
+                                                Inco2: destination, //Destination
+                                                Evers: shipMode, //ShipMode
+                                                Ebelp: aData.at(item).ITEM,//poitem
+                                                Txz01: aData.at(item).SHORTTEXT,//shorttext
+                                                Menge: aData.at(item).POQTY,//QTY
+                                                Meins: aData.at(item).UOM,//UOM
+                                                Netpr: aData.at(item).NETPRICE,//net price
+                                                Peinh: aData.at(item).PER,//PER
+                                                Bprme: aData.at(item).ORDERPRICEUOM, //Order Price Unit
+                                                Repos: aData.at(item).INVRCPTIND, //IR Indicator
+                                                Webre: aData.at(item).GRBASEDIVIND, //GR Based Ind
+                                                Eindt: sapDateFormat.format(new Date(aData.at(item).DELDT)) + "T00:00:00", //DlvDt
+                                                Uebtk: aData.at(item).UNLIMITED,//Unlimited
+                                                Uebto: aData.at(item).OVERDELTOL,//OverDel Tol.
+                                                Untto: aData.at(item).UNDERDELTOL,//UnderDel Tol.
+                                                Zzmakt: aData.at(item).POADDTLDESC, //PO Addtl Desc
+                                                Elikz: true, //Closed
+                                                // Delete_Rec: aData.at(item).DELETED//Delete
+                                                
+                                            });
+                                            oParamDataPOClose.push({
+                                                Banfn: aData.at(item).PRNO, //PRNO
+                                                Bnfpo: aData.at(item).PRITM, //PRITM
+                                                Ebakz: "" 
+                                            });
+                                        }else{
+                                            bProceed = false;
+                                        }
+                                        if(bProceed){
+                                            if (aSelIndices.length === iCounter) {
+                                                if (oParamDataPO.length > 0) {
+                                                    oParam = oParamInitParam;
+                                                    oParam['N_ChangePOItemParam'] = oParamDataPO;
+                                                    oParam['N_ChangePOClosePRParam'] = oParamDataPOClose;
+                                                    oParam['N_ChangePOReturn'] = [];
+                                                    _promiseResult = new Promise((resolve, reject)=>{
+                                                        rfcModel.create("/ChangePOSet", oParam, {
+                                                            method: "POST",
+                                                            success: function(oData, oResponse){
+                                                                message = ""
+                                                                if(oData.N_ChangePOReturn.results.length > 0){
+                                                                    var oParam = {};
+                                                                    for(var errCount = 0; errCount <= oData.N_ChangePOReturn.results.length - 1; errCount++){
+                                                                        message =+ oData.N_ChangePOReturn.results[errCount] === undefined ? "": oData.N_ChangePOReturn.results[errCount].Msgv1;
+                                                                        if (oData.N_ChangePOReturn.results[errCount].Msgtyp === 'S') {
+                                                                        }
+                                                                    }
+                                                                    MessageBox.information(message);
+                                                                    resolve();
+                                                                }
+                                                            },error: function(error){
+                                                                //error message
+                                                                MessageBox.error(error);
+                                                                resolve();
+                                                            }
+                                                        });
+                                                    });
+                                                    
+                                                    me.showLoadingDialog(_captionList.LOADING);
+                                                    await _promiseResult;
+                                                    await me.loadAllData();
+                                                    me.closeLoadingDialog();
+                                                }else{
+                                                    console.log("test")
+                                                }
+                                            }
+                                        }else{
+                                            MessageBox.error(_captionList.INFO_PO_CLOSED_DELETED);
+                                        }
+                                    }
+                                })
+                            },error: function(error){
+    
+                            }
+                        })
+                    }
+                }else{
+                    MessageBox.error(_captionList.INFO_NO_RECORD_SELECT);
+                }
+
+            },
             onEditPODelSched: async function(){
                 var me = this;
                 
@@ -5232,7 +5459,6 @@ sap.ui.define([
                                                 me.byId("vpoBtnDeleteDelSched").setVisible(false);
                                                 me.byId("vpoBtnRefresDelSched").setVisible(false);
                                                 me.byId("vpoBtnExportToExcelDelSched").setVisible(false);
-                                                me.byId("vpoBtnCancelDetails").setVisible(false);
 
                                                 me.disableOtherTabsChild("idIconTabBarInlineMode");
                                                 me.disableOtherTabsChild("vpoHeaderTxtIconTab");
@@ -5247,7 +5473,7 @@ sap.ui.define([
                                                 
                                             }
                                         }else{
-                                            MessageBox.error("PO already Closed or Deleted.")
+                                            MessageBox.error(_captionList.INFO_PO_CLOSED_DELETED);
                                         }
                                     }
                                 });
@@ -5293,7 +5519,6 @@ sap.ui.define([
                                                 me.byId("vpoBtnDeleteDelSched").setVisible(false);
                                                 me.byId("vpoBtnRefresDelSched").setVisible(false);
                                                 me.byId("vpoBtnExportToExcelDelSched").setVisible(false);
-                                                me.byId("vpoBtnCancelDetails").setVisible(false);
 
                                                 me.disableOtherTabsChild("idIconTabBarInlineMode");
                                                 me.disableOtherTabsChild("vpoHeaderTxtIconTab");
@@ -5308,7 +5533,7 @@ sap.ui.define([
                                                 
                                             }
                                         }else{
-                                            MessageBox.error("PO already Closed or Deleted.")
+                                            MessageBox.error(_captionList.INFO_PO_CLOSED_DELETED);
                                         }
                                     }
                                 });
@@ -5425,7 +5650,9 @@ sap.ui.define([
                         me.byId("vpoBtnDeleteDelSched").setVisible(true);
                         me.byId("vpoBtnRefresDelSched").setVisible(true);
                         me.byId("vpoBtnExportToExcelDelSched").setVisible(true);
-                        me.byId("vpoBtnCancelDetails").setVisible(true);
+
+                        me.byId("vpoBtnUpdatePrice").setVisible(true);
+                        me.byId("vpoBtnDelCompleteDetails").setVisible(true);
 
                         me.enableOtherTabsChild("idIconTabBarInlineMode");
                         me.enableOtherTabsChild("vpoHeaderTxtIconTab");
@@ -5575,7 +5802,6 @@ sap.ui.define([
                             me.byId("vpoBtnDeleteDelSched").setVisible(true);
                             me.byId("vpoBtnRefresDelSched").setVisible(true);
                             me.byId("vpoBtnExportToExcelDelSched").setVisible(true);
-                            me.byId("vpoBtnCancelDetails").setVisible(true);
 
                             me.enableOtherTabsChild("idIconTabBarInlineMode");
                             me.enableOtherTabsChild("vpoHeaderTxtIconTab");
@@ -5678,7 +5904,7 @@ sap.ui.define([
                                                 
                                             }
                                         }else{
-                                            MessageBox.error("PO already Closed or Deleted.")
+                                            MessageBox.error(_captionList.INFO_PO_CLOSED_DELETED);
                                         }
                                     }
                                 });
@@ -5736,7 +5962,7 @@ sap.ui.define([
                                                 
                                             }
                                         }else{
-                                            MessageBox.error("PO already Closed or Deleted.")
+                                            MessageBox.error(_captionList.INFO_PO_CLOSED_DELETED);
                                         }
                                     }
                                 });
@@ -6280,12 +6506,14 @@ sap.ui.define([
                 this.byId("vpoBtnDeleteDelSched").setVisible(true);
                 this.byId("vpoBtnRefresDelSched").setVisible(true);
                 this.byId("vpoBtnExportToExcelDelSched").setVisible(true);
-                this.byId("vpoBtnCancelDetails").setVisible(true);
+
+                this.byId("vpoBtnUpdatePrice").setVisible(true);
+                this.byId("vpoBtnDelCompleteDetails").setVisible(true);
+                this.byId("vpoBtnCancelDelInv").setVisible(false);
 
                 this.byId("vpoBtnRefresDelInv").setVisible(true);
                 this.byId("vpoBtnEditDelInv").setVisible(true);
-                this.byId("vpoBtnSaveDelInv").setVisible(false);
-                this.byId("vpoBtnCancelDelInv").setVisible(false);
+                this.byId("vpoBtnSaveDelInv").setVisible(false)
                 this.byId("vpoBtnExportToExcelDelInv").setVisible(true);
 
                 // this.getView().getModel("TableData").setProperty("/", this._oDataBeforeChange);
@@ -6530,7 +6758,7 @@ sap.ui.define([
                     oModel.read("/VPOAddPRToPORscSet",{ 
                         urlParameters: {
                             "$filter": "VENDORCD eq '" + vendorCd + "' and PURCHORG eq '"+ purchOrg +"' and PURCHGRP eq '"+ purchGrp +"' and " +
-                                    "SHIPTOPLANT eq '"+ szzhipToPlant +"' and PURCHPLANT eq '"+ purchPlant +"' and PODOCTYP eq '"+ docType +"'"
+                                    "SHIPTOPLANT eq '"+ shipToPlant +"' and PURCHPLANT eq '"+ purchPlant +"' and PODOCTYP eq '"+ docType +"'"
                             // "$filter": "VENDORCD eq '0003101604' and PURCHORG eq '1601' and PURCHGRP eq '601' and SHIPTOPLANT eq 'B601' and PURCHPLANT eq 'C600' and DOCTYP eq 'ZMRP'"
                         },
                         success: async function (oData, oResponse) {
@@ -6756,8 +6984,8 @@ sap.ui.define([
                     resolve(this.loadAllData());
                 });
                 await _promiseResult;
-
-                this.getProcessFlow();
+                var poItem = this.getView().getModel("ui").getProperty("/activePOItem"); 
+                this.getProcessFlow(poItem);
                 this.closeLoadingDialog(that);
             },
 
@@ -6770,7 +6998,7 @@ sap.ui.define([
                 var me = this;
 
                 if(oEvent.getParameters().id.includes("vpoDetailsTab")){
-                    oRow = this.getView().getModel("VPODtlsVPODet").getProperty(sRowPath)
+                    oRow = this.getView().getModel("VPODtlsVPODet").getProperty(sRowPath)
                     oTable = this.byId("vpoDetailsTab");
 
                     _promiseResult = new Promise((resolve, reject)=>{
@@ -6784,7 +7012,7 @@ sap.ui.define([
                     });
                     await _promiseResult;
                 }else if(oEvent.getParameters().id.includes("vpoDelSchedTab")){
-                    oRow = this.getView().getModel("VPODelSchedVPODet").getProperty(sRowPath)
+                    oRow = this.getView().getModel("VPODelSchedVPODet").getProperty(sRowPath)
                     oTable = this.byId("vpoDelSchedTab");
                     
                     this.getView().getModel("ui").setProperty("/activePOItem", oRow.ITEM);
@@ -6801,7 +7029,7 @@ sap.ui.define([
                 }else if(oEvent.getParameters().id.includes("vpoDelInvTab")){
                     oRow = this.getView().getModel("VPODelInvVPODet").getProperty(sRowPath)
                     oTable = this.byId("vpoDelInvTab");
-
+                    oTable.clearSelection();
                     this.getView().getModel("ui").setProperty("/activePOItem", oRow.ITEM);                    
                     _promiseResult = new Promise((resolve, reject)=>{
                         oTable.getRows().forEach(row => {
@@ -6831,7 +7059,7 @@ sap.ui.define([
                 }else if(oEvent.getParameters().id.includes("vpoConditionsTab")){
                     oRow = this.getView().getModel("VPOCondVPODet").getProperty(sRowPath)
                     oTable = this.byId("vpoConditionsTab");
-                    
+                    oTable.clearSelection();
                     _promiseResult = new Promise((resolve, reject)=>{
                         oTable.getRows().forEach(row => {
                             if(row.getBindingContext().sPath.replace("/rows/", "") === sRowPath.split("/")[2]){
@@ -6847,15 +7075,15 @@ sap.ui.define([
             },
             onKeyUp: async function(oEvent){
                 var me = this;
-                if ((oEvent.key === "ArrowUp" || oEvent.key === "ArrowDown") && oEvent.srcControl.sParentAggregationName === "rows"){// && _dataMode === "READ") {
-                    var sRowPath = this.byId(oEvent.srcControl.sId).oBindingContexts["undefined"].sPath;
+                if((oEvent.key === "ArrowUp" || oEvent.key === "ArrowDown") && oEvent.srcControl.sParentAggregationName === "rows"){// && _dataMode === "READ") {
+                    var sRowPath = this.byId(oEvent.srcControl.sId).oBindingContexts["undefined"].sPath;
                     sRowPath = "/results/"+ sRowPath.split("/")[2];
                     var index = sRowPath.split("/");
                     var oRow;
                     var oTable;
 
                     if(oEvent.srcControl.sId.includes("vpoDetailsTab")){
-                        oRow = this.getView().getModel("VPODtlsVPODet").getProperty(sRowPath);
+                        oRow = this.getView().getModel("VPODtlsVPODet").getProperty(sRowPath);
                         oTable = this.byId("vpoDetailsTab")
                         _promiseResult = new Promise((resolve, reject)=>{
                             oTable.getRows().forEach(row => {
@@ -6868,8 +7096,9 @@ sap.ui.define([
                         });
                         await _promiseResult;
 
-                    }else if(oEvent.srcControl.sId.includes("vpoDelSchedTab")){
-                        oRow = this.getView().getModel("VPODelSchedVPODet").getProperty(sRowPath);
+                    }
+                    if(oEvent.srcControl.sId.includes("vpoDelSchedTab")){
+                        oRow = this.getView().getModel("VPODelSchedVPODet").getProperty(sRowPath);
                         oTable = this.byId("vpoDelSchedTab")
                         this.getView().getModel("ui").setProperty("/activePOItem", oRow.ITEM)
                         _promiseResult = new Promise((resolve, reject)=>{
@@ -6883,8 +7112,9 @@ sap.ui.define([
                         });
                         await _promiseResult;
 
-                    }else if(oEvent.srcControl.sId.includes("vpoDelInvTab")){
-                        oRow = this.getView().getModel("VPODelInvVPODet").getProperty(sRowPath);
+                    }
+                    if(oEvent.srcControl.sId.includes("vpoDelInvTab")){
+                        oRow = this.getView().getModel("VPODelInvVPODet").getProperty(sRowPath);
                         oTable = this.byId("vpoDelInvTab")
                         this.getView().getModel("ui").setProperty("/activePOItem", oRow.ITEM)
                         _promiseResult = new Promise((resolve, reject)=>{
@@ -6898,8 +7128,9 @@ sap.ui.define([
                         });
                         await _promiseResult;
 
-                    }else if(oEvent.srcControl.sId.includes("vpoPoHistTab")){
-                        oRow = this.getView().getModel("VPOPOHistVPODet").getProperty(sRowPath);
+                    }
+                    if(oEvent.srcControl.sId.includes("vpoPoHistTab")){
+                        oRow = this.getView().getModel("VPOPOHistVPODet").getProperty(sRowPath);
                         oTable = this.byId("vpoPoHistTab")
                         this.getView().getModel("ui").setProperty("/activePOItem", oRow.ITEM)
                         _promiseResult = new Promise((resolve, reject)=>{
@@ -6913,8 +7144,9 @@ sap.ui.define([
                         });
                         await _promiseResult;
 
-                    }else if(oEvent.srcControl.sId.includes("vpoConditionsTab")){
-                        oRow = this.getView().getModel("VPOCondVPODet").getProperty(sRowPath);
+                    }
+                    if(oEvent.srcControl.sId.includes("vpoConditionsTab")){
+                        oRow = this.getView().getModel("VPOCondVPODet").getProperty(sRowPath);
                         oTable = this.byId("vpoConditionsTab")
                         _promiseResult = new Promise((resolve, reject)=>{
                             oTable.getRows().forEach(row => {
@@ -6927,6 +7159,159 @@ sap.ui.define([
                         });
                         await _promiseResult;
                     }
+                }
+            },
+
+            onKeyUpDelInv: async function(){
+                var me = this;
+                var count = 0;
+                var oRow = this.getView().getModel("VPODelInvVPODet");
+                var oTable = this.byId("vpoDelInvTab");
+                var iSelectedIndex = oTable.getSelectedIndex();
+                var poItem = this.getView().getModel("ui").getProperty("/activePOItem");
+                if (iSelectedIndex > 0) {
+                    var selectedIndexCount = iSelectedIndex - 1;
+                    let sPath = "/results/"+ selectedIndexCount +""
+                    oRow = this.getView().getModel("VPODelInvVPODet").getProperty(sPath);
+                    oTable.setSelectedIndex(iSelectedIndex - 1);
+                    this.getView().getModel("ui").setProperty("/activePOItem", oRow.ITEM)
+                }
+
+            },
+
+            onKeyDownDelInv: async function(){
+                var me = this;
+                var count = 0;
+                var oRow = this.getView().getModel("VPODelInvVPODet");
+                var oTable = this.byId("vpoDelInvTab");
+                var iSelectedIndex = oTable.getSelectedIndex();
+                var iVisibleRowCount = oTable.getVisibleRowCount();
+                var poItem = this.getView().getModel("ui").getProperty("/activePOItem");
+                if (iSelectedIndex < iVisibleRowCount - 1) {
+                    var selectedIndexCount = iSelectedIndex + 1;
+                    let sPath = "/results/"+ selectedIndexCount +""
+                    oRow = this.getView().getModel("VPODelInvVPODet").getProperty(sPath);
+                    oTable.setSelectedIndex(iSelectedIndex + 1);
+                    this.getView().getModel("ui").setProperty("/activePOItem", oRow.ITEM)
+                }
+            },
+            
+            onKeyUpPOHistory: async function(){
+                var me = this;
+                var poNo = this.getView().getModel("ui").getProperty("/activePONo");
+
+                if (this._poHistPOItemCount <= 0) {
+                    this._poHistPOItemCount++;
+                }
+                if(this._poHistPOItemCount <= this._poItemStore.length){
+                    this._poHistPOItemCount--;
+                    var poItem = this._poItemStore[this._poHistPOItemCount].poItem;
+                    var matNo = this._poItemStore[this._poHistPOItemCount].matNo;
+                    var shortText = this._poItemStore[this._poHistPOItemCount].shortText;
+
+                    this.getView().getModel("ui").setProperty("/activePOItem", poItem);
+                    await this.getPOHistory2(poNo, poItem)
+                    await this.setTableColumnsData("VPOHISTORY");
+                    
+                }
+            },
+            onKeyDownPOHistory: async function(){
+                var me = this;
+                var poNo = this.getView().getModel("ui").getProperty("/activePONo");
+                
+                if (this._poHistPOItemCount ===  this._poItemStore.length -1) {
+                    this._poHistPOItemCount--;
+                }
+
+                if(this._poHistPOItemCount != this._poItemStore.length - 1){
+                    this._poHistPOItemCount++;
+                    var poItem = this._poItemStore[this._poHistPOItemCount].poItem;
+                    var matNo = this._poItemStore[this._poHistPOItemCount].matNo;
+                    var shortText = this._poItemStore[this._poHistPOItemCount].shortText;
+
+                    this.getView().getModel("ui").setProperty("/activePOItem", poItem);
+                    await this.getPOHistory2(poNo, poItem)
+                    await this.setTableColumnsData("VPOHISTORY");
+                    
+                }
+            },
+
+            onKeyUpCond: async function(){
+                var me = this;
+                var condrec = this.getView().getModel("ui").getProperty("/activeCondRec");
+
+                if (this._condPOItemCount <= 0) {
+                    this._condPOItemCount++;
+                }
+                if(this._condPOItemCount <= this._condPOItemMatNoStore.length){
+                    this._condPOItemCount--;
+                    var poItem = this._condPOItemMatNoStore[this._condPOItemCount].poItem;
+                    var matNo = this._condPOItemMatNoStore[this._condPOItemCount].matNo;
+                    var shortText = this._condPOItemMatNoStore[this._condPOItemCount].shortText;
+
+                    this.getView().getModel("ui").setProperty("/activePOItem", poItem);
+                    this.getView().getModel("ui").setProperty("/condMatNo", matNo);
+                    this.getView().getModel("ui").setProperty("/condShortText", shortText);
+                    await this.getConditions2(condrec, poItem)
+                    await this.setTableColumnsData("VPOCOND");
+                    
+                }
+            },
+            onKeyDownCond: async function(){
+                var me = this;
+                var condrec = this.getView().getModel("ui").getProperty("/activeCondRec");
+                
+                if (this._condPOItemCount ===  this._condPOItemMatNoStore.length -1) {
+                    this._condPOItemCount--;
+                }
+
+                if(this._condPOItemCount != this._condPOItemMatNoStore.length - 1){
+                    this._condPOItemCount++;
+                    var poItem = this._condPOItemMatNoStore[this._condPOItemCount].poItem;
+                    var matNo = this._condPOItemMatNoStore[this._condPOItemCount].matNo;
+                    var shortText = this._condPOItemMatNoStore[this._condPOItemCount].shortText;
+
+                    this.getView().getModel("ui").setProperty("/activePOItem", poItem);
+                    this.getView().getModel("ui").setProperty("/condMatNo", matNo);
+                    this.getView().getModel("ui").setProperty("/condShortText", shortText);
+                    await this.getConditions2(condrec, poItem)
+                    await this.setTableColumnsData("VPOCOND");
+                    
+                }
+            },
+
+            
+            onKeyUpProcFlow: async function(){
+                var me = this;
+                var poNo = this.getView().getModel("ui").getProperty("/activePONo");
+
+                if (this._procFlowPOItemCount <= 0) {
+                    this._procFlowPOItemCount++;
+                }
+                if(this._procFlowPOItemCount <= this._poItemStore.length){
+                    this._procFlowPOItemCount--;
+                    var poItem = this._poItemStore[this._procFlowPOItemCount].poItem;
+
+                    this.getView().getModel("ui").setProperty("/activePOItem", poItem);
+                    await this.getProcessFlow(poItem);
+                    
+                }
+            },
+            onKeyDownProcFlow: async function(){
+                var me = this;
+                var poNo = this.getView().getModel("ui").getProperty("/activePONo");
+                
+                if (this._procFlowPOItemCount ===  this._poItemStore.length -1) {
+                    this._procFlowPOItemCount--;
+                }
+
+                if(this._procFlowPOItemCount != this._poItemStore.length - 1){
+                    this._procFlowPOItemCount++;
+                    var poItem = this._poItemStore[this._procFlowPOItemCount].poItem;
+
+                    this.getView().getModel("ui").setProperty("/activePOItem", poItem);
+                    await this.getProcessFlow(poItem);
+                    
                 }
             },
 
@@ -7274,7 +7659,7 @@ sap.ui.define([
 
             },
 
-            getProcessFlow: function() {
+            getProcessFlow: function(poItem) {
                 // this.getView().getModel("vpoProcessFlow").setProperty("/nodes", []);
 
                 var oModel = this.getOwnerComponent().getModel();
@@ -7285,7 +7670,7 @@ sap.ui.define([
 
                 oModel.read('/VPOProcFlowGRSet', { 
                     urlParameters: {
-                        "$filter": "EBELN eq '" + this._pono + "'"
+                        "$filter": "EBELN eq '" + this._pono + "' and EBELP eq '"+ poItem +"'"
                     },
                     success: function (oData, oResponse) {
                         oGRData = oData.results;
@@ -7296,7 +7681,7 @@ sap.ui.define([
 
                 oModel.read('/VPOProcFlowINVSet', { 
                     urlParameters: {
-                        "$filter": "EBELN eq '" + this._pono + "'"
+                        "$filter": "EBELN eq '" + this._pono + "' and EBELP eq '"+ poItem +"'"
                     },
                     success: function (oData, oResponse) {
                         oInvData = oData.results;
@@ -7307,13 +7692,13 @@ sap.ui.define([
 
                 var oInterval = setInterval(() => {
                     if (bGetGRFin && bGetInvFin) {
-                        me.setProcessFlow(oGRData, oInvData);
+                        me.setProcessFlow(oGRData, oInvData, poItem);
                         clearInterval(oInterval);
                     }
                 }, 100);
             },
 
-            setProcessFlow: function(oGRData, oInvData) {
+            setProcessFlow: function(oGRData, oInvData, poItem) {
                 this._processFlowData = [];
 
                 var oPOItem = [];
@@ -7323,28 +7708,30 @@ sap.ui.define([
 
                 this.byId("vpoDetailsTab").getModel().getData().rows.forEach(item => {  
                     iCounter++;
-                    oPOItem.push({ ITEM: item.ITEM });
-
                     var oChildren = [];
-                    var oGRItemData = oGRData.filter(fItem => fItem.EBELP === item.ITEM);
-                    var oInvItemData = oInvData.filter(fItem => fItem.EBELP === item.ITEM);
+                    var oGRItemData = oGRData.filter(fItem => fItem.EBELP === item.ITEM && fItem.EBELN === item.PONO);
+                    var oInvItemData = oInvData.filter(fItem => fItem.EBELP === item.ITEM && fItem.EBELN === item.PONO);
+                    
 
                     oGRItemData.forEach((gr, idx) => oChildren.push(idx+1+iCounter));
                     oInvItemData.forEach((inv, idx) => oChildren.push(idx+1+iCounter+oGRItemData.length));
 
-                    oNodes.push({
-                        id: iCounter + "",
-                        lane: "0",
-                        title: "Purchase Order " + item.PONO + "/" + item.ITEM,
-                        titleAbbreviation: "PO",
-                        children: oChildren,
-                        state: "Positive",
-                        stateText: "Follow-On Documents",
-                        focused: true,
-                        highlighted: false,
-                        texts: [ "Created On: " + dateFormat.format(new Date(item.CREATEDDT)), "Vendor: " + sVendor ]                        
-                    })
-
+                    if(item.ITEM === poItem){
+                        oNodes.push({
+                            id: iCounter + "",
+                            lane: "0",
+                            title: "Purchase Order " + item.PONO + "/" + poItem,
+                            titleAbbreviation: "PO",
+                            children: oChildren,
+                            state: "Positive",
+                            stateText: "Follow-On Documents",
+                            focused: true,
+                            highlighted: false,
+                            texts: [ "Created On: " + dateFormat.format(new Date(item.CREATEDDT)), "Vendor: " + sVendor ]                        
+                        })
+                    }
+                    
+                    
                     oGRItemData.forEach(gr => {
                         iCounter++;
 

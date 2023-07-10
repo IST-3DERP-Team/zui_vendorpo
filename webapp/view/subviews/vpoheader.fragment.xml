@@ -17,6 +17,7 @@
             </dependents>
             <content>
                 <OverflowToolbar id="_ovfToolBarIO" design="Transparent" >
+                    <Text text="{ui>/poVendorVendName}" class="selHdrKeyFontStyle" />
                     <ToolbarSpacer/>
                     <MenuButton id="vpoHdrMenuBtn" text="{captionMsg>/POACTIONS}">
                         <menu>
@@ -26,6 +27,7 @@
                                 <MenuItem id="_IDGenMenuItem_02_3" text="{captionMsg>/DELETEPO}" press=".onDeleteVPO"/>
                                 <MenuItem id="_IDGenMenuItem_02_4" text="{captionMsg>/CANCELPO}" press=".onCancelVPO" />
                                 <MenuItem id="_IDGenMenuItem_02_5" text="{captionMsg>/SPLITPO}" press=".onSplitVPO"/>
+                                <MenuItem id="_IDGenMenuItem_02_6" text="{captionMsg>/POPRINT}" press=".onPOPrint"/>
                             </Menu>
                         </menu>                    
                     </MenuButton>
