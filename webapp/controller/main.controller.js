@@ -956,87 +956,87 @@ sap.ui.define([
                     var sColumnSortOrder = context.getObject().SortOrder;
                     var sColumnWidth = context.getObject().ColumnWidth;
 
-                    if (table === "detailsTab" && sColumnId === "PRNO") {
-                        var oControl = new sap.m.Link({
-                            text: "{" + sColumnId + "}",
-                            wrapping: false, 
-                            tooltip: "{" + sColumnId + "}",
-                            press: function(oEvent) {
-                                // console.log(oEvent.oSource)
-                                const vRow = oEvent.oSource.getBindingInfo("text").binding.getContext().sPath;
-                                const vPRNo =  oEvent.oSource.mProperties.text;
-                                const vPRItem =  oTable.getModel().getProperty(vRow + "/PRITM");
-                                // console.log(vPRNo, vPRItem);
-                                var oData = {
-                                    DOCTYPE: "PR",
-                                    PRNO: vPRNo,
-                                    PRITEM: vPRItem
-                                }
+                    // if (table === "detailsTab" && sColumnId === "PRNO") {
+                    //     var oControl = new sap.m.Link({
+                    //         text: "{" + sColumnId + "}",
+                    //         wrapping: false, 
+                    //         tooltip: "{" + sColumnId + "}",
+                    //         press: function(oEvent) {
+                    //             // console.log(oEvent.oSource)
+                    //             const vRow = oEvent.oSource.getBindingInfo("text").binding.getContext().sPath;
+                    //             const vPRNo =  oEvent.oSource.mProperties.text;
+                    //             const vPRItem =  oTable.getModel().getProperty(vRow + "/PRITM");
+                    //             // console.log(vPRNo, vPRItem);
+                    //             var oData = {
+                    //                 DOCTYPE: "PR",
+                    //                 PRNO: vPRNo,
+                    //                 PRITEM: vPRItem
+                    //             }
 
-                                me.viewDoc(oData);
+                    //             me.viewDoc(oData);
 
-                                // window.open(`https://ltd.luenthai.com:44300/sap/bc/ui2/flp?sap-client=888#ZSO_3DERP_PUR_PR-dispaly&/PRDetail/VER/5000000487/00010` , "_blank");
-                            },
-                        })
-                        oControl.addStyleClass("hyperlink");
+                    //             // window.open(`https://ltd.luenthai.com:44300/sap/bc/ui2/flp?sap-client=888#ZSO_3DERP_PUR_PR-dispaly&/PRDetail/VER/5000000487/00010` , "_blank");
+                    //         },
+                    //     })
+                    //     oControl.addStyleClass("hyperlink");
 
-                        return new sap.ui.table.Column({
-                            id: model+"-"+sColumnId,
-                            label: sColumnLabel,
-                            template: oControl,
-                            width: sColumnWidth + "px",
-                            hAlign: me.columnSize(sColumnId),
-                            sortProperty: sColumnId,
-                            filterProperty: sColumnId,
-                            autoResizable: true,
-                            visible: sColumnVisible,
-                            sorted: sColumnSorted,
-                            sortOrder: ((sColumnSorted === true) ? sColumnSortOrder : "Ascending" )
-                        });
-                    }
-                    else if (table === "poHistTab" && sColumnId === "MATDOC") {
-                        var oControl = new sap.m.Link({
-                            text: "{" + sColumnId + "}",
-                            wrapping: false, 
-                            tooltip: "{" + sColumnId + "}",
-                            press: function(oEvent) {
-                                // console.log(oEvent.oSource)
-                                const vRow = oEvent.oSource.getBindingInfo("text").binding.getContext().sPath;
-                                const vMatDocNo =  oEvent.oSource.mProperties.text;
-                                const vMatDocItem =  oTable.getModel().getProperty(vRow + "/ITEM");
-                                const vMatDocYr =  oTable.getModel().getProperty(vRow + "/MATDOCYR");
-                                const vPONo =  oTable.getModel().getProperty(vRow + "/PONO");
-                                const vPOItem =  oTable.getModel().getProperty(vRow + "/ITEM2");
+                    //     return new sap.ui.table.Column({
+                    //         id: model+"-"+sColumnId,
+                    //         label: sColumnLabel,
+                    //         template: oControl,
+                    //         width: sColumnWidth + "px",
+                    //         hAlign: me.columnSize(sColumnId),
+                    //         sortProperty: sColumnId,
+                    //         filterProperty: sColumnId,
+                    //         autoResizable: true,
+                    //         visible: sColumnVisible,
+                    //         sorted: sColumnSorted,
+                    //         sortOrder: ((sColumnSorted === true) ? sColumnSortOrder : "Ascending" )
+                    //     });
+                    // }
+                    // else if (table === "poHistTab" && sColumnId === "MATDOC") {
+                    //     var oControl = new sap.m.Link({
+                    //         text: "{" + sColumnId + "}",
+                    //         wrapping: false, 
+                    //         tooltip: "{" + sColumnId + "}",
+                    //         press: function(oEvent) {
+                    //             // console.log(oEvent.oSource)
+                    //             const vRow = oEvent.oSource.getBindingInfo("text").binding.getContext().sPath;
+                    //             const vMatDocNo =  oEvent.oSource.mProperties.text;
+                    //             const vMatDocItem =  oTable.getModel().getProperty(vRow + "/ITEM");
+                    //             const vMatDocYr =  oTable.getModel().getProperty(vRow + "/MATDOCYR");
+                    //             const vPONo =  oTable.getModel().getProperty(vRow + "/PONO");
+                    //             const vPOItem =  oTable.getModel().getProperty(vRow + "/ITEM2");
 
-                                var oData = {
-                                    DOCTYPE: "MAT",
-                                    MBLNR: vMatDocNo,
-                                    MJAHR: vMatDocYr,
-                                    ZEILE: vMatDocItem,
-                                    EBELN: vPONo,
-                                    EBELP: vPOItem
-                                }
+                    //             var oData = {
+                    //                 DOCTYPE: "MAT",
+                    //                 MBLNR: vMatDocNo,
+                    //                 MJAHR: vMatDocYr,
+                    //                 ZEILE: vMatDocItem,
+                    //                 EBELN: vPONo,
+                    //                 EBELP: vPOItem
+                    //             }
 
-                                me.viewDoc(oData);
-                            },
-                        })
-                        oControl.addStyleClass("hyperlink");
+                    //             me.viewDoc(oData);
+                    //         },
+                    //     })
+                    //     oControl.addStyleClass("hyperlink");
 
-                        return new sap.ui.table.Column({
-                            id: model+"-"+sColumnId,
-                            label: sColumnLabel,
-                            template: oControl,
-                            width: sColumnWidth + "px",
-                            hAlign: me.columnSize(sColumnId),
-                            sortProperty: sColumnId,
-                            filterProperty: sColumnId,
-                            autoResizable: true,
-                            visible: sColumnVisible,
-                            sorted: sColumnSorted,
-                            sortOrder: ((sColumnSorted === true) ? sColumnSortOrder : "Ascending" )
-                        });
-                    }
-                    else if (sColumnType === "STRING" || sColumnType === "DATETIME"|| sColumnType === "BOOLEAN") {                        
+                    //     return new sap.ui.table.Column({
+                    //         id: model+"-"+sColumnId,
+                    //         label: sColumnLabel,
+                    //         template: oControl,
+                    //         width: sColumnWidth + "px",
+                    //         hAlign: me.columnSize(sColumnId),
+                    //         sortProperty: sColumnId,
+                    //         filterProperty: sColumnId,
+                    //         autoResizable: true,
+                    //         visible: sColumnVisible,
+                    //         sorted: sColumnSorted,
+                    //         sortOrder: ((sColumnSorted === true) ? sColumnSortOrder : "Ascending" )
+                    //     });
+                    // }
+                    if (sColumnType === "STRING" || sColumnType === "DATETIME"|| sColumnType === "BOOLEAN") {                        
                         return new sap.ui.table.Column({
                             id: model+"-"+sColumnId,
                             label: sColumnLabel,

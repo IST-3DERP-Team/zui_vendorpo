@@ -7812,7 +7812,7 @@ sap.ui.define([
             },
 
             viewDoc: function(oData) {
-                var vSBU = this._sbuu;
+                var vSBU = this._sbu;
                 var oCrossAppNavigator = sap.ushell.Container.getService("CrossApplicationNavigation");
 
                 if (oData.DOCTYPE === "MAT") {
