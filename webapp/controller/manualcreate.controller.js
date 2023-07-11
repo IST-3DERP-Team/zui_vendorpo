@@ -544,7 +544,8 @@ sap.ui.define([
                         KOPrctr: _oHeader.profitCtr,
                         Charg: "",
                         Sakto: item.GLACCOUNT,
-                        Aufnr: item.ORDERNO
+                        Aufnr: item.ORDERNO,
+                        Shipping: _oHeader.shipMode
                     }
                     aParamPOItem.push(oParamPOItem);
 
