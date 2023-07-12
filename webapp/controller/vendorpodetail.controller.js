@@ -4189,6 +4189,24 @@ sap.ui.define([
                 }
             },
 
+            onPOPrint: function(){
+                var poNo = this._pono;
+                var aPOItem = [];
+                aPOItem.push({
+                    "PONo": poNo
+                });
+
+                var oCrossAppNavigator = sap.ushell.Container.getService("CrossApplicationNavigation");
+                var hashUrl = (oCrossAppNavigator && oCrossAppNavigator.hrefForExternal({
+                        target: {
+                            semanticObject: "ZSO_POPRINT_PRVW",
+                            action: "display"
+                                },
+                            params : aPOItem[0]
+                        }));
+                oCrossAppNavigator.toExternal({target: {shellHash: hashUrl}});
+            },
+
             onUpdatePricePODtls: async function(){
                 var me = this;
                 _promiseResult = new Promise((resolve, reject)=>{
