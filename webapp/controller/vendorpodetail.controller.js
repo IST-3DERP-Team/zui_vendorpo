@@ -426,6 +426,7 @@ sap.ui.define([
                 oDDTextParam.push({CODE: "CREATEDDT"});
                 oDDTextParam.push({CODE: "UPDATEDDT"});
                 oDDTextParam.push({CODE: "FULLSCREEN"});
+                oDDTextParam.push({CODE: "EXITFULLSCREEN"});
                 oDDTextParam.push({CODE: "EXPORTTOEXCEL"});
                 
                 oDDTextParam.push({CODE: "PROCFLOW"});
@@ -3038,10 +3039,11 @@ sap.ui.define([
                 })
                 await _promiseResult;
             },
-            updateZERPPOUnlock: async function(pono){
+            updateZERPPOUnlock: async function(){
                 var me = this;
+                var poNo = this._pono;
                 var oModel = this.getOwnerComponent().getModel();
-                var oEntitySet = "/VPOZPOUnlockSet(EBELN='7300001313')"
+                var oEntitySet = "/VPOZPOUnlockSet(EBELN='"+ poNo +"')"
 
                 _promiseResult = new Promise((resolve, reject)=>{
                     oModel.read(oEntitySet, {
@@ -3523,7 +3525,7 @@ sap.ui.define([
                                 rfcModel.create("/Get_PO_Change_VendorSet", changeVendorParam, {
                                     method: "POST",
                                     success: function(oData, oResponse) {
-                                        if(oData.iv_msgtyp === "E"){
+                                        if(oData.ifv_msgtyp === "E"){
                                             if(oData.iv_msgv1 !== "")
                                                 message = oData.iv_msgtyp + " - No PO Created. "+ oData.iv_msgv1 +". ";
                                             MessageBox.error(message);
@@ -3663,6 +3665,10 @@ sap.ui.define([
                 var oSelectedIndices = oTable.getBinding("rows").aIndices;
                 var aData = oTable.getModel().getData().rows;
 
+                var shipToPlant = this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
+                var incoTerms = this.byId("f1Incoterms").getValue().split('-')[0].trim();
+                var destination = this.byId("f1Destination").getValue();
+                var shipMode = this.byId("f1ShipMode").getValue().split('-')[0].trim();
                 var validPOItem
 
                 if(this._newDlvDate === undefined || this._newDlvDate === "" || this._newDlvDate === null){
@@ -3689,9 +3695,13 @@ sap.ui.define([
                                 Banfn: aData.at(validPOItem).PRNO, //PRNO
                                 Bnfpo: aData.at(validPOItem).PRITM, //PRITM
                                 Ebeln: this._pono,//pono
+                                Unsez: shipToPlant, //shipToPlant
+                                Inco1: incoTerms, // Incoterms
+                                Inco2: destination, //Destination
+                                Evers: shipMode, //ShipMode
                                 Ebelp: aData.at(validPOItem).ITEM,//poitem
                                 Txz01: aData.at(validPOItem).SHORTTEXT,//shorttext
-                                Menge: aData.at(validPOItem).QTY,//QTY
+                                Menge: aData.at(validPOItem).POQTY,//POQTY
                                 Meins: aData.at(validPOItem).UOM,//UOM
                                 Netpr: aData.at(validPOItem).NETPRICE,//net price
                                 Peinh: aData.at(validPOItem).PER,//PER
@@ -3764,6 +3774,10 @@ sap.ui.define([
                 var me = this;
                 var actionSel;
                 var poNo = this._pono;
+                var shipToPlant = this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
+                var incoTerms = this.byId("f1Incoterms").getValue().split('-')[0].trim();
+                var destination = this.byId("f1Destination").getValue();
+                var shipMode = this.byId("f1ShipMode").getValue().split('-')[0].trim();
 
                 var bProceed = true
                 var isValid = true
@@ -3917,6 +3931,10 @@ sap.ui.define([
                                         Banfn: aData.at(validPOItem).PRNO, //PRNO
                                         Bnfpo: aData.at(validPOItem).PRITM, //PRITM
                                         Ebeln: this._pono,//pono
+                                        Unsez: shipToPlant, //shipToPlant
+                                        Inco1: incoTerms, // Incoterms
+                                        Inco2: destination, //Destination
+                                        Evers: shipMode, //ShipMode
                                         Ebelp: aData.at(validPOItem).ITEM,//poitem
                                         Txz01: aData.at(validPOItem).SHORTTEXT,//shorttext
                                         Menge: aData.at(validPOItem).POQTY,//QTY
@@ -5159,7 +5177,6 @@ sap.ui.define([
                                                                                 "EDI": "X",
                                                                                 "DOWNLOAD": ""
                                                                             }
-                                                                            console.log(oParam);
                                                                             var oEntitySet = "/VPODownloadedSet(EBELN='" + me._pono + "')";
                                                                             oModel.update(oEntitySet, oParam, {
                                                                                 method: "PUT",
@@ -5198,9 +5215,6 @@ sap.ui.define([
                                                         }
                                                     });
                                                 });
-
-                                                //console.log(me.getView().getModel("relStratData").getData().RELSTRAT);
-                                                //console.log(me.getView().getModel("currentRelStratData"));
 
                                             }
                                         }
@@ -5387,8 +5401,6 @@ sap.ui.define([
                                                     await _promiseResult;
                                                     await me.loadAllData();
                                                     me.closeLoadingDialog();
-                                                }else{
-                                                    console.log("test")
                                                 }
                                             }
                                         }else{
@@ -5562,6 +5574,43 @@ sap.ui.define([
                     });
                 }
             },
+            
+            onLineSplitPODelSched: async function(){
+                var me = this;
+
+                // _promiseResult = new Promise((resolve, reject)=>{
+                //     resolve(me.validatePOChange());
+                // })
+                // await _promiseResult;
+
+                // if(this._validPOChange != 1){
+                //     MessageBox.error(_captionList.INFO_PO_NOT_VALID_TO_EDIT)
+                //     return;
+                // }
+
+                var oModel = this.getOwnerComponent().getModel();
+                var oTable = this.byId("vpoDelSchedTab");
+                var aSelIndices = oTable.getSelectedIndices();
+                var oSelectedIndices = oTable.getBinding("rows").aIndices;
+                var aData = oTable.getModel().getData().rows;
+                var oTmpSelectedIndices = [];
+
+                var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
+
+                if (aSelIndices.length > 0) {
+                    aSelIndices.forEach(item => {
+                        oTmpSelectedIndices.push(oTable.getBinding("rows").aIndices[item])
+                    });
+            
+                    aSelIndices = oTmpSelectedIndices;
+
+                    aSelIndices.forEach((item, index) => {
+                        console.log(aData.at(item))
+                    })
+            
+                }
+            },
+
             onCancelEditPODelSched: async function(){
                 var me = this;
                 if (!this._DiscardChangesDialog) {
@@ -6833,10 +6882,15 @@ sap.ui.define([
                 var oParamInitParam = {};
                 var oParamDataPO = [];
                 var oParam;
+                var oParamClosePR = [];
 
                 var rfcModel = this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
                 var oModel = this.getOwnerComponent().getModel();
 
+                var shipToPlant = this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
+                var incoTerms = this.byId("f1Incoterms").getValue().split('-')[0].trim();
+                var destination = this.byId("f1Destination").getValue();
+                var shipMode = this.byId("f1ShipMode").getValue().split('-')[0].trim();
                 var message;
                 var bProceed = true
 
@@ -6923,6 +6977,10 @@ sap.ui.define([
                             // Zterm     : paymentTerms,
                             Ebeln     : poNo, //PONO
                             Ebelp     : poItemLastCnt, //POITM
+                            Unsez     : shipToPlant, //shipToPlant
+                            Inco1     : incoTerms, // Incoterms
+                            Inco2     : destination, //Destination
+                            Evers     : shipMode, //ShipMode
                             Bukrs     : headerPOArr[0].COMPANY,//COCD
                             Werks     : headerPOArr[0].PURCHPLANT,//PLANTCD
                             Unsez     : headerPOArr[0].SHIPTOPLANT,//
@@ -6931,6 +6989,10 @@ sap.ui.define([
                             Txz01     : aData.at(item).SHORTTEXT,//ShortText
                             Menge     : aData.at(item).QTY,//OrdQTY
                             Meins     : aData.at(item).UOM,//UOM
+                            Netpr     : aData.at(item).NETPRICE,//net price
+                            Repos     : aData.at(item).INVRCPTIND, //IR Indicator
+                            Webre     : aData.at(item).GRBASEDIVIND, //GR Based Ind
+                            Eindt     : sapDateFormat.format(new Date(aData.at(item).DELDT)) + "T00:00:00", //DlvDt
                             // Netpr     : resultExtendPop[0][x].NETPR,//NET ORD PRICE/
                             // Peinh     : resultExtendPop[0][x].PEINH,//NET UOM/
                             // Bprme     : resultExtendPop[0][x].BPRME,//ORD UOM/
@@ -6944,6 +7006,10 @@ sap.ui.define([
                             // Elikz     : resultExtendPop[0][x].ELIKZ,//DLVCOMPLETE /
                             // DeleteRec : resultExtendPop[0][x].LOEKZ //DELETE /
                         });
+                        oParamClosePR.push({
+                            Banfn: aData.at(item).PRNO, //PRNO
+                            Bnfpo: aData.at(item).PRITM //PRITM
+                        })
 
                         poItemLastCnt = String(parseInt(poItemLastCnt) + 10);
 
@@ -6957,6 +7023,7 @@ sap.ui.define([
                     oParam = oParamInitParam;
                     oParam['N_ChangePOItemParam'] = oParamDataPO;
                     oParam['N_ChangePOReturn'] = [];
+                    oParam['N_ChangePOClosePRParam'] = oParamClosePR;
                     _promiseResult = new Promise((resolve, reject)=>{
                         rfcModel.create("/ChangePOSet", oParam, {
                             method: "POST",
@@ -7335,130 +7402,12 @@ sap.ui.define([
 
             onExportToExcel: Utils.onExport,
 
-            onTableResize: async function (oEvent){
+            onTableResize: function (oEvent){
                 var event = oEvent.getSource();
                 var oSplitter = this.byId("splitDet");
                 var oFirstPane = oSplitter.getRootPaneContainer().getPanes().at(0);
                 var oSecondPane = oSplitter.getRootPaneContainer().getPanes().at(1);
-                if(this._tableFullScreenRender !== ""){
-                    if(event.getParent().getParent().getId().includes("mainTab")){
-                        this.byId('vpoDetailTab').setVisible(true)
-                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
-                            size: "46%",
-                            resizable: true
-                        });
-                        oFirstPane.setLayoutData(oLayoutData);
-                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
-                    }
-                    else if(event.getParent().getParent().getId().includes("vpoDetailsTab")){
-                        this.byId('idIconTabBarInlineMode').setVisible(true)
-                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
-                            size: "50%",
-                            resizable: true
-                        });
-                        oSecondPane.setLayoutData(oLayoutData);
-                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
-                        this.byId("vpoDetailTab").addStyleClass("vpoDetSection")
-                        this.byId("vpoDetailTab").removeStyleClass("addDesignSection2")
-
-                        this.byId("vpoDetailsIconTab").setEnabled(true);
-                        this.byId("vpoDelSchedIconTab").setEnabled(true);
-                        this.byId("vpoDelInvIconTab").setEnabled(true);
-                        this.byId("vpoPoHistIconTab").setEnabled(true);
-                        this.byId("vpoConditionsIconTab").setEnabled(true);
-                        this.byId("vpoProcFlowIconTab").setEnabled(true);
-                    }
-                    else if(event.getParent().getParent().getId().includes("vpoDelSchedTab")){
-                        this.byId('idIconTabBarInlineMode').setVisible(true)
-                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
-                            size: "50%",
-                            resizable: true
-                        });
-                        oSecondPane.setLayoutData(oLayoutData);
-                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
-                        this.byId("vpoDetailTab").addStyleClass("vpoDetSection")
-                        this.byId("vpoDetailTab").removeStyleClass("addDesignSection2")
-
-                        this.byId("vpoDetailsIconTab").setEnabled(true);
-                        this.byId("vpoDelSchedIconTab").setEnabled(true);
-                        this.byId("vpoDelInvIconTab").setEnabled(true);
-                        this.byId("vpoPoHistIconTab").setEnabled(true);
-                        this.byId("vpoConditionsIconTab").setEnabled(true);
-                        this.byId("vpoProcFlowIconTab").setEnabled(true);
-                    }
-                    else if(event.getParent().getParent().getId().includes("vpoDelInvTab")){
-                        this.byId('idIconTabBarInlineMode').setVisible(true)
-                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
-                            size: "50%",
-                            resizable: true
-                        });
-                        oSecondPane.setLayoutData(oLayoutData);
-                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
-                        this.byId("vpoDetailTab").addStyleClass("vpoDetSection")
-                        this.byId("vpoDetailTab").removeStyleClass("addDesignSection2")
-
-                        this.byId("vpoDetailsIconTab").setEnabled(true);
-                        this.byId("vpoDelSchedIconTab").setEnabled(true);
-                        this.byId("vpoDelInvIconTab").setEnabled(true);
-                        this.byId("vpoPoHistIconTab").setEnabled(true);
-                        this.byId("vpoConditionsIconTab").setEnabled(true);
-                        this.byId("vpoProcFlowIconTab").setEnabled(true);
-                    }
-                    else if(event.getParent().getParent().getId().includes("vpoPoHistTab")){
-                        this.byId('idIconTabBarInlineMode').setVisible(true)
-                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
-                            size: "50%",
-                            resizable: true
-                        });
-                        oSecondPane.setLayoutData(oLayoutData);
-                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
-                        this.byId("vpoDetailTab").addStyleClass("vpoDetSection")
-                        this.byId("vpoDetailTab").removeStyleClass("addDesignSection2")
-
-                        this.byId("vpoDetailsIconTab").setEnabled(true);
-                        this.byId("vpoDelSchedIconTab").setEnabled(true);
-                        this.byId("vpoDelInvIconTab").setEnabled(true);
-                        this.byId("vpoPoHistIconTab").setEnabled(true);
-                        this.byId("vpoConditionsIconTab").setEnabled(true);
-                        this.byId("vpoProcFlowIconTab").setEnabled(true);
-                    }
-                    else if(event.getParent().getParent().getId().includes("vpoConditionsTab")){
-                        this.byId('idIconTabBarInlineMode').setVisible(true)
-                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
-                            size: "50%",
-                            resizable: true
-                        });
-                        oSecondPane.setLayoutData(oLayoutData);
-                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
-                        this.byId("vpoDetailTab").addStyleClass("vpoDetSection")
-                        this.byId("vpoDetailTab").removeStyleClass("addDesignSection2")
-
-                        this.byId("vpoDetailsIconTab").setEnabled(true);
-                        this.byId("vpoDelSchedIconTab").setEnabled(true);
-                        this.byId("vpoDelInvIconTab").setEnabled(true);
-                        this.byId("vpoPoHistIconTab").setEnabled(true);
-                        this.byId("vpoConditionsIconTab").setEnabled(true);
-                        this.byId("vpoProcFlowIconTab").setEnabled(true);
-                    }
-                    else if(event.getParent().getParent().getId().includes("vpoProcFlowIconTab")){
-                        this.byId('idIconTabBarInlineMode').setVisible(true)
-                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
-                            size: "50%",
-                            resizable: true
-                        });
-                        oSecondPane.setLayoutData(oLayoutData);
-                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
-                        this.byId("vpoDetailTab").addStyleClass("vpoDetSection")
-                        this.byId("vpoDetailTab").removeStyleClass("addDesignSection2")
-
-                        this.byId("vpoDetailsIconTab").setEnabled(true);
-                        this.byId("vpoDelSchedIconTab").setEnabled(true);
-                        this.byId("vpoDelInvIconTab").setEnabled(true);
-                        this.byId("vpoPoHistIconTab").setEnabled(true);
-                        this.byId("vpoConditionsIconTab").setEnabled(true);
-                    }
-                    this._tableFullScreenRender = ""
-                }else{
+                if(this._tableFullScreenRender === ""){
                     if(event.getParent().getParent().getId().includes("mainTab")){
                         this.byId('vpoDetailTab').setVisible(false)
                         var oLayoutData = new sap.ui.layout.SplitterLayoutData({
@@ -7466,6 +7415,10 @@ sap.ui.define([
                             resizable: false
                         });
                         oFirstPane.setLayoutData(oLayoutData);
+
+                        this.byId('vpoBtnFullScreenDetails').setVisible(false)
+                        this.byId('vpoBtnExitFullScreenDetails').setVisible(true)
+
                         this.byId("_IDGenVBox1").addStyleClass("onAddvboxHeight")
                     }
                     else if(event.getParent().getParent().getId().includes("vpoDetailsTab")){
@@ -7478,6 +7431,9 @@ sap.ui.define([
                         this.byId("_IDGenVBox1").addStyleClass("onAddvboxHeight")
                         this.byId("vpoDetailTab").removeStyleClass("vpoDetSection")
                         this.byId("vpoDetailTab").addStyleClass("addDesignSection2")
+
+                        this.byId('vpoBtnFullScreenDetails').setVisible(false)
+                        this.byId('vpoBtnExitFullScreenDetails').setVisible(true)
 
                         // this.byId("vpoDetailsIconTab").setEnabled(false);
                         this.byId("vpoDelSchedIconTab").setEnabled(false);
@@ -7497,6 +7453,9 @@ sap.ui.define([
                         this.byId("vpoDetailTab").removeStyleClass("vpoDetSection")
                         this.byId("vpoDetailTab").addStyleClass("addDesignSection2")
 
+                        this.byId('vpoBtnFullScreenDelSched').setVisible(false)
+                        this.byId('vpoBtnExitFullScreenDelSched').setVisible(true)
+
                         this.byId("vpoDetailsIconTab").setEnabled(false);
                         // this.byId("vpoDelSchedIconTab").setEnabled(false);
                         this.byId("vpoDelInvIconTab").setEnabled(false);
@@ -7514,6 +7473,9 @@ sap.ui.define([
                         this.byId("_IDGenVBox1").addStyleClass("onAddvboxHeight")
                         this.byId("vpoDetailTab").removeStyleClass("vpoDetSection")
                         this.byId("vpoDetailTab").addStyleClass("addDesignSection2")
+
+                        this.byId('vpoBtnFullScreenDelInv').setVisible(false)
+                        this.byId('vpoBtnExitFullScreenDelInv').setVisible(true)
 
                         this.byId("vpoDetailsIconTab").setEnabled(false);
                         this.byId("vpoDelSchedIconTab").setEnabled(false);
@@ -7533,6 +7495,9 @@ sap.ui.define([
                         this.byId("vpoDetailTab").removeStyleClass("vpoDetSection")
                         this.byId("vpoDetailTab").addStyleClass("addDesignSection2")
 
+                        this.byId('vpoBtnFullScreenPOHistory').setVisible(false)
+                        this.byId('vpoBtnExitFullScreenPOHistory').setVisible(true)
+
                         this.byId("vpoDetailsIconTab").setEnabled(false);
                         this.byId("vpoDelSchedIconTab").setEnabled(false);
                         this.byId("vpoDelInvIconTab").setEnabled(false);
@@ -7550,6 +7515,9 @@ sap.ui.define([
                         this.byId("_IDGenVBox1").addStyleClass("onAddvboxHeight")
                         this.byId("vpoDetailTab").removeStyleClass("vpoDetSection")
                         this.byId("vpoDetailTab").addStyleClass("addDesignSection2")
+
+                        this.byId('vpoBtnFullScreenConditions').setVisible(false)
+                        this.byId('vpoBtnExitFullScreenConditions').setVisible(true)
 
                         this.byId("vpoDetailsIconTab").setEnabled(false);
                         this.byId("vpoDelSchedIconTab").setEnabled(false);
@@ -7569,6 +7537,9 @@ sap.ui.define([
                         this.byId("vpoDetailTab").removeStyleClass("vpoDetSection")
                         this.byId("vpoDetailTab").addStyleClass("addDesignSection2")
 
+                        this.byId('vpoBtnFullScreenProcFlow').setVisible(false)
+                        this.byId('vpoBtnExitFullScreenProcFlow').setVisible(true)
+
                         this.byId("vpoDetailsIconTab").setEnabled(false);
                         this.byId("vpoDelSchedIconTab").setEnabled(false);
                         this.byId("vpoDelInvIconTab").setEnabled(false);
@@ -7576,6 +7547,154 @@ sap.ui.define([
                         this.byId("vpoConditionsIconTab").setEnabled(false);
                     }
                     this._tableFullScreenRender = "Value"
+                }
+            },
+
+            onExitTableResize: function(oEvent){
+                var event = oEvent.getSource();
+                var oSplitter = this.byId("splitDet");
+                var oFirstPane = oSplitter.getRootPaneContainer().getPanes().at(0);
+                var oSecondPane = oSplitter.getRootPaneContainer().getPanes().at(1);
+                if(this._tableFullScreenRender !== ""){
+                    if(event.getParent().getParent().getId().includes("mainTab")){
+                        this.byId('vpoDetailTab').setVisible(true)
+                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
+                            size: "46%",
+                            resizable: true
+                        });
+                        oFirstPane.setLayoutData(oLayoutData);
+
+                        this.byId('vpoBtnFullScreenDetails').setVisible(true)
+                        this.byId('vpoBtnExitFullScreenDetails').setVisible(false)
+
+                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
+                    }
+                    else if(event.getParent().getParent().getId().includes("vpoDetailsTab")){
+                        this.byId('idIconTabBarInlineMode').setVisible(true)
+                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
+                            size: "50%",
+                            resizable: true
+                        });
+                        oSecondPane.setLayoutData(oLayoutData);
+                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
+                        this.byId("vpoDetailTab").addStyleClass("vpoDetSection")
+                        this.byId("vpoDetailTab").removeStyleClass("addDesignSection2")
+
+                        this.byId('vpoBtnFullScreenDetails').setVisible(true)
+                        this.byId('vpoBtnExitFullScreenDetails').setVisible(false)
+
+                        this.byId("vpoDetailsIconTab").setEnabled(true);
+                        this.byId("vpoDelSchedIconTab").setEnabled(true);
+                        this.byId("vpoDelInvIconTab").setEnabled(true);
+                        this.byId("vpoPoHistIconTab").setEnabled(true);
+                        this.byId("vpoConditionsIconTab").setEnabled(true);
+                        this.byId("vpoProcFlowIconTab").setEnabled(true);
+                    }
+                    else if(event.getParent().getParent().getId().includes("vpoDelSchedTab")){
+                        this.byId('idIconTabBarInlineMode').setVisible(true)
+                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
+                            size: "50%",
+                            resizable: true
+                        });
+                        oSecondPane.setLayoutData(oLayoutData);
+                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
+                        this.byId("vpoDetailTab").addStyleClass("vpoDetSection")
+                        this.byId("vpoDetailTab").removeStyleClass("addDesignSection2")
+
+                        this.byId('vpoBtnFullScreenDelSched').setVisible(true)
+                        this.byId('vpoBtnExitFullScreenDelSched').setVisible(false)
+
+                        this.byId("vpoDetailsIconTab").setEnabled(true);
+                        this.byId("vpoDelSchedIconTab").setEnabled(true);
+                        this.byId("vpoDelInvIconTab").setEnabled(true);
+                        this.byId("vpoPoHistIconTab").setEnabled(true);
+                        this.byId("vpoConditionsIconTab").setEnabled(true);
+                        this.byId("vpoProcFlowIconTab").setEnabled(true);
+                    }
+                    else if(event.getParent().getParent().getId().includes("vpoDelInvTab")){
+                        this.byId('idIconTabBarInlineMode').setVisible(true)
+                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
+                            size: "50%",
+                            resizable: true
+                        });
+                        oSecondPane.setLayoutData(oLayoutData);
+                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
+                        this.byId("vpoDetailTab").addStyleClass("vpoDetSection")
+                        this.byId("vpoDetailTab").removeStyleClass("addDesignSection2")
+
+                        this.byId('vpoBtnFullScreenDelInv').setVisible(true)
+                        this.byId('vpoBtnExitFullScreenDelInv').setVisible(false)
+
+                        this.byId("vpoDetailsIconTab").setEnabled(true);
+                        this.byId("vpoDelSchedIconTab").setEnabled(true);
+                        this.byId("vpoDelInvIconTab").setEnabled(true);
+                        this.byId("vpoPoHistIconTab").setEnabled(true);
+                        this.byId("vpoConditionsIconTab").setEnabled(true);
+                        this.byId("vpoProcFlowIconTab").setEnabled(true);
+                    }
+                    else if(event.getParent().getParent().getId().includes("vpoPoHistTab")){
+                        this.byId('idIconTabBarInlineMode').setVisible(true)
+                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
+                            size: "50%",
+                            resizable: true
+                        });
+                        oSecondPane.setLayoutData(oLayoutData);
+                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
+                        this.byId("vpoDetailTab").addStyleClass("vpoDetSection")
+                        this.byId("vpoDetailTab").removeStyleClass("addDesignSection2")
+
+                        this.byId('vpoBtnFullScreenPOHistory').setVisible(true)
+                        this.byId('vpoBtnExitFullScreenPOHistory').setVisible(false)
+
+                        this.byId("vpoDetailsIconTab").setEnabled(true);
+                        this.byId("vpoDelSchedIconTab").setEnabled(true);
+                        this.byId("vpoDelInvIconTab").setEnabled(true);
+                        this.byId("vpoPoHistIconTab").setEnabled(true);
+                        this.byId("vpoConditionsIconTab").setEnabled(true);
+                        this.byId("vpoProcFlowIconTab").setEnabled(true);
+                    }
+                    else if(event.getParent().getParent().getId().includes("vpoConditionsTab")){
+                        this.byId('idIconTabBarInlineMode').setVisible(true)
+                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
+                            size: "50%",
+                            resizable: true
+                        });
+                        oSecondPane.setLayoutData(oLayoutData);
+                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
+                        this.byId("vpoDetailTab").addStyleClass("vpoDetSection")
+                        this.byId("vpoDetailTab").removeStyleClass("addDesignSection2")
+
+                        this.byId('vpoBtnFullScreenConditions').setVisible(true)
+                        this.byId('vpoBtnExitFullScreenConditions').setVisible(false)
+
+                        this.byId("vpoDetailsIconTab").setEnabled(true);
+                        this.byId("vpoDelSchedIconTab").setEnabled(true);
+                        this.byId("vpoDelInvIconTab").setEnabled(true);
+                        this.byId("vpoPoHistIconTab").setEnabled(true);
+                        this.byId("vpoConditionsIconTab").setEnabled(true);
+                        this.byId("vpoProcFlowIconTab").setEnabled(true);
+                    }
+                    else if(event.getParent().getParent().getId().includes("vpoProcFlowIconTab")){
+                        this.byId('idIconTabBarInlineMode').setVisible(true)
+                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
+                            size: "50%",
+                            resizable: true
+                        });
+                        oSecondPane.setLayoutData(oLayoutData);
+                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
+                        this.byId("vpoDetailTab").addStyleClass("vpoDetSection")
+                        this.byId("vpoDetailTab").removeStyleClass("addDesignSection2")
+
+                        this.byId('vpoBtnFullScreenProcFlow').setVisible(true)
+                        this.byId('vpoBtnExitFullScreenProcFlow').setVisible(false)
+
+                        this.byId("vpoDetailsIconTab").setEnabled(true);
+                        this.byId("vpoDelSchedIconTab").setEnabled(true);
+                        this.byId("vpoDelInvIconTab").setEnabled(true);
+                        this.byId("vpoPoHistIconTab").setEnabled(true);
+                        this.byId("vpoConditionsIconTab").setEnabled(true);
+                    }
+                    this._tableFullScreenRender = ""
                 }
             },
 
@@ -7963,8 +8082,6 @@ sap.ui.define([
                         }
                     })
                 }
-    
-                console.log(oSource.getTokens())
             },
 
             
