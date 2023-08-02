@@ -22,7 +22,7 @@ sap.ui.define([
             onInit: async function () {
                 that = this;
                 this._oModel = this.getOwnerComponent().getModel();
-                
+
                 if (sap.ui.getCore().byId("backBtn") !== undefined) {
                     this._fBackButton = sap.ui.getCore().byId("backBtn").mEventRegistry.press[0].fFunction;
 
@@ -113,6 +113,8 @@ sap.ui.define([
                 //store PO Item for PO History arrow up and arrow down function
                 this._poHistPOItemStore = []; //Store PO Items. 
                 this._poHistPOItemCount = 0; //Store Count every time user click arrow button in PO History
+
+                this._isDBClickApplied = false;
 
                 var nodeLanes = 
                 {
@@ -828,17 +830,19 @@ sap.ui.define([
                     }
                     oColumnsData = oDataModel.getProperty('/');                 
                     this.addColumns("mainTab", oColumnsData, oData, "VPOHdr");
-
-                    //double click event
-                    this.byId("mainTab").attachBrowserEvent('dblclick',function(e){
-                        var PONo = me.getView().getModel("ui").getProperty("/activePONo");
-                        // var CONDREC = me.getView().getModel("ui").getProperty("/activeCondRec");
-                        var SBU = me.getView().getModel("ui").getData().sbu;
-                        e.preventDefault();
-                        if(me.getView().getModel("ui").getData().dataMode === 'READ'){
-                            me.navToDetail(PONo, SBU); //navigate to detail page
-                        }
-                    });
+                    if(!this._isDBClickApplied){
+                        //double click event
+                        this.byId("mainTab").attachBrowserEvent('dblclick',function(e){
+                            me._isDBClickApplied = true;
+                            var PONo = me.getView().getModel("ui").getProperty("/activePONo");
+                            // var CONDREC = me.getView().getModel("ui").getProperty("/activeCondRec");
+                            var SBU = me.getView().getModel("ui").getData().sbu;
+                            e.preventDefault();
+                            if(me.getView().getModel("ui").getData().dataMode === 'READ'){
+                                me.navToDetail(PONo, SBU); //navigate to detail page
+                            }
+                        });
+                    }
                 }
                 if (modCode === 'VPODTLS') {
                     oColumnsModel = this.getView().getModel("VPODtls");  
@@ -1855,133 +1859,12 @@ sap.ui.define([
 
             onExportToExcel: Utils.onExport,
 
-            onTableResize: async function (oEvent){
+            onTableResize: function(oEvent){
                 var event = oEvent.getSource();
                 var oSplitter = this.byId("splitMain");
                 var oFirstPane = oSplitter.getRootPaneContainer().getPanes().at(0);
                 var oSecondPane = oSplitter.getRootPaneContainer().getPanes().at(1);
-                if(this._tableFullScreenRender !== ""){
-                    //hide Smart Filter Bar
-                    this.byId('smartFilterBar').setVisible(true)
-
-                    if(event.getParent().getParent().getId().includes("mainTab")){
-                        this.byId('itbDetail').setVisible(true)
-                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
-                            size: "46%",
-                            resizable: true
-                        });
-                        oFirstPane.setLayoutData(oLayoutData);
-                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
-                    }
-                    else if(event.getParent().getParent().getId().includes("detailsTab")){
-                        this.byId('mainTab').setVisible(true)
-                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
-                            size: "54%",
-                            resizable: true
-                        });
-                        oSecondPane.setLayoutData(oLayoutData);
-                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
-                        this.byId("itbDetail").addStyleClass("designSection2")
-                        this.byId("itbDetail").removeStyleClass("addDesignSection2")
-
-                        // this.byId("detailsIconTab").setEnabled(true);
-                        this.byId("delSchedIconTab").setEnabled(true);
-                        this.byId("delInvIconTab").setEnabled(true);
-                        this.byId("poHistIconTab").setEnabled(true);
-                        this.byId("conditionsIconTab").setEnabled(true);
-                        this.byId("procFlowIconTab").setEnabled(true);
-                    }
-                    else if(event.getParent().getParent().getId().includes("delSchedTab")){
-                        this.byId('mainTab').setVisible(true)
-                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
-                            size: "54%",
-                            resizable: true
-                        });
-                        oSecondPane.setLayoutData(oLayoutData);
-                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
-                        this.byId("itbDetail").addStyleClass("designSection2")
-                        this.byId("itbDetail").removeStyleClass("addDesignSection2")
-
-                        this.byId("detailsIconTab").setEnabled(true);
-                        // this.byId("delSchedIconTab").setEnabled(true);
-                        this.byId("delInvIconTab").setEnabled(true);
-                        this.byId("poHistIconTab").setEnabled(true);
-                        this.byId("conditionsIconTab").setEnabled(true);
-                        this.byId("procFlowIconTab").setEnabled(true);
-                    }
-                    else if(event.getParent().getParent().getId().includes("delInvTab")){
-                        this.byId('mainTab').setVisible(true)
-                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
-                            size: "54%",
-                            resizable: true
-                        });
-                        oSecondPane.setLayoutData(oLayoutData);
-                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
-                        this.byId("itbDetail").addStyleClass("designSection2")
-                        this.byId("itbDetail").removeStyleClass("addDesignSection2")
-
-                        this.byId("detailsIconTab").setEnabled(true);
-                        this.byId("delSchedIconTab").setEnabled(true);
-                        // this.byId("delInvIconTab").setEnabled(true);
-                        this.byId("poHistIconTab").setEnabled(true);
-                        this.byId("conditionsIconTab").setEnabled(true);
-                        this.byId("procFlowIconTab").setEnabled(true);
-                    }
-                    else if(event.getParent().getParent().getId().includes("poHistTab")){
-                        this.byId('mainTab').setVisible(true)
-                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
-                            size: "54%",
-                            resizable: true
-                        });
-                        oSecondPane.setLayoutData(oLayoutData);
-                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
-                        this.byId("itbDetail").addStyleClass("designSection2")
-                        this.byId("itbDetail").removeStyleClass("addDesignSection2")
-
-                        this.byId("detailsIconTab").setEnabled(true);
-                        this.byId("delSchedIconTab").setEnabled(true);
-                        this.byId("delInvIconTab").setEnabled(true);
-                        // this.byId("poHistIconTab").setEnabled(true);
-                        this.byId("conditionsIconTab").setEnabled(true);
-                        this.byId("procFlowIconTab").setEnabled(true);
-                    }
-                    else if(event.getParent().getParent().getId().includes("conditionsTab")){
-                        this.byId('mainTab').setVisible(true)
-                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
-                            size: "54%",
-                            resizable: true
-                        });
-                        oSecondPane.setLayoutData(oLayoutData);
-                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
-                        this.byId("itbDetail").addStyleClass("designSection2")
-                        this.byId("itbDetail").removeStyleClass("addDesignSection2")
-
-                        this.byId("detailsIconTab").setEnabled(true);
-                        this.byId("delSchedIconTab").setEnabled(true);
-                        this.byId("delInvIconTab").setEnabled(true);
-                        this.byId("poHistIconTab").setEnabled(true);
-                        // this.byId("conditionsIconTab").setEnabled(true);
-                        this.byId("procFlowIconTab").setEnabled(true);
-                    }
-                    else if(event.getParent().getParent().getId().includes("procFlowIconTab")){
-                        this.byId('mainTab').setVisible(true)
-                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
-                            size: "54%",
-                            resizable: true
-                        });
-                        oSecondPane.setLayoutData(oLayoutData);
-                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
-                        this.byId("itbDetail").addStyleClass("designSection2")
-                        this.byId("itbDetail").removeStyleClass("addDesignSection2")
-
-                        this.byId("detailsIconTab").setEnabled(true);
-                        this.byId("delSchedIconTab").setEnabled(true);
-                        this.byId("delInvIconTab").setEnabled(true);
-                        this.byId("poHistIconTab").setEnabled(true);
-                        this.byId("conditionsIconTab").setEnabled(true);
-                    }
-                    this._tableFullScreenRender = ""
-                }else{
+                if(this._tableFullScreenRender === ""){
                     //hide Smart Filter Bar
                     this.byId('smartFilterBar').setVisible(false)
                     
@@ -1992,6 +1875,9 @@ sap.ui.define([
                             resizable: false
                         });
                         oFirstPane.setLayoutData(oLayoutData);
+                        
+                        this.byId('btnFullScreen').setVisible(false)
+                        this.byId('btnExitFullScreen').setVisible(true)
                         this.byId("_IDGenVBox1").addStyleClass("onAddvboxHeight")
                     }
                     else if(event.getParent().getParent().getId().includes("detailsTab")){
@@ -2004,6 +1890,9 @@ sap.ui.define([
                         this.byId("_IDGenVBox1").addStyleClass("onAddvboxHeight")
                         this.byId("itbDetail").removeStyleClass("designSection2")
                         this.byId("itbDetail").addStyleClass("addDesignSection2")
+
+                        this.byId('btnFullScreenDetails').setVisible(false)
+                        this.byId('btnExitFullScreenDetails').setVisible(true)
 
                         // this.byId("detailsIconTab").setEnabled(false);
                         this.byId("delSchedIconTab").setEnabled(false);
@@ -2023,6 +1912,9 @@ sap.ui.define([
                         this.byId("itbDetail").removeStyleClass("designSection2")
                         this.byId("itbDetail").addStyleClass("addDesignSection2")
 
+                        this.byId('btnFullScreenDelSched').setVisible(false)
+                        this.byId('btnExitFullScreenDelSched').setVisible(true)
+
                         this.byId("detailsIconTab").setEnabled(false);
                         // this.byId("delSchedIconTab").setEnabled(false);
                         this.byId("delInvIconTab").setEnabled(false);
@@ -2040,6 +1932,9 @@ sap.ui.define([
                         this.byId("_IDGenVBox1").addStyleClass("onAddvboxHeight")
                         this.byId("itbDetail").removeStyleClass("designSection2")
                         this.byId("itbDetail").addStyleClass("addDesignSection2")
+
+                        this.byId('btnFullScreenDelInv').setVisible(false)
+                        this.byId('btnExitFullScreenDelInv').setVisible(true)
 
                         this.byId("detailsIconTab").setEnabled(false);
                         this.byId("delSchedIconTab").setEnabled(false);
@@ -2059,6 +1954,9 @@ sap.ui.define([
                         this.byId("itbDetail").removeStyleClass("designSection2")
                         this.byId("itbDetail").addStyleClass("addDesignSection2")
 
+                        this.byId('btnFullScreenPOHistory').setVisible(false)
+                        this.byId('btnExitFullScreenPOHistory').setVisible(true)
+
                         this.byId("detailsIconTab").setEnabled(false);
                         this.byId("delSchedIconTab").setEnabled(false);
                         this.byId("delInvIconTab").setEnabled(false);
@@ -2076,6 +1974,9 @@ sap.ui.define([
                         this.byId("_IDGenVBox1").addStyleClass("onAddvboxHeight")
                         this.byId("itbDetail").removeStyleClass("designSection2")
                         this.byId("itbDetail").addStyleClass("addDesignSection2")
+
+                        this.byId('btnFullScreenConditions').setVisible(false)
+                        this.byId('btnExitFullScreenConditions').setVisible(true)
 
                         this.byId("detailsIconTab").setEnabled(false);
                         this.byId("delSchedIconTab").setEnabled(false);
@@ -2102,6 +2003,153 @@ sap.ui.define([
                         this.byId("conditionsIconTab").setEnabled(false);
                     }
                     this._tableFullScreenRender = "Value"
+                }
+            },
+            
+            onExitTableResize: function (oEvent){
+                var event = oEvent.getSource();
+                var oSplitter = this.byId("splitMain");
+                var oFirstPane = oSplitter.getRootPaneContainer().getPanes().at(0);
+                var oSecondPane = oSplitter.getRootPaneContainer().getPanes().at(1);
+                if(this._tableFullScreenRender !== ""){
+                    //hide Smart Filter Bar
+                    this.byId('smartFilterBar').setVisible(true)
+
+                    if(event.getParent().getParent().getId().includes("mainTab")){
+                        this.byId('itbDetail').setVisible(true)
+                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
+                            size: "46%",
+                            resizable: true
+                        });
+                        oFirstPane.setLayoutData(oLayoutData);
+
+                        this.byId('btnFullScreen').setVisible(true)
+                        this.byId('btnExitFullScreen').setVisible(false)
+                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
+                    }
+                    else if(event.getParent().getParent().getId().includes("detailsTab")){
+                        this.byId('mainTab').setVisible(true)
+                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
+                            size: "54%",
+                            resizable: true
+                        });
+                        oSecondPane.setLayoutData(oLayoutData);
+                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
+                        this.byId("itbDetail").addStyleClass("designSection2")
+                        this.byId("itbDetail").removeStyleClass("addDesignSection2")
+
+                        this.byId('btnFullScreenDetails').setVisible(true)
+                        this.byId('btnExitFullScreenDetails').setVisible(false)
+
+                        // this.byId("detailsIconTab").setEnabled(true);
+                        this.byId("delSchedIconTab").setEnabled(true);
+                        this.byId("delInvIconTab").setEnabled(true);
+                        this.byId("poHistIconTab").setEnabled(true);
+                        this.byId("conditionsIconTab").setEnabled(true);
+                        this.byId("procFlowIconTab").setEnabled(true);
+                    }
+                    else if(event.getParent().getParent().getId().includes("delSchedTab")){
+                        this.byId('mainTab').setVisible(true)
+                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
+                            size: "54%",
+                            resizable: true
+                        });
+                        oSecondPane.setLayoutData(oLayoutData);
+                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
+                        this.byId("itbDetail").addStyleClass("designSection2")
+                        this.byId("itbDetail").removeStyleClass("addDesignSection2")
+
+                        this.byId('btnFullScreenDelSched').setVisible(true)
+                        this.byId('btnExitFullScreenDelSched').setVisible(false)
+
+                        this.byId("detailsIconTab").setEnabled(true);
+                        // this.byId("delSchedIconTab").setEnabled(true);
+                        this.byId("delInvIconTab").setEnabled(true);
+                        this.byId("poHistIconTab").setEnabled(true);
+                        this.byId("conditionsIconTab").setEnabled(true);
+                        this.byId("procFlowIconTab").setEnabled(true);
+                    }
+                    else if(event.getParent().getParent().getId().includes("delInvTab")){
+                        this.byId('mainTab').setVisible(true)
+                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
+                            size: "54%",
+                            resizable: true
+                        });
+                        oSecondPane.setLayoutData(oLayoutData);
+                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
+                        this.byId("itbDetail").addStyleClass("designSection2")
+                        this.byId("itbDetail").removeStyleClass("addDesignSection2")
+
+                        this.byId('btnFullScreenDelInv').setVisible(true)
+                        this.byId('btnExitFullScreenDelInv').setVisible(false)
+
+                        this.byId("detailsIconTab").setEnabled(true);
+                        this.byId("delSchedIconTab").setEnabled(true);
+                        // this.byId("delInvIconTab").setEnabled(true);
+                        this.byId("poHistIconTab").setEnabled(true);
+                        this.byId("conditionsIconTab").setEnabled(true);
+                        this.byId("procFlowIconTab").setEnabled(true);
+                    }
+                    else if(event.getParent().getParent().getId().includes("poHistTab")){
+                        this.byId('mainTab').setVisible(true)
+                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
+                            size: "54%",
+                            resizable: true
+                        });
+                        oSecondPane.setLayoutData(oLayoutData);
+                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
+                        this.byId("itbDetail").addStyleClass("designSection2")
+                        this.byId("itbDetail").removeStyleClass("addDesignSection2")
+
+                        this.byId('btnFullScreenPOHistory').setVisible(true)
+                        this.byId('btnExitFullScreenPOHistory').setVisible(false)
+
+                        this.byId("detailsIconTab").setEnabled(true);
+                        this.byId("delSchedIconTab").setEnabled(true);
+                        this.byId("delInvIconTab").setEnabled(true);
+                        // this.byId("poHistIconTab").setEnabled(true);
+                        this.byId("conditionsIconTab").setEnabled(true);
+                        this.byId("procFlowIconTab").setEnabled(true);
+                    }
+                    else if(event.getParent().getParent().getId().includes("conditionsTab")){
+                        this.byId('mainTab').setVisible(true)
+                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
+                            size: "54%",
+                            resizable: true
+                        });
+                        oSecondPane.setLayoutData(oLayoutData);
+                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
+                        this.byId("itbDetail").addStyleClass("designSection2")
+                        this.byId("itbDetail").removeStyleClass("addDesignSection2")
+
+                        this.byId('btnFullScreenConditions').setVisible(true)
+                        this.byId('btnExitFullScreenConditions').setVisible(false)
+
+                        this.byId("detailsIconTab").setEnabled(true);
+                        this.byId("delSchedIconTab").setEnabled(true);
+                        this.byId("delInvIconTab").setEnabled(true);
+                        this.byId("poHistIconTab").setEnabled(true);
+                        // this.byId("conditionsIconTab").setEnabled(true);
+                        this.byId("procFlowIconTab").setEnabled(true);
+                    }
+                    else if(event.getParent().getParent().getId().includes("procFlowIconTab")){
+                        this.byId('mainTab').setVisible(true)
+                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
+                            size: "54%",
+                            resizable: true
+                        });
+                        oSecondPane.setLayoutData(oLayoutData);
+                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
+                        this.byId("itbDetail").addStyleClass("designSection2")
+                        this.byId("itbDetail").removeStyleClass("addDesignSection2")
+
+                        this.byId("detailsIconTab").setEnabled(true);
+                        this.byId("delSchedIconTab").setEnabled(true);
+                        this.byId("delInvIconTab").setEnabled(true);
+                        this.byId("poHistIconTab").setEnabled(true);
+                        this.byId("conditionsIconTab").setEnabled(true);
+                    }
+                    this._tableFullScreenRender = ""
                 }
             },
 
@@ -2202,6 +2250,7 @@ sap.ui.define([
                 oDDTextParam.push({CODE: "INFO_NO_LAYOUT"});
                 oDDTextParam.push({CODE: "SAVELAYOUT"});
                 oDDTextParam.push({CODE: "FULLSCREEN"});
+                oDDTextParam.push({CODE: "EXITFULLSCREEN"});
                 oDDTextParam.push({CODE: "EXPORTTOEXCEL"});
                 oDDTextParam.push({CODE: "CREATEDBY"});
 
@@ -2451,7 +2500,6 @@ sap.ui.define([
             },
 
             onPOLock: async function(){
-                return true;
                 var me = this;
                 var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_LOCK_SRV");
                 var sError = "";
@@ -2492,7 +2540,6 @@ sap.ui.define([
             },
 
             onPOUnlock: async function(){
-                return;
                 var me = this;
                 var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_LOCK_SRV");
 
