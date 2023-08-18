@@ -5591,22 +5591,145 @@ sap.ui.define([
                 var oModel = this.getOwnerComponent().getModel();
                 var oTable = this.byId("vpoDelSchedTab");
                 var aSelIndices = oTable.getSelectedIndices();
-                var oSelectedIndices = oTable.getBinding("rows").aIndices;
                 var aData = oTable.getModel().getData().rows;
+                var oParamInitParam = {}
+                var oParamDataPOSched = [];
+                var oParam = {};
                 var oTmpSelectedIndices = [];
+                var rfcModel = this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
 
-                var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
+                var message = "";
+                var poNo = this._pono;
 
+                var seqNoList = [];
+                var seqNoCount = 0;
+                var delSchedSet = [];
+
+                await new Promise((resolve, reject)=>{
+                    oModel.read('/VPODelSchedSet', { 
+                        urlParameters: {
+                            "$filter": "PONO eq '" + poNo + "'"
+                        },
+                        success: function (data, response) {
+                            if (data.results.length > 0) {
+                                delSchedSet = data.results;
+                                delSchedSet.sort((a,b) => (a.ITEM > b.ITEM) ? 1 : ((b.ITEM > a.ITEM) ? -1 : 0));
+
+                                console.log(delSchedSet);
+                            }
+                            resolve();
+                        },
+                        error: function (err) {
+                            resolve();
+                        }
+                    });
+                });
                 if (aSelIndices.length > 0) {
                     aSelIndices.forEach(item => {
                         oTmpSelectedIndices.push(oTable.getBinding("rows").aIndices[item])
                     });
             
                     aSelIndices = oTmpSelectedIndices;
+                    aSelIndices.forEach(async(item, index) => {
+                        for(var x = 0; x < delSchedSet.length; x++){
+                            if(delSchedSet[x].ITEM === aData.at(item).ITEM && delSchedSet[x].SEQNO === aData.at(item).SEQNO){
+                                var wItemSeqNo = {};
+                                if(seqNoList[0] === undefined){
+                                    wItemSeqNo = {
+                                        ITEM: aData.at(item).ITEM,
+                                        SEQNO: [delSchedSet[x].SEQNO]
+                                    }
+                                    seqNoList.push(wItemSeqNo);
+                                    seqNoList[0].SEQNO.sort(function(a, b){return b - a});
+                                }else{
+                                    for(var y = 0; y < seqNoList.length; y++){
+                                        if(seqNoList[y].ITEM === delSchedSet[x].ITEM){
 
-                    aSelIndices.forEach((item, index) => {
-                        console.log(aData.at(item))
+                                            if (!seqNoList[y].SEQNO.includes(delSchedSet[x].SEQNO)) {
+                                                // ✅ only runs if value not in array
+                                                seqNoList[y].SEQNO.push(delSchedSet[x].SEQNO);
+                                            }
+                                        }else{
+                                            wItemSeqNo = {
+                                                ITEM: aData.at(item).ITEM,
+                                                SEQNO: [delSchedSet[x].SEQNO]
+                                            }
+                                            seqNoList.push(wItemSeqNo);
+                                        }
+                                        seqNoList[y].SEQNO.sort(function(a, b){return b - a});
+                                    }
+                                }
+                            }
+                        }
                     })
+
+                    aSelIndices.forEach(async(item, index) => {
+                        console.log("seq no", seqNoList)
+
+                        for(var x = 0; x < seqNoList.length; x++){
+                            if(aData.at(item).ITEM === seqNoList[x].ITEM){
+
+                                seqNoCount = isNaN(seqNoList[x].SEQNO[0]) ? 0 : seqNoList[x].SEQNO[0];
+                                seqNoCount = String(parseInt(seqNoCount) + 1);
+
+                                while (seqNoCount.length < 4) seqNoCount = "0" + seqNoCount;
+
+                                if (!seqNoList[x].SEQNO.includes(seqNoCount)) {
+                                    // ✅ only runs if value not in array
+                                    seqNoList[x].SEQNO.push(seqNoCount);
+                                }
+                                seqNoList[x].SEQNO.sort(function(a, b){return b - a});
+
+                                oParamInitParam = {
+                                    IPoNumber: me._pono,
+                                    IDoDownload: "N",
+                                    IChangeonlyHdrplants: "N",
+                                }
+                                oParamDataPOSched.push({
+                                    PoNumber: me._pono,
+                                    PoItem: aData.at(item).ITEM,
+                                    SchedLine: seqNoCount,
+                                    Quantity: aData.at(item).SCHEDQTY,
+                                    DelivDate: sapDateFormat.format(new Date(aData.at(item).DELDT)) + "T00:00:00",
+                                    PreqNo: aData.at(item).PRNO,
+                                    PreqItem: aData.at(item).PRITM,
+                                    
+                                });
+
+                            }
+                        }
+                    });
+                    if (oParamDataPOSched.length > 0) {
+                        oParam = oParamInitParam;
+                        oParam['N_ChangePOItemSchedParam'] = oParamDataPOSched;
+                        oParam['N_ChangePOReturn'] = [];
+                    }
+                    console.log(oParam)
+                    // _promiseResult = new Promise((resolve, reject)=>{
+                    //     rfcModel.create("/ChangePOSet", oParam, {
+                    //         method: "POST",
+                    //         success: async function(oData, oResponse){
+                    //             console.log(oData);
+                    //             if(oData.N_ChangePOReturn.results[0].Msgtyp === 'E'){
+                    //                 message = oData.N_ChangePOReturn.results[0].Msgv1;
+                    //                 MessageBox.error(message);
+                    //                 resolve()
+                    //             }else{
+                    //                 message = oData.N_ChangePOReturn.results[0].Msgv1;
+                    //                 MessageBox.information(message);
+                    //                 await new Promise((resolve, reject)=>{
+                    //                     resolve(me.loadAllData())
+                    //                 });
+                    //                 resolve()
+                    //             }   
+                    //         },error: function(error){
+                    //             MessageBox.error(error);
+                    //             reject();
+                    //         }
+                    //     })
+                    // });
+
+                    // await _promiseResult
             
                 }
             },
