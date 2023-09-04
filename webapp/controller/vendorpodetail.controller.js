@@ -7113,8 +7113,8 @@ sap.ui.define([
                             Menge     : aData.at(item).QTY,//OrdQTY
                             Meins     : aData.at(item).UOM,//UOM
                             Netpr     : aData.at(item).NETPRICE,//net price
-                            Repos     : aData.at(item).INVRCPTIND, //IR Indicator
-                            Webre     : aData.at(item).GRBASEDIVIND, //GR Based Ind
+                            Repos     : true, //aData.at(item).INVRCPTIND, //IR Indicator
+                            Webre     : true, //aData.at(item).GRBASEDIVIND, //GR Based Ind
                             Eindt     : sapDateFormat.format(new Date(aData.at(item).DELDT)) + "T00:00:00", //DlvDt
                             // Netpr     : resultExtendPop[0][x].NETPR,//NET ORD PRICE/
                             // Peinh     : resultExtendPop[0][x].PEINH,//NET UOM/
