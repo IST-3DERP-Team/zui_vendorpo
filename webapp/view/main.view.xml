@@ -12,7 +12,6 @@
             <core:CommandExecution id="comVpoMain" command="Edit" enabled="true" execute=".onClickEdit" />
         </dependents>
         <content>
-            
             <smartfilterbar:SmartFilterBar id="smartFilterBar" entitySet="ZVB_3DERP_VPO_FILTERS" search="onSearch" showClearOnFB="true" persistencyKey="3DERP_StylesPKey" filterContainerWidth="15rem">
                 <smartfilterbar:controlConfiguration>
                     <smartfilterbar:ControlConfiguration key="SBU" groupId="_BASIC" label="{captionMsg>/SBU}" mandatory="mandatory" width="50px">
@@ -37,7 +36,37 @@
                     </smartfilterbar:ControlConfiguration>
                 </smartfilterbar:controlConfiguration>
                 <smartfilterbar:controlConfiguration>
-                    <smartfilterbar:ControlConfiguration key="DOCTYPE" label="{captionMsg>/DOCTYP}" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false" displayBehaviour ="idOnly"/>
+                    <smartfilterbar:ControlConfiguration key="DOCTYPE" label="{captionMsg>/DOCTYP}" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false">
+                        <smartfilterbar:customControl>
+                            <MultiInput id="multiInputDOCTYPE"
+                                change="onCustomSmartFilterValueHelpChange"
+                                valueHelpRequest=".onCustomSmartFilterValueHelp"
+                                tokenUpdate="onCustomSmartFilterValueHelpTokenUpdate"
+                                suggestionRows="{
+                                    path: 'docTypSHSource>/results',
+                                    sorter: { path: 'DocType' },
+                                    length: 1000,
+                                    templateShareable: false
+                                }">
+                                <suggestionColumns>
+                                    <Column>
+                                        <Label text="Document Type"/>
+                                    </Column>
+                                    <Column>
+                                        <Label text="Description"/>
+                                    </Column>
+                                </suggestionColumns>
+                                <suggestionRows>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <Label text="{docTypSHSource>DocType}" />
+                                             <Label text="{docTypSHSource>Description}" />
+                                        </cells>
+                                    </ColumnListItem>
+                                </suggestionRows>
+                            </MultiInput>
+                        </smartfilterbar:customControl>
+                    </smartfilterbar:ControlConfiguration>
                 </smartfilterbar:controlConfiguration>
                 <smartfilterbar:controlConfiguration>
                     <smartfilterbar:ControlConfiguration key="COMPANY" label="{captionMsg>/COMPANY}" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false" displayBehaviour ="idOnly"/>
@@ -50,6 +79,38 @@
                 </smartfilterbar:controlConfiguration>
                 <smartfilterbar:controlConfiguration>
                     <smartfilterbar:ControlConfiguration key="CREATEDBY" label="{captionMsg>/CREATEDBY}" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false" displayBehaviour ="idOnly"/>
+                </smartfilterbar:controlConfiguration>
+                <smartfilterbar:controlConfiguration>
+                    <smartfilterbar:ControlConfiguration key="PRNO" label="{captionMsg>/PRNO}" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false">
+                        <smartfilterbar:customControl>
+                            <MultiInput id="multiInputPRNO"
+                                change="onCustomSmartFilterValueHelpChange"
+                                valueHelpRequest=".onCustomSmartFilterValueHelp"
+                                tokenUpdate="onCustomSmartFilterValueHelpTokenUpdate"
+                                suggestionRows="{
+                                    path: 'prNoSHSource>/results',
+                                    sorter: { path: 'PRNumber' },
+                                    length: 1000,
+                                    templateShareable: false
+                                }">
+                                <suggestionColumns>
+                                    <Column>
+                                        <Label text="PR Number"/>
+                                    </Column>
+                                    <!-- <Column>
+                                        <Label text="Description"/>
+                                    </Column> -->
+                                </suggestionColumns>
+                                <suggestionRows>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <Label text="{prNoSHSource>PRNumber}" />
+                                        </cells>
+                                    </ColumnListItem>
+                                </suggestionRows>
+                            </MultiInput>
+                        </smartfilterbar:customControl>
+                    </smartfilterbar:ControlConfiguration>
                 </smartfilterbar:controlConfiguration>
                 <smartfilterbar:layoutData>
                     <FlexItemData growFactor="0"/>
