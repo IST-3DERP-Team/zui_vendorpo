@@ -6,11 +6,14 @@ sap.ui.define([
     "sap/m/MessageBox",
     "../js/Utils",
     "sap/ui/core/routing/HashChanger",
+    'sap/m/SearchField',
+    'sap/ui/model/type/String',
+    "sap/m/Token"
 ],
     /**
      * @param {typeof sap.ui.core.mvc.Controller} Controller
      */
-    function (Controller, JSONModel, Filter, FilterOperator, MessageBox, Utils, HashChanger) {
+    function (Controller, JSONModel, Filter, FilterOperator, MessageBox, Utils, HashChanger, SearchField, typeString, Token) {
         "use strict";
 
         var that;
@@ -38,7 +41,6 @@ sap.ui.define([
                     }, oView);
                 }
 
-                this.callCaptionsAPI();
                 this._counts = {
                     unreleasedpo: 0,
                     openlineitems: 0,
@@ -77,7 +79,7 @@ sap.ui.define([
                 var oModel = this.getOwnerComponent().getModel("ZVB_3DERP_VPO_FILTERS_CDS");
                 oModel.read("/ZVB_3DERP_SBU_SH", {
                     success: function (oData, oResponse) {
-                        // console.log(oData)
+                        console.log(oData)
                         if (oData.results.length === 1) {
                             // that.getView().getModel("ui").setProperty("/sbu", oData.results[0].SBU);
                             // that.getColumns("AUTO_INIT");
@@ -154,6 +156,16 @@ sap.ui.define([
 
                     this.byId("_IDGenMenuButton3").setVisible(false);
                 }
+
+                this._oMultiInputDOCTYPE = this.getView().byId("multiInputDOCTYPE");
+                this._oMultiInputDOCTYPE.addValidator(this._onMultiInputValidate.bind(this));
+
+                this._oMultiInputPRNO = this.getView().byId("multiInputPRNO");
+                this._oMultiInputPRNO.addValidator(this._onMultiInputValidate.bind(this));
+
+                
+                this.callCaptionsAPI();
+                this.getPRNOSH([]);
             },
 
             _routePatternMatched: function (oEvent) {
@@ -189,10 +201,353 @@ sap.ui.define([
                 _promiseResult = new Promise((resolve, reject)=>{
                     resolve(me.getCols());
                 });
+                
+                this.getDocTypSH([]);
                 await _promiseResult;
                 this.closeLoadingDialog();
 
             },
+
+            getDocTypSH: function(aList){
+                var me = this;
+                var oJSONModel = new JSONModel();
+                var iCounter = 0;
+                var itemResult = [];
+                var vSBU = this.getView().getModel("ui").getData().sbu;
+                var oModel = this.getOwnerComponent().getModel("ZVB_3DERP_VPO_FILTERS_CDS");
+                //ZVB_3DERP_DOCTYPE_SH
+                oModel.read("/ZVB_3DERP_DOCTYPE_SH", {
+                    success: function (oData, oResponse) {
+                        if(oData.results.length > 0){
+                            for(var x = 0; x < oData.results.length; x++ ){
+                                if(oData.results[x].SBU === vSBU){
+                                    itemResult.push(oData.results[x]);
+                                }
+                            }
+
+                            itemResult = {results: itemResult} 
+                            var aDataFiltered = [];
+                            aDataFiltered = itemResult.results;
+            
+                            var aData = new JSONModel({
+                                results: aDataFiltered
+                            });
+                            me.getView().setModel(aData, "docTypSHSource");
+                            
+                        }else{
+                                
+                            var aData = new JSONModel({results: []});
+                            me.getView().setModel(aData, "docTypSHSource");
+                        }
+                        
+                    },
+                    error: function (err) { 
+                    }
+                });
+            },
+
+            getPRNOSH: function(aList){
+                var me = this;
+                var oJSONModel = new JSONModel();
+                var iCounter = 0;
+                var itemResult = [];
+                var vSBU = this.getView().getModel("ui").getData().sbu;
+                var oModel = this.getOwnerComponent().getModel("ZVB_3DERP_VPO_FILTERS_CDS");
+                // ZVB_3DERP_PRNO_SH
+                oModel.read("/ZVB_3DERP_PRNO_SH", {
+                    success: function (oData, oResponse) {
+                        if(oData.results.length > 0){
+                            var aDataFiltered = [];
+                            if (aList.length > 0) {
+                                aList.forEach(item => {
+                                    aDataFiltered.push(...oData.results.filter(x => x.DocType === item));
+                                })
+                            } else {
+                                aDataFiltered = oData.results;
+                            }
+                            console.log(aDataFiltered);
+                            var aData = new JSONModel({
+                                results: aDataFiltered
+                            });
+                            me.getView().setModel(aData, "prNoSHSource");
+                        }else{
+                            
+                            var aData = new JSONModel({results: []});
+                            me.getView().setModel(aData, "prNoSHSource");
+                        }
+                    },
+                    error: function (err) { 
+                    }
+                });
+            },
+            onCustomSmartFilterValueHelp: function(oEvent){
+                var oSource = oEvent.getSource();
+                var sModel = oSource.mBindingInfos.suggestionRows.model;
+                var oCustomSmartFilterModel;
+                var oSmartField = {};
+
+                if(sModel == "prNoSHSource"){
+                    oSmartField = {
+                        idLabel: "PR Number",
+                        idName: "PRNumber"
+                    }
+
+                    this.oColModel = new JSONModel({
+                        "cols": [
+                            {
+                                "label": "PR Number",
+                                "template": "PRNumber",
+                                "width": "20rem",
+                                "sortProperty": "PRNumber"
+                            }
+                        ]
+                    });
+
+                    oCustomSmartFilterModel = new JSONModel({
+                        "title": "PR Number",
+                        "key": "PRNumber"
+                    })
+                }else if(sModel == "docTypSHSource"){
+                    oSmartField = {
+                        idLabel: "Document Type",
+                        idName: "DocType"
+                    }
+
+                    this.oColModel = new JSONModel({
+                        "cols": [
+                            {
+                                "label": "Document Type",
+                                "template": "DocType",
+                                "width": "20rem",
+                                "sortProperty": "DocType"
+                            },
+                            {
+                                "label": "Description",
+                                "template": "Description",
+                                "sortProperty": "Description"
+                            },
+                        ]
+                    });
+
+                    oCustomSmartFilterModel = new JSONModel({
+                        "title": "Document Type",
+                        "key": "DocType"
+                    })
+                }
+
+                var aCols = this.oColModel.getData().cols;
+                this._oBasicSearchField = new SearchField({
+                    showSearchButton: false
+                });
+
+                this._oCustomSmartFilterValueHelpDialog = sap.ui.xmlfragment("zuivendorpo.view.fragments.valuehelp.SmartFilterValueHelpDialog", this);
+                this.getView().addDependent(this._oCustomSmartFilterValueHelpDialog);
+
+                this._oCustomSmartFilterValueHelpDialog.setModel(oCustomSmartFilterModel);
+    
+                this._oCustomSmartFilterValueHelpDialog.setRangeKeyFields([{
+                    label: oSmartField.idLabel,
+                    key: oSmartField.idName,
+                    type: "string",
+                    typeInstance: new typeString({}, {
+                        maxLength: 4
+                    })
+                }]);
+
+                this._oCustomSmartFilterValueHelpDialog.getTableAsync().then(function (oTable) {
+                    oTable.setModel(this.getView().getModel(sModel));
+                    oTable.setModel(this.oColModel, "columns");
+                    if (oTable.bindRows) {
+                        oTable.bindAggregation("rows", "/results");
+                    }
+    
+                    if (oTable.bindItems) {
+                        oTable.bindAggregation("items", "/results", function () {
+                            return new ColumnListItem({
+                                cells: aCols.map(function (column) {
+                                    return new Label({ text: "{" + column.template + "}" });
+                                })
+                            });
+                        });
+                    }
+    
+                    this._oCustomSmartFilterValueHelpDialog.update();
+                }.bind(this));
+
+                if (sModel == "prNoSHSource") this._oCustomSmartFilterValueHelpDialog.setTokens(this._oMultiInputPRNO.getTokens());
+                if (sModel == "docTypSHSource") this._oCustomSmartFilterValueHelpDialog.setTokens(this._oMultiInputDOCTYPE.getTokens());
+                this._oCustomSmartFilterValueHelpDialog.open();
+            },
+
+            onCustomSmartFilterValueHelpOkPress: function (oEvent) {
+                var me = this;
+                var aTokens = oEvent.getParameter("tokens");
+                var oSource = oEvent.getSource();
+                var sKey = Object.values(oSource.oModels)[0].oData.key;
+                //var oObject = oArgs.suggestionObject.getBindingContext(oSmartField.model).getObject(),
+
+                aTokens.forEach(item => {
+                    item.mProperties.text = item.mProperties.key;
+                })
+
+                if (sKey == "PRNumber") this._oMultiInputPRNO.setTokens(aTokens);
+                else if(sKey == "DocType"){
+                    this._oMultiInputDOCTYPE.setTokens(aTokens);
+
+                    var aToken = this._oMultiInputDOCTYPE.getTokens();
+                    var aList = [];
+
+                    aToken.forEach(item => {
+                        aList.push(item.mProperties.key);
+                    });
+                    
+                    if (aList.length > 0)
+                        me.getPRNOSH(aList);
+                    else
+                        me.getPRNOSH([]);
+                }
+                this._oCustomSmartFilterValueHelpDialog.close();
+            },
+
+            onCustomSmartFilterValueHelpCancelPress: function () {
+                this._oCustomSmartFilterValueHelpDialog.close();
+            },
+    
+            onCustomSmartFilterValueHelpAfterClose: function () {
+                this._oCustomSmartFilterValueHelpDialog.destroy();
+            },
+
+            onFilterBarSearch: function (oEvent) {
+                var sSearchQuery = this._oBasicSearchField.getValue(),
+                    aSelectionSet = oEvent.getParameter("selectionSet");
+                
+                var aFilters = aSelectionSet.reduce(function (aResult, oControl) {
+
+                    var sKey = _that._oCustomSmartFilterValueHelpDialog.getModel().oData.key;
+                    if (oControl.getValue()) {
+                        aResult.push(new Filter({
+                            path: sKey, //oControl.getName(),
+                            operator: FilterOperator.Contains,
+                            value1: oControl.getValue()
+                        }));
+                    }
+
+                    return aResult;
+                }, []);
+    
+                this._filterTable(new Filter({
+                    filters: aFilters,
+                    and: true
+                }));
+            },
+
+            _filterTable: function (oFilter) {
+                var oValueHelpDialog = this._oCustomSmartFilterValueHelpDialog;
+    
+                oValueHelpDialog.getTableAsync().then(function (oTable) {
+                    if (oTable.bindRows) {
+                        oTable.getBinding("rows").filter(oFilter);
+                    }
+    
+                    if (oTable.bindItems) {
+                        oTable.getBinding("items").filter(oFilter);
+                    }
+    
+                    oValueHelpDialog.update();
+                });
+            },
+
+            _onMultiInputValidate: function(oArgs) {
+                var oSmartField = {};
+
+                if (oArgs.suggestionObject.sId.includes("multiInputPRNO")) {
+                    oSmartField.model = "prNoSHSource";
+                    oSmartField.id = "PRNumber";
+                    oSmartField.desc = "DESCRIPTION";x``
+                }else if (oArgs.suggestionObject.sId.includes("multiInputDOCTYPE")) {
+                    oSmartField.model = "docTypSHSource";
+                    oSmartField.id = "DocType";
+                    oSmartField.desc = "Description";
+                }
+
+                var aToken;
+
+                if (oSmartField.model == "prNoSHSource") aToken = this._oMultiInputPRNO.getTokens();
+                else if (oSmartField.model == "docTypSHSource") aToken = this._oMultiInputDOCTYPE.getTokens();
+
+                if (oArgs.suggestionObject) {
+                    var oObject = oArgs.suggestionObject.getBindingContext(oSmartField.model).getObject(),
+                        oToken = new Token();
+
+                    oToken.setKey(oObject[oSmartField.id]);
+                    //oToken.setText(oObject[oSmartField.desc] + " (" + oObject[oSmartField.id] + ")");
+                    oToken.setText(oObject[oSmartField.id]);
+                    aToken.push(oToken)
+
+                    if (oSmartField.model == "prNoSHSource") {
+                        this._oMultiInputPRNO.setTokens(aToken);
+                        this._oMultiInputPRNO.setValueState("None");
+                    }else if (oSmartField.model == "docTypSHSource") {
+                        this._oMultiInputDOCTYPE.setTokens(aToken);
+                        this._oMultiInputDOCTYPE.setValueState("None");
+                    }
+                }
+                else if (oArgs.text !== "") {
+                    if (oSmartField.model == "prNoSHSource") {
+                        this._oMultiInputPRNO.setValueState("Error");
+                    }else if (oSmartField.model == "docTypSHSource") {
+                        this._oMultiInputDOCTYPE.setValueState("Error");
+                    }
+                }
+                return null;
+            },
+
+            onCustomSmartFilterValueHelpChange: function(oEvent) {
+                var me = this;
+                var oSource = oEvent.getSource();
+                if (oSource.sId.includes("multiInputPRNO")) {
+                    if (oEvent.getParameter("value") === "") this._oMultiInputPRNO.setValueState("None");
+                }else if (oSource.sId.includes("multiInputDOCTYPE")){
+                    if (oEvent.getParameter("value") === "") this._oMultiInputDOCTYPE.setValueState("None");
+
+                    var aToken = this._oMultiInputDOCTYPE.getTokens();
+                    var aList = [];
+
+                    aToken.forEach(item => {
+                        aList.push(item.mProperties.key);
+                    });
+
+                    if (aList.length > 0)
+                        me.getPRNOSH(aList);
+                    else
+                        me.getPRNOSH([]);
+                }
+            },
+
+            onCustomSmartFilterValueHelpTokenUpdate: function(oEvent) {
+                var oSource = oEvent.getSource();
+                var oParameter = oEvent.getParameters();
+                var me = this;
+
+                if (oParameter.type == "removed") {
+                    if (oSource.sId.includes("multiInputPRNO")) { } 
+                }else if (oSource.sId.includes("multiInputDOCTYPE")) { 
+                    var aToken = this._oMultiInputDOCTYPE.getTokens();
+                    var aList = [];
+
+                    aToken.forEach(item => {
+                        if (oParameter.removedTokens.filter(x => x.mProperties.key == item.mProperties.key).length == 0) {
+                            aList.push(item.mProperties.key);
+                        }
+                    });
+
+                    if (aList.length > 0)
+                        me.getPRNOSH(aList);
+                    else
+                        me.getPRNOSH([]);
+                }
+            },
+
             //Same as OnSearch
             onRefresh: async function(){
                 var me = this;
@@ -2174,7 +2529,8 @@ sap.ui.define([
                     }
                 });
             },
-            callCaptionsAPI: async function(){
+            callCaptionsAPI: function(){
+                var me = this;
                 var oJSONModel = new JSONModel();
                 var oDDTextParam = [];
                 var oDDTextResult = [];
@@ -2260,19 +2616,22 @@ sap.ui.define([
                 oDDTextParam.push({CODE: "ARROWUP"});
                 oDDTextParam.push({CODE: "ARROWDOWN"});
                 oDDTextParam.push({CODE: "POPRINT"});
-                
-                await oModel.create("/CaptionMsgSet", { CaptionMsgItems: oDDTextParam  }, {
+                oDDTextParam.push({CODE: "PRNO"});
+
+                oModel.create("/CaptionMsgSet", { CaptionMsgItems: oDDTextParam  }, {
                     method: "POST",
                     success: function(oData, oResponse) {
+                        console.log(oData);
                         oData.CaptionMsgItems.results.forEach(item=>{
                             oDDTextResult[item.CODE] = item.TEXT;
                         })
                         
                         oJSONModel.setData(oDDTextResult);
-                        that.getView().setModel(oJSONModel, "captionMsg");
+                        me.getView().setModel(oJSONModel, "captionMsg");
                     },
                     error: function(err) {
                         //error message
+                        console.log(err);
                         MessageBox.error(me.getView().getModel("captionMsg").getData()["INFO_ERROR"])
                     }
                 });
