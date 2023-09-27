@@ -112,6 +112,12 @@
                         </smartfilterbar:customControl>
                     </smartfilterbar:ControlConfiguration>
                 </smartfilterbar:controlConfiguration>
+                 <smartfilterbar:controlConfiguration>
+                    <smartfilterbar:ControlConfiguration key="IONO" label="{captionMsg>/IONO}" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false">
+                        <smartfilterbar:customControl>
+                        </smartfilterbar:customControl>
+                    </smartfilterbar:ControlConfiguration>
+                </smartfilterbar:controlConfiguration>
                 <smartfilterbar:layoutData>
                     <FlexItemData growFactor="0"/>
                 </smartfilterbar:layoutData>

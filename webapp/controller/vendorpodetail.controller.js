@@ -6572,9 +6572,11 @@ sap.ui.define([
 
                                     for (var i = 0; i < poDetailsData.length; i++) {
                                         if (poDetailsData[i].PRNO === dataRow.at(selRowItem).PRNO && poDetailsData[i].PRITM === dataRow.at(selRowItem).PRITM) {
-                                            poDetailsData[i].UNLIMITED = VPOGetGMCPOTolSetResult.results[0].UNLIMITED
-                                            poDetailsData[i].OVERDELTOL = VPOGetGMCPOTolSetResult.results[0].OVERDELTOL
-                                            poDetailsData[i].UNDERDELTOL = VPOGetGMCPOTolSetResult.results[0].UNDERDELTOL
+                                            if(VPOGetGMCPOTolSetResult.result !== undefined){
+                                                poDetailsData[i].UNLIMITED = VPOGetGMCPOTolSetResult.results[0].UNLIMITED
+                                                poDetailsData[i].OVERDELTOL = VPOGetGMCPOTolSetResult.results[0].OVERDELTOL
+                                                poDetailsData[i].UNDERDELTOL = VPOGetGMCPOTolSetResult.results[0].UNDERDELTOL
+                                            }
                                         }
                                     }        
                                 }
@@ -7020,6 +7022,11 @@ sap.ui.define([
                 var poItemArr = [];
                 var poItemLastCnt = 0;
 
+                var infoRecMainParam = {};
+                var inforRecReturn = [];
+                var oParamInfoRec = [];
+                var inforRecMessage = "";
+
                 this.showLoadingDialog(_captionList.LOADING)
                 
                 _promiseResult = new Promise((resolve, reject)=>{
@@ -7080,103 +7087,212 @@ sap.ui.define([
                         oTmpSelectedIndices.push(oTable.getBinding("rows").aIndices[item])
                     });
                     aSelIndices = oTmpSelectedIndices;
-                    aSelIndices.forEach((item, index) => {
-                        oParamInitParam = {
-                            IPoNumber: poNo,
-                            IDoDownload: "",
-                            IChangeonlyHdrplants: "",
-                        };
-                        oParamDataPO.push({
-                            Bedat     : sapDateFormat.format(new Date(headerPOArr[0].PODT)) + "T00:00:00", //PODocDt
-                            Bsart     : headerPOArr[0].DOCTYPE, //PODocTyp
-                            Banfn     : aData.at(item).PRNO, //PR
-                            Bnfpo     : aData.at(item).PRITM, //PRITM
-                            // Ekorg     : aData.at(item).PURCHORG,
-                            // Lifnr     : aData.at(item).VENDORCD,
-                            // Ekgrp     : aData.at(item).PURCHGRP,
-                            // Inco1     : inco1,
-                            // Inco2     : inco2,
-                            // Waers     : currency,
-                            // Zterm     : paymentTerms,
-                            Ebeln     : poNo, //PONO
-                            Ebelp     : poItemLastCnt, //POITM
-                            Unsez     : shipToPlant, //shipToPlant
-                            Inco1     : incoTerms, // Incoterms
-                            Inco2     : destination, //Destination
-                            Evers     : shipMode, //ShipMode
-                            Bukrs     : headerPOArr[0].COMPANY,//COCD
-                            Werks     : headerPOArr[0].PURCHPLANT,//PLANTCD
-                            Unsez     : headerPOArr[0].SHIPTOPLANT,//
-                            Matnr     : aData.at(item).MATNO, //MatNo
-                            Charg     : aData.at(item).IONO,
-                            Txz01     : aData.at(item).SHORTTEXT,//ShortText
-                            Menge     : aData.at(item).QTY,//OrdQTY
-                            Meins     : aData.at(item).UOM,//UOM
-                            Netpr     : aData.at(item).NETPRICE,//net price
-                            Repos     : true, //aData.at(item).INVRCPTIND, //IR Indicator
-                            Webre     : true, //aData.at(item).GRBASEDIVIND, //GR Based Ind
-                            Eindt     : sapDateFormat.format(new Date(aData.at(item).DELDT)) + "T00:00:00", //DlvDt
-                            // Netpr     : resultExtendPop[0][x].NETPR,//NET ORD PRICE/
-                            // Peinh     : resultExtendPop[0][x].PEINH,//NET UOM/
-                            // Bprme     : resultExtendPop[0][x].BPRME,//ORD UOM/
-                            // Repos     : resultExtendPop[0][x].REPOS,//INV RCPT/
-                            // Webre     : resultExtendPop[0][x].WEBRE,//GR IND /
-                            // Eindt     : sapDateFormat.format(new Date(delDt)) + "T00:00:00", //Delivery Date /
-                            // Evers     : resultExtendPop[0][x].EVERS,//SHIPPINGINST /
-                            // Uebto     : resultExtendPop[0][x].UEBTO,//OVERTOL /
-                            // Untto     : resultExtendPop[0][x].UNTTO,//UNDERTOL /
-                            // Uebtk     : resultExtendPop[0][x].UEBTK,//UNLIMITED /
-                            // Elikz     : resultExtendPop[0][x].ELIKZ,//DLVCOMPLETE /
-                            // DeleteRec : resultExtendPop[0][x].LOEKZ //DELETE /
-                        });
-                        oParamClosePR.push({
-                            Banfn: aData.at(item).PRNO, //PRNO
-                            Bnfpo: aData.at(item).PRITM //PRITM
-                        })
 
-                        poItemLastCnt = String(parseInt(poItemLastCnt) + 10);
+                    aSelIndices.forEach(async (item, index) => {
 
-                        if(poItemLastCnt != "" || poItemLastCnt != null){
-                            while(poItemLastCnt.length < 5) poItemLastCnt = "0" + poItemLastCnt.toString();
+                        if(headerPOArr[0].VENDOR === undefined || headerPOArr[0].VENDOR === "" || headerPOArr[0].VENDOR === null){
+                            oParamInfoRec = [];
+                            inforRecReturn = [];
+                            var mengeComputed = 0;
+                            oParamInfoRec.push({
+                                Vendor: "",//headerPOArr[0].VENDOR,
+                                Material: aData.at(item).MATNO,
+                                PurchOrg: headerPOArr[0].PURCHORG,
+                                Plant: headerPOArr[0].PURCHPLANT,
+                                PurGroup: headerPOArr[0].PURCHGRP
+                            });
+                            infoRecMainParam["N_GetInfoRecMatParam"] = oParamInfoRec;
+
+                            await new Promise((resolve, reject)=>{
+                                rfcModel.create("/GetInfoRecordSet", infoRecMainParam, {
+                                    method: "POST",
+                                    success: function(oData, oResponse) {
+                                        console.log(oData);
+                                        inforRecReturn.push(oData.N_GetInfoRecReturn)
+                                        resolve();
+                                    },
+                                    error: function(err){
+                                        reject();
+                                    }
+                                });
+                            });
                             
+
+                            console.log(inforRecReturn);
+
+                            if(inforRecReturn.Ret_Type === "E"){
+                                inforRecMessage = inforRecReturn.Ret_Message + "\n"
+                            }else{
+                                if(aData.at(item).UOM !== inforRecReturn.OrderPR_Un){
+                                    mengeComputed = (aData.at(item).QTY/inforRecReturn.Conv_Num1) * (inforRecReturn.Conv_Den1 *inforRecReturn.Price_Unit)
+                                }else{
+                                    mengeComputed = aData.at(item).QTY;
+                                }
+    
+                                oParamInitParam = {
+                                    IPoNumber: poNo,
+                                    IDoDownload: "",
+                                    IChangeonlyHdrplants: "",
+                                };
+                                oParamDataPO.push({
+                                    Bedat     : sapDateFormat.format(new Date(headerPOArr[0].PODT)) + "T00:00:00", //PODocDt
+                                    Bsart     : headerPOArr[0].DOCTYPE, //PODocTyp
+                                    Banfn     : aData.at(item).PRNO, //PR
+                                    Bnfpo     : aData.at(item).PRITM, //PRITM
+                                    // Ekorg     : aData.at(item).PURCHORG,
+                                    // Lifnr     : aData.at(item).VENDORCD,
+                                    // Ekgrp     : aData.at(item).PURCHGRP,
+                                    // Inco1     : inco1,
+                                    // Inco2     : inco2,
+                                    // Waers     : currency,
+                                    // Zterm     : paymentTerms,
+                                    Ebeln     : poNo, //PONO
+                                    Ebelp     : poItemLastCnt, //POITM
+                                    Unsez     : shipToPlant, //shipToPlant
+                                    Inco1     : incoTerms, // Incoterms
+                                    Inco2     : destination, //Destination
+                                    Evers     : shipMode, //ShipMode
+                                    Bukrs     : headerPOArr[0].COMPANY,//COCD
+                                    Werks     : headerPOArr[0].PURCHPLANT,//PLANTCD
+                                    Unsez     : headerPOArr[0].SHIPTOPLANT,//
+                                    Matnr     : aData.at(item).MATNO, //MatNo
+                                    Charg     : aData.at(item).IONO,
+                                    Txz01     : aData.at(item).SHORTTEXT,//ShortText
+                                    Menge     : mengeComputed, //aData.at(item).QTY,//OrdQTY
+                                    Meins     : aData.at(item).UOM,//UOM
+                                    Netpr     : aData.at(item).NETPRICE,//net price
+                                    Repos     : true, //aData.at(item).INVRCPTIND, //IR Indicator
+                                    Webre     : true, //aData.at(item).GRBASEDIVIND, //GR Based Ind
+                                    Eindt     : sapDateFormat.format(new Date(aData.at(item).DELDT)) + "T00:00:00", //DlvDt
+                                    // Netpr     : resultExtendPop[0][x].NETPR,//NET ORD PRICE/
+                                    // Peinh     : resultExtendPop[0][x].PEINH,//NET UOM/
+                                    // Bprme     : resultExtendPop[0][x].BPRME,//ORD UOM/
+                                    // Repos     : resultExtendPop[0][x].REPOS,//INV RCPT/
+                                    // Webre     : resultExtendPop[0][x].WEBRE,//GR IND /
+                                    // Eindt     : sapDateFormat.format(new Date(delDt)) + "T00:00:00", //Delivery Date /
+                                    // Evers     : resultExtendPop[0][x].EVERS,//SHIPPINGINST /
+                                    // Uebto     : resultExtendPop[0][x].UEBTO,//OVERTOL /
+                                    // Untto     : resultExtendPop[0][x].UNTTO,//UNDERTOL /
+                                    // Uebtk     : resultExtendPop[0][x].UEBTK,//UNLIMITED /
+                                    // Elikz     : resultExtendPop[0][x].ELIKZ,//DLVCOMPLETE /
+                                    // DeleteRec : resultExtendPop[0][x].LOEKZ //DELETE /
+                                });
+                                oParamClosePR.push({
+                                    Banfn: aData.at(item).PRNO, //PRNO
+                                    Bnfpo: aData.at(item).PRITM //PRITM
+                                })
+    
+                                poItemLastCnt = String(parseInt(poItemLastCnt) + 10);
+    
+                                if(poItemLastCnt != "" || poItemLastCnt != null){
+                                    while(poItemLastCnt.length < 5) poItemLastCnt = "0" + poItemLastCnt.toString();
+                                }
+                            }
+                            
+                            
+                        }else{
+                            oParamInitParam = {
+                                IPoNumber: poNo,
+                                IDoDownload: "",
+                                IChangeonlyHdrplants: "",
+                            };
+                            oParamDataPO.push({
+                                Bedat     : sapDateFormat.format(new Date(headerPOArr[0].PODT)) + "T00:00:00", //PODocDt
+                                Bsart     : headerPOArr[0].DOCTYPE, //PODocTyp
+                                Banfn     : aData.at(item).PRNO, //PR
+                                Bnfpo     : aData.at(item).PRITM, //PRITM
+                                // Ekorg     : aData.at(item).PURCHORG,
+                                // Lifnr     : aData.at(item).VENDORCD,
+                                // Ekgrp     : aData.at(item).PURCHGRP,
+                                // Inco1     : inco1,
+                                // Inco2     : inco2,
+                                // Waers     : currency,
+                                // Zterm     : paymentTerms,
+                                Ebeln     : poNo, //PONO
+                                Ebelp     : poItemLastCnt, //POITM
+                                Unsez     : shipToPlant, //shipToPlant
+                                Inco1     : incoTerms, // Incoterms
+                                Inco2     : destination, //Destination
+                                Evers     : shipMode, //ShipMode
+                                Bukrs     : headerPOArr[0].COMPANY,//COCD
+                                Werks     : headerPOArr[0].PURCHPLANT,//PLANTCD
+                                Unsez     : headerPOArr[0].SHIPTOPLANT,//
+                                Matnr     : aData.at(item).MATNO, //MatNo
+                                Charg     : aData.at(item).IONO,
+                                Txz01     : aData.at(item).SHORTTEXT,//ShortText
+                                Menge     : aData.at(item).QTY,//OrdQTY
+                                Meins     : aData.at(item).UOM,//UOM
+                                Netpr     : aData.at(item).NETPRICE,//net price
+                                Repos     : true, //aData.at(item).INVRCPTIND, //IR Indicator
+                                Webre     : true, //aData.at(item).GRBASEDIVIND, //GR Based Ind
+                                Eindt     : sapDateFormat.format(new Date(aData.at(item).DELDT)) + "T00:00:00", //DlvDt
+                                // Netpr     : resultExtendPop[0][x].NETPR,//NET ORD PRICE/
+                                // Peinh     : resultExtendPop[0][x].PEINH,//NET UOM/
+                                // Bprme     : resultExtendPop[0][x].BPRME,//ORD UOM/
+                                // Repos     : resultExtendPop[0][x].REPOS,//INV RCPT/
+                                // Webre     : resultExtendPop[0][x].WEBRE,//GR IND /
+                                // Eindt     : sapDateFormat.format(new Date(delDt)) + "T00:00:00", //Delivery Date /
+                                // Evers     : resultExtendPop[0][x].EVERS,//SHIPPINGINST /
+                                // Uebto     : resultExtendPop[0][x].UEBTO,//OVERTOL /
+                                // Untto     : resultExtendPop[0][x].UNTTO,//UNDERTOL /
+                                // Uebtk     : resultExtendPop[0][x].UEBTK,//UNLIMITED /
+                                // Elikz     : resultExtendPop[0][x].ELIKZ,//DLVCOMPLETE /
+                                // DeleteRec : resultExtendPop[0][x].LOEKZ //DELETE /
+                            });
+                            oParamClosePR.push({
+                                Banfn: aData.at(item).PRNO, //PRNO
+                                Bnfpo: aData.at(item).PRITM //PRITM
+                            })
+
+                            poItemLastCnt = String(parseInt(poItemLastCnt) + 10);
+
+                            if(poItemLastCnt != "" || poItemLastCnt != null){
+                                while(poItemLastCnt.length < 5) poItemLastCnt = "0" + poItemLastCnt.toString();
+                                
+                            }
                         }
-                        
                     });
 
-                    oParam = oParamInitParam;
-                    oParam['N_ChangePOItemParam'] = oParamDataPO;
-                    oParam['N_ChangePOReturn'] = [];
-                    oParam['N_ChangePOClosePRParam'] = oParamClosePR;
-                    _promiseResult = new Promise((resolve, reject)=>{
-                        rfcModel.create("/ChangePOSet", oParam, {
-                            method: "POST",
-                            success: async function(oData, oResponse){
-                                if(oData.N_ChangePOReturn.results.length > 0){
-                                    if(oData.N_ChangePOReturn.results[0].Msgtyp === "E"){
-                                        message = oData.N_ChangePOReturn.results[0].Msgv1;
-                                        MessageBox.error(message);
-                                        resolve()
+                    if(oParamDataPO.length > 0){
+                        oParam = oParamInitParam;
+                        oParam['N_ChangePOItemParam'] = oParamDataPO;
+                        oParam['N_ChangePOReturn'] = [];
+                        oParam['N_ChangePOClosePRParam'] = oParamClosePR;
+                        _promiseResult = new Promise((resolve, reject)=>{
+                            rfcModel.create("/ChangePOSet", oParam, {
+                                method: "POST",
+                                success: async function(oData, oResponse){
+                                    if(oData.N_ChangePOReturn.results.length > 0){
+                                        if(oData.N_ChangePOReturn.results[0].Msgtyp === "E"){
+                                            message = oData.N_ChangePOReturn.results[0].Msgv1;
+                                            MessageBox.error(message);
+                                            resolve()
+                                        }else{
+                                            message = oData.N_ChangePOReturn.results[0].Msgv1;
+                                            MessageBox.information(message);
+                                            me.addPRToPODialog.destroy(true);
+                                            await new Promise((resolve, reject)=>{
+                                                resolve(me.loadAllData())
+                                            });
+                                            resolve()
+                                        }
                                     }else{
-                                        message = oData.N_ChangePOReturn.results[0].Msgv1;
-                                        MessageBox.information(message);
-                                        me.addPRToPODialog.destroy(true);
-                                        await new Promise((resolve, reject)=>{
-                                            resolve(me.loadAllData())
-                                        });
+                                        MessageBox.error(_captionList.INFO_NO_DATA_MODIFIED);
                                         resolve()
                                     }
-                                }else{
+                                },error: function(error){
+                                    //error message
                                     MessageBox.error(_captionList.INFO_NO_DATA_MODIFIED);
                                     resolve()
                                 }
-                            },error: function(error){
-                                //error message
-                                MessageBox.error(_captionList.INFO_NO_DATA_MODIFIED);
-                                resolve()
-                            }
-                        })
-                    });
-                    await _promiseResult;
+                            })
+                        });
+                        await _promiseResult;
+                    }
+
+                    if(inforRecMessage !== ""){
+                        MessageBox.error(inforRecMessage);
+                    }
                 }
                     
                 this.closeLoadingDialog();

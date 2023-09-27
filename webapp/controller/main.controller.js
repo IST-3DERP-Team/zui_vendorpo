@@ -79,7 +79,6 @@ sap.ui.define([
                 var oModel = this.getOwnerComponent().getModel("ZVB_3DERP_VPO_FILTERS_CDS");
                 oModel.read("/ZVB_3DERP_SBU_SH", {
                     success: function (oData, oResponse) {
-                        console.log(oData)
                         if (oData.results.length === 1) {
                             // that.getView().getModel("ui").setProperty("/sbu", oData.results[0].SBU);
                             // that.getColumns("AUTO_INIT");
@@ -265,7 +264,6 @@ sap.ui.define([
                             } else {
                                 aDataFiltered = oData.results;
                             }
-                            console.log(aDataFiltered);
                             var aData = new JSONModel({
                                 results: aDataFiltered
                             });
@@ -418,12 +416,13 @@ sap.ui.define([
             },
 
             onFilterBarSearch: function (oEvent) {
+                var me = this;
                 var sSearchQuery = this._oBasicSearchField.getValue(),
                     aSelectionSet = oEvent.getParameter("selectionSet");
                 
                 var aFilters = aSelectionSet.reduce(function (aResult, oControl) {
 
-                    var sKey = _that._oCustomSmartFilterValueHelpDialog.getModel().oData.key;
+                    var sKey = me._oCustomSmartFilterValueHelpDialog.getModel().oData.key;
                     if (oControl.getValue()) {
                         aResult.push(new Filter({
                             path: sKey, //oControl.getName(),
@@ -463,7 +462,7 @@ sap.ui.define([
                 if (oArgs.suggestionObject.sId.includes("multiInputPRNO")) {
                     oSmartField.model = "prNoSHSource";
                     oSmartField.id = "PRNumber";
-                    oSmartField.desc = "DESCRIPTION";x``
+                    oSmartField.desc = "DESCRIPTION";
                 }else if (oArgs.suggestionObject.sId.includes("multiInputDOCTYPE")) {
                     oSmartField.model = "docTypSHSource";
                     oSmartField.id = "DocType";
@@ -648,13 +647,72 @@ sap.ui.define([
                 var poNo;
                 var condrec;
                 var docType;
-                var aFilters = this.getView().byId("smartFilterBar").getFilters();
+                // var aFilters = this.getView().byId("smartFilterBar").getFilters();
                 var oResults = []
                 var oCounter = 0;
 
                 var vSBU = this.getView().getModel("ui").getData().sbu;
 
-                
+                var oSmartFilter = this.getView().byId("smartFilterBar").getFilters();
+                var aFilters = [],
+                    aFilter = [],
+                    aCustomFilter = [],
+                    aSmartFilter = [];
+
+                if (oSmartFilter.length > 0)  {
+                    // aFilters = oSmartFilter[0].aFilters;
+                    oSmartFilter[0].aFilters.forEach(item => {
+                        if (item.aFilters === undefined) {
+                            aFilter.push(new Filter(item.sPath, item.sOperator, item.oValue1));
+                        }
+                        else {
+                            aFilters.push(item);
+                        }
+                    })
+
+                    if (aFilter.length > 0) { aFilters.push(new Filter(aFilter, false)); }
+                }
+
+                if (this.getView().byId("smartFilterBar")) {
+                    var oCtrl = this.getView().byId("smartFilterBar").determineControlByName("DOCTYPE");
+
+                    if (oCtrl) {
+                        var aCustomFilter = [];
+
+                        if (oCtrl.getTokens().length === 1) {
+                            oCtrl.getTokens().map(function(oToken) {
+                                aFilters.push(new Filter("DOCTYPE", FilterOperator.EQ, oToken.getKey()))
+                            })
+                        }
+                        else if (oCtrl.getTokens().length > 1) {
+                            oCtrl.getTokens().map(function(oToken) {
+                                aCustomFilter.push(new Filter("DOCTYPE", FilterOperator.EQ, oToken.getKey()))
+                            })
+
+                            aFilters.push(new Filter(aCustomFilter));
+                        }
+                    }
+
+                    oCtrl = this.getView().byId("smartFilterBar").determineControlByName("PRNO");
+
+                    if (oCtrl) {
+                        var aCustomFilter = [];
+
+                        if (oCtrl.getTokens().length === 1) {
+                            oCtrl.getTokens().map(function(oToken) {
+                                aFilters.push(new Filter("PRNO", FilterOperator.EQ, oToken.getKey()))
+                            })
+                        }
+                        else if (oCtrl.getTokens().length > 1) {
+                            oCtrl.getTokens().map(function(oToken) {
+                                aCustomFilter.push(new Filter("PRNO", FilterOperator.EQ, oToken.getKey()))
+                            })
+
+                            aFilters.push(new Filter(aCustomFilter));
+                        }
+                    }
+                }
+
                 if (aFilters.length > 0) {
                     aFilters[0].aFilters.forEach(item => {
                         if (item.sPath === 'VENDOR') {
@@ -665,9 +723,11 @@ sap.ui.define([
                     })
                 }
 
+                aSmartFilter.push(new Filter(aFilters, true));
+
                 return new Promise((resolve, reject) => {
                     oModel.read('/mainSet', {
-                        filters: aFilters,
+                        filters: aSmartFilter,
                         success: function (data, response) {
                             if (data.results.length > 0) {
                                 data.results.forEach(item =>{
@@ -677,8 +737,21 @@ sap.ui.define([
                                     }
 
                                     if(oCounter === data.results.length){
-                                        oResults = {"results": oResults}
-                                        
+                                        const filteredObj = oResults.reduce((acc, current) => {
+                                            // Use the PONO value as the key for filtering.
+                                            const key = current.PONO;
+                                            
+                                            // If the key doesn't exist in the accumulator (acc), add the current object.
+                                            if (!acc[key]) {
+                                                acc[key] = current;
+                                            }
+                                            
+                                            return acc;
+                                        }, {});
+                                        const resultArray = Object.values(filteredObj);
+
+                                        oResults = {"results": resultArray}
+
                                         oResults.results.sort(function(a,b) {
                                             return new Date(b.PODT) - new Date(a.PODT);
                                         });
@@ -2617,11 +2690,11 @@ sap.ui.define([
                 oDDTextParam.push({CODE: "ARROWDOWN"});
                 oDDTextParam.push({CODE: "POPRINT"});
                 oDDTextParam.push({CODE: "PRNO"});
+                oDDTextParam.push({CODE: "IONO"});
 
                 oModel.create("/CaptionMsgSet", { CaptionMsgItems: oDDTextParam  }, {
                     method: "POST",
                     success: function(oData, oResponse) {
-                        console.log(oData);
                         oData.CaptionMsgItems.results.forEach(item=>{
                             oDDTextResult[item.CODE] = item.TEXT;
                         })
