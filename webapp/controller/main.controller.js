@@ -1265,7 +1265,9 @@ sap.ui.define([
                             var PONo = me.getView().getModel("ui").getProperty("/activePONo");
                             // var CONDREC = me.getView().getModel("ui").getProperty("/activeCondRec");
                             var SBU = me.getView().getModel("ui").getData().sbu;
+                            console.log(PONo);
                             e.preventDefault();
+                            console.log(me.getView().getModel("ui").getData().dataMode);
                             if(me.getView().getModel("ui").getData().dataMode === 'READ'){
                                 me.navToDetail(PONo, SBU); //navigate to detail page
                             }
@@ -2933,7 +2935,7 @@ sap.ui.define([
 
             onPOLock: async function(){
                 var me = this;
-                var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_LOCK_SRV");
+                var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_LOCK2_SRV");
                 var sError = "";
                 var boolResult = true;
 
@@ -2943,10 +2945,12 @@ sap.ui.define([
                     "N_LOCK_PO_ENQ": [], 
                     "N_LOCK_PO_OUTMESSAGES": [] 
                 }
+                console.log(oParam);
                 await new Promise((resolve, reject) => {
                     oModel.create("/Lock_POHdr_Set", oParam, {
                         method: "POST",
                         success: function(data, oResponse) {
+                            console.log(data)
                             for(var item of data.N_LOCK_PO_OUTMESSAGES.results) {
                                 if (item.Type === "E") {
                                     sError += item.Message + ". ";
@@ -2973,7 +2977,7 @@ sap.ui.define([
 
             onPOUnlock: async function(){
                 var me = this;
-                var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_LOCK_SRV");
+                var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_LOCK2_SRV");
 
                 var oParam = {
                     "N_UNLOCK_PO_ITEMTAB": this._aParamLockPOdata,

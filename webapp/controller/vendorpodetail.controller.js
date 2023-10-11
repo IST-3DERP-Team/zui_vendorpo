@@ -3950,7 +3950,7 @@ sap.ui.define([
                                         Untto: aData.at(validPOItem).UNDERDELTOL,//UnderDel Tol.
                                         Zzmakt: aData.at(validPOItem).POADDTLDESC, //PO Addtl Desc
                                         Elikz: aData.at(validPOItem).CLOSED, //Closed
-                                        DeleteRec: false//Delete
+                                        DeleteRec: true//Delete
                                         // Delete_Rec: aData.at(item).DELETED//Delete
                                     });
                                     oParamDataPOClose.push({
@@ -4132,7 +4132,7 @@ sap.ui.define([
                                         Untto: aData.at(validPOItem).UNDERDELTOL,//UnderDel Tol.
                                         Zzmakt: aData.at(validPOItem).POADDTLDESC, //PO Addtl Desc
                                         Elikz: aData.at(validPOItem).CLOSED, //Closed
-                                        DeleteRec: true//Delete
+                                        DeleteRec: false//Delete
                                         // Delete_Rec: aData.at(item).DELETED//Delete
                                     });
                                     oParamDataPOClose.push({

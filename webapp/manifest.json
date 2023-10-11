@@ -61,21 +61,21 @@
                     "odataVersion": "2.0"
                 }
             },
-            "ZGW_3DERP_LOCK_SRV": {
-                "uri": "/sap/opu/odata/sap/ZGW_3DERP_LOCK_SRV/",
-                "type": "OData",
-                "settings": {
-                    "annotations": [],
-                    "localUri": "localService/ZGW_3DERP_LOCK_SRV/metadata.xml",
-                    "odataVersion": "2.0"
-                }
-            },
             "ZGW_3DERP_SRV": {
                 "uri": "/sap/opu/odata/sap/ZGW_3DERP_SRV/",
                 "type": "OData",
                 "settings": {
                     "annotations": [],
                     "localUri": "localService/ZGW_3DERP_SRV/metadata.xml",
+                    "odataVersion": "2.0"
+                }
+            },
+            "ZGW_3DERP_LOCK2_SRV": {
+                "uri": "/sap/opu/odata/sap/ZGW_3DERP_LOCK2_SRV",
+                "type": "OData",
+                "settings": {
+                    "annotations": [],
+                    "localUri": "localService/ZGW_3DERP_LOCK2_SRV/metadata.xml",
                     "odataVersion": "2.0"
                 }
             }
@@ -186,8 +186,8 @@
                     }
                 }
             },
-            "ZGW_3DERP_LOCK_SRV": {
-                "dataSource": "ZGW_3DERP_LOCK_SRV",
+            "ZGW_3DERP_SRV": {
+                "dataSource": "ZGW_3DERP_SRV",
                 "preload": true,
                 "settings": {
                     "defaultBindingMode": "TwoWay",
@@ -198,8 +198,8 @@
                     }
                 }
             },
-            "ZGW_3DERP_SRV": {
-                "dataSource": "ZGW_3DERP_SRV",
+            "ZGW_3DERP_LOCK2_SRV": {
+                "dataSource": "ZGW_3DERP_LOCK2_SRV",
                 "preload": true,
                 "settings": {
                     "defaultBindingMode": "TwoWay",
