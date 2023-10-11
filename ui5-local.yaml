@@ -46,11 +46,11 @@ server:
             url: http://190.92.230.65:8000
             client: '888'
             destination: LTD888_S4HANA2022
-          - path: /sap/opu/odata/sap/ZGW_3DERP_LOCK_SRV/
+          - path: /sap/opu/odata/sap/ZGW_3DERP_SRV/
             url: http://190.92.230.65:8000
             client: '888'
             destination: LTD888_S4HANA2022
-          - path: /sap/opu/odata/sap/ZGW_3DERP_SRV/
+          - path: /sap/opu/odata/sap/ZGW_3DERP_LOCK2_SRV
             url: http://190.92.230.65:8000
             client: '888'
             destination: LTD888_S4HANA2022
