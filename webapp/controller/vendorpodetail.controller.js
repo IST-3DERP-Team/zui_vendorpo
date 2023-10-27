@@ -10,11 +10,12 @@ sap.ui.define([
     'sap/ui/core/routing/HashChanger',
     "../js/Utils",
     'sap/m/Token',
+    "../js/Common",
 ],
     /**
      * @param {typeof sap.ui.core.mvc.Controller} Controller
      */
-    function (Controller, Filter, JSONModel, MessageBox, MessageToast, jQuery, HashChanger, Utils, Token) {
+    function (Controller, Filter, JSONModel, MessageBox, MessageToast, jQuery, HashChanger, Utils, Token, Common) {
         "use strict";
 
         var that;
@@ -438,6 +439,61 @@ sap.ui.define([
                 oDDTextParam.push({CODE: "ARROWDOWN"});
                 oDDTextParam.push({CODE: "POPRINT"});
 
+                oDDTextParam.push({CODE: "GENERATEPO"});
+                oDDTextParam.push({CODE: "GMCDESC"});
+                oDDTextParam.push({CODE: "ADDTLDESC"});
+                oDDTextParam.push({CODE: "POADDTLDESC"});
+                oDDTextParam.push({CODE: "BATCH"});
+                oDDTextParam.push({CODE: "ORIGPOQTY"});
+                oDDTextParam.push({CODE: "SPLITQTY"});
+                oDDTextParam.push({CODE: "UOM"});
+                oDDTextParam.push({CODE: "DELDT"});
+                oDDTextParam.push({CODE: "NETPRICE"});
+                oDDTextParam.push({CODE: "PER"});
+                oDDTextParam.push({CODE: "DENOMINATOR"});
+                oDDTextParam.push({CODE: "NUMERATOR"});
+                oDDTextParam.push({CODE: "ORDERPRICEUOM"});
+                oDDTextParam.push({CODE: "TAXCD"});
+                oDDTextParam.push({CODE: "SUPPLYTYP"});
+                oDDTextParam.push({CODE: "ITEM"});
+                oDDTextParam.push({CODE: "UNLIMITED"});
+                oDDTextParam.push({CODE: "OVERDELTOL"});
+                oDDTextParam.push({CODE: "UNDERDELTOL"});
+                oDDTextParam.push({CODE: "PRNO"});
+                oDDTextParam.push({CODE: "PRITM"});
+                oDDTextParam.push({CODE: "GRBASEDIVIND"});
+                oDDTextParam.push({CODE: "INVRCPTIND"});
+                oDDTextParam.push({CODE: "REMARKS"});
+                oDDTextParam.push({CODE: "HEADERTEXT"});
+
+                oDDTextParam.push({CODE: "YES"});
+                oDDTextParam.push({CODE: "NO"});
+
+                oDDTextParam.push({CODE: "INFO_NEXT_DELVDATE"});
+                oDDTextParam.push({CODE: "CONTINUE"});
+                oDDTextParam.push({CODE: "INFO_DELVDATE_UPDATED"});
+                oDDTextParam.push({CODE: "INFO_CHECK_INVALID_ENTRIES"});
+                oDDTextParam.push({CODE: "INFO_INPUT_REQD_FIELDS"});
+                oDDTextParam.push({CODE: "CONF_DISCARD_CHANGE"});
+                oDDTextParam.push({CODE: "CONF_DELETE_RECORDS"});                
+                oDDTextParam.push({CODE: "INFO_SEL_RECORD_TO_DELETE"});
+                oDDTextParam.push({CODE: "INFO_INPUT_PACKINS"});
+                oDDTextParam.push({CODE: "INFO_PACKINS_SAVED"});
+                oDDTextParam.push({CODE: "INFO_INPUT_REMARKS"});
+                oDDTextParam.push({CODE: "INFO_REMARKS_SAVED"});
+                oDDTextParam.push({CODE: "INFO_DATA_DELETED"});
+                oDDTextParam.push({CODE: "ERR_INVALID_SPLITPOQTY"});
+                oDDTextParam.push({CODE: "INFO_DATA_SAVE"});
+                oDDTextParam.push({CODE: "INFO_NO_RECORD_TO_DELETE"});
+                oDDTextParam.push({CODE: "INFO_DATA_SAVE"});
+                oDDTextParam.push({CODE: "INFO_NO_DETAIL_DATA"});
+                oDDTextParam.push({CODE: "CONF_CANCEL_TRANS"});
+                oDDTextParam.push({CODE: "INFO_NO_RANGE_CODE"});
+                oDDTextParam.push({CODE: "INFO_ERROR"});
+                oDDTextParam.push({CODE: "ERR_GETTING_RESOURCES"});
+                oDDTextParam.push({CODE: "INFO_INPUT_HDR_REQD_FIELDS"});
+                oDDTextParam.push({CODE: "INFO_INPUT_DTL_REQD_FIELDS"});
+
                 await oModel.create("/CaptionMsgSet", { CaptionMsgItems: oDDTextParam  }, {
                     method: "POST",
                     success: function(oData, oResponse) {
@@ -448,6 +504,7 @@ sap.ui.define([
                         
                         oJSONModel.setData(oDDTextResult);
                         that.getView().setModel(oJSONModel, "captionMsg");
+                        that.getOwnerComponent().getModel("CAPTION_MSGS_MODEL").setData({text: oDDTextResult});
                     },
                     error: function(err) {
                         sap.m.MessageBox.error(_captionList.INFO_ERROR);
@@ -509,8 +566,7 @@ sap.ui.define([
                             
                             oView.setModel(oJSONModel, "topHeaderData");
                             oView.setModel(oJSONEdit, "topHeaderDataEdit");
-                            
-                            
+
                             resolve();
                             // me.setChangeStatus(false);
                         },
@@ -1586,6 +1642,7 @@ sap.ui.define([
                         }
                         oJSONModel.setData(oData);
                         oView.setModel(oJSONModel, "relStratData");
+                        me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/relstrat", oData);
                         // me.setChangeStatus(false);
                     },
                     error: function (error) {
@@ -4189,20 +4246,55 @@ sap.ui.define([
             },
             onSplitVPO: async function(){
                 var me = this;
+                var oModel = this.getOwnerComponent().getModel();
                 var bProceed = true
+                
+                Common.openProcessingDialog(this);
 
                 _promiseResult = new Promise((resolve, reject)=>{
                     resolve(me.validatePOChange());
                 })
-                await _promiseResult;
+                await _promiseResult;           
 
-                if(this._validPOChange != 1){
-                    bProceed = false
+                if (this._validPOChange != 1){
+                    bProceed = false;
+                    Common.closeProcessingDialog(this);
                 }
 
-                if(bProceed){
-                    MessageToast.show("Split PO Function");
-                }else{
+                if (bProceed) {
+                    bProceed = await this.getResource(this);
+
+                    if (!bProceed) {
+                        MessageBox.error(_captionList.ERR_GETTING_RESOURCES);
+                        Common.closeProcessingDialog(this);
+                        return;
+                    }
+
+                    //lock PO
+
+                    
+                    this.getOwnerComponent().getModel("UI_MODEL").setProperty("/sbu", this._sbu);
+                    this.getOwnerComponent().getModel("UI_MODEL").setProperty("/pono", this._pono);
+
+                    var oHeaderData = me.getView().getModel("topHeaderData").getData();
+                    var aDetailData = this.byId("vpoDetailsTab").getModel().getData().rows.filter(fItem => fItem.DELETED === false && fItem.DELCOMPLETE === false);
+                    
+                    aDetailData.forEach(item => {
+                        item.SPLITPOQTY = "",
+                        item.INFOREC = ""
+                    });
+
+                    me.getOwnerComponent().getModel("SPLITPO_MODEL").setData({
+                        header: oHeaderData,
+                        detail: aDetailData
+                    })
+
+                    Common.closeProcessingDialog(this);
+
+                    var oRouter = sap.ui.core.UIComponent.getRouterFor(me);
+                    oRouter.navTo("RouteSplitPO");
+                } 
+                else {
                     MessageBox.error(_captionList.INFO_PO_NOT_VALID_TO_EDIT)
                 }
             },
@@ -5144,6 +5236,7 @@ sap.ui.define([
                             Ebakz: "" 
                         });
                     });
+
                     await me.getPOTOlerance(aData, oSelectedIndices);
                     if (oParamDataPO.length > 0) {
                         oParam = oParamInitParam;
@@ -8323,6 +8416,96 @@ sap.ui.define([
                 }
             },
 
-            
+            getResource: async (me) => {   
+                var oModel = me.getOwnerComponent().getModel();
+
+                var oParam = {
+                    SBU: me._sbu,
+                    PONO: me._pono,
+                    N_PurchOrg: [],
+                    N_PurchGrp: [],
+                    N_PayTerms: [],
+                    N_IncoTerms: [],
+                    N_ShipMode: [],
+                    N_UOM: [],
+                    N_DocTypeInfo: [],
+                    N_CustGrp: [],
+                    N_Vendor: [],
+                    N_InfoRecChk: [],
+                    N_Company: [],
+                    N_Currency: [],
+                    N_PODocType: [],
+                    N_PurchPlant: [],
+                    N_ShipToPlant: [],
+                    N_SupplyType: [],
+                    N_Plant: []
+                }
+    
+                var oPromise = new Promise((resolve, reject) => {
+                    oModel.create("/VPOSplitPOResourceSet", oParam, {
+                        method: "POST",
+                        success: function(oData, oResponse) {
+                            me.getView().setModel(new JSONModel(oData.N_PurchOrg.results), "purchorg");
+                            me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/purchorg", oData.N_PurchOrg.results);
+
+                            me.getView().setModel(new JSONModel(oData.N_PurchGrp.results), "purchgrp");
+                            me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/purchgrp", oData.N_PurchGrp.results);
+
+                            me.getView().setModel(new JSONModel(oData.N_PayTerms.results), "payterms");
+                            me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/payterms", oData.N_PayTerms.results);
+
+                            me.getView().setModel(new JSONModel(oData.N_IncoTerms.results), "incoterms");
+                            me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/incoterms", oData.N_IncoTerms.results); 
+
+                            me.getView().setModel(new JSONModel(oData.N_ShipMode.results), "shipmode");
+                            me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/shipmode", oData.N_ShipMode.results);
+
+                            me.getView().setModel(new JSONModel(oData.N_UOM.results), "uom");
+                            me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/uom", oData.N_UOM.results);
+
+                            me.getView().setModel(new JSONModel(oData.N_DocTypeInfo.results), "podoctypeinfo");
+                            me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/podoctypeinfo", oData.N_DocTypeInfo.results);
+
+                            me.getView().setModel(new JSONModel(oData.N_CustGrp.results), "custgrp");
+                            me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/custgrp", oData.N_CustGrp.results);
+
+                            me.getView().setModel(new JSONModel(oData.N_Vendor.results), "vendor");
+                            me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/vendor", oData.N_Vendor.results);
+
+                            me.getView().setModel(new JSONModel(oData.N_InfoRecChk.results), "inforecchk");
+                            me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/inforecchk", oData.N_InfoRecChk.results);
+
+                            me.getView().setModel(new JSONModel(oData.N_Company.results), "company");
+                            me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/company", oData.N_Company.results);
+    
+                            me.getView().setModel(new JSONModel(oData.N_Currency.results), "currency");
+                            me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/currency", oData.N_Currency.results);
+    
+                            me.getView().setModel(new JSONModel(oData.N_SupplyType.results), "supplytype");
+                            me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/supplytype", oData.N_SupplyType.results);
+
+                            me.getView().setModel(new JSONModel(oData.N_PODocType.results), "podoctype");
+                            me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/podoctype", oData.N_PODocType.results);
+
+                            me.getView().setModel(new JSONModel(oData.N_PurchPlant.results), "purchplant");
+                            me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/purchplant", oData.N_PurchPlant.results);
+
+                            me.getView().setModel(new JSONModel(oData.N_ShipToPlant.results), "shiptoplant");
+                            me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/shiptoplant", oData.N_ShipToPlant.results);
+
+                            me.getView().setModel(new JSONModel(oData.N_Plant.results), "plant");
+                            me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/plant", oData.N_Plant.results);
+
+                            resolve(true);
+                        },
+                        error: function (err) {
+                            resolve(false);
+                        }
+                    });
+                })
+                
+                return await oPromise;
+            },
+
         });
     });
