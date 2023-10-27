@@ -752,13 +752,13 @@ function (Controller, JSONModel, MessageBox, History, MessageToast, TableValueHe
                 }
 
                 Common.openProcessingDialog(this);
-                // bProceed = await this.getInfoRecord(this);
+                bProceed = await this.getInfoRecord(this);
 
-                // if (!bProceed) {
-                //     Common.closeProcessingDialog(this);
-                //     return;
-                // }
-                this._isInfoRecRetrieve = true;
+                if (!bProceed) {
+                    Common.closeProcessingDialog(this);
+                    return;
+                }
+                // this._isInfoRecRetrieve = true;
 
                 MessageBox.information(me.getView().getModel("ddtext").getData()["INFO_DATA_SAVE"], {
                     onClose: function(oAction) { }
@@ -859,8 +859,6 @@ function (Controller, JSONModel, MessageBox, History, MessageToast, TableValueHe
             var oSource = oEvent.getSource();
             var oSelectedItem = oEvent.getParameter("selectedItem");
             // var sRowPath = oSource.getBindingInfo("value").binding.oContext.sPath;
-            console.log(oSource);
-            console.log(oSelectedItem);
 
             this._selValueHelpIndex = "-1";
             
