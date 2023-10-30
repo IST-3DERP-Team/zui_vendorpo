@@ -312,3 +312,14 @@ span[data-row-active-class=X] {
 .vendorPO .sapMLIBSelectM {
     align-self: flex-start;
 }
+
+.sapMDialogScroll {
+    height: 98%;
+}
+
+.splitPOTitle {
+    background-color: bisque !important;
+    padding: 0.15rem 0.5rem !important;
+    border-radius: 0.5rem !important;
+    font-weight: bold !important;
+}

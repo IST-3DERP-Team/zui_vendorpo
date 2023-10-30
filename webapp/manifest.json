@@ -98,7 +98,7 @@
         }
     },
     "sap.ui5": {
-        "flexEnabled": true,
+        "flexEnabled": false,
         "dependencies": {
             "minUI5Version": "1.71.49",
             "libs": {
@@ -209,6 +209,18 @@
                         "sap-value-list": "none"
                     }
                 }
+            },
+            "SPLITPO_MODEL": {
+                "type": "sap.ui.model.json.JSONModel"
+            },
+            "UI_MODEL": {
+                "type": "sap.ui.model.json.JSONModel"
+            },
+            "CAPTION_MSGS_MODEL": {
+                "type": "sap.ui.model.json.JSONModel"
+            },
+            "LOOKUP_MODEL": {
+                "type": "sap.ui.model.json.JSONModel"
             }
         },
         "resources": {
@@ -252,6 +264,14 @@
                     "target": [
                         "TargetVPODetail"
                     ]
+                },
+                {
+                    "name": "RouteSplitPO",
+                    "pattern": "RouteSplitPO",
+                    "greedy": false,
+                    "target": [
+                        "TargetSplitPO"
+                    ]
                 }
             ],
             "targets": {
@@ -275,6 +295,12 @@
                     "clearControlAggregation": false,
                     "viewId": "vendorpodetail",
                     "viewName": "vendorpodetail"
+                },
+                "TargetSplitPO": {
+                    "viewType": "XML",
+                    "transition": "slide",
+                    "clearControlAggregation": false,
+                    "viewName": "splitpo"
                 }
             }
         },
