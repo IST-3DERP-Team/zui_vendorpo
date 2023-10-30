@@ -8,12 +8,14 @@ sap.ui.define([
     "sap/ui/core/routing/HashChanger",
     'sap/m/SearchField',
     'sap/ui/model/type/String',
-    "sap/m/Token"
+    "sap/m/Token",
+    "../js/TableFilter",
+    "../js/Common",
 ],
     /**
      * @param {typeof sap.ui.core.mvc.Controller} Controller
      */
-    function (Controller, JSONModel, Filter, FilterOperator, MessageBox, Utils, HashChanger, SearchField, typeString, Token) {
+    function (Controller, JSONModel, Filter, FilterOperator, MessageBox, Utils, HashChanger, SearchField, typeString, Token, TableFilter, Common) {
         "use strict";
 
         var that;
@@ -24,6 +26,7 @@ sap.ui.define([
         return Controller.extend("zuivendorpo.controller.main", {
             onInit: async function () {
                 that = this;
+                this.callCaptionsAPI();
                 this._oModel = this.getOwnerComponent().getModel();
 
                 if (sap.ui.getCore().byId("backBtn") !== undefined) {
@@ -52,7 +55,8 @@ sap.ui.define([
                     activeCondRec:'',
                     condMatNo: '',
                     condShortText: '',
-                    activeDocTyp: ''
+                    activeDocTyp: '',
+                    poCount: 0
                 }), "ui");
 
                 var _oDelegateKeyUp = {
@@ -70,6 +74,12 @@ sap.ui.define([
 
                 this._sbuChange = false;
                 this._tblChange = false;
+                
+                //table Filter
+                this._aColumns = {};
+                this._tableFilter = TableFilter;
+                this._colFilters = {};
+
                 var oJSONDataModel = new JSONModel(); 
                 oJSONDataModel.setData(this._counts);
                 this.getView().setModel(oJSONDataModel, "counts");
@@ -93,7 +103,6 @@ sap.ui.define([
                     main: "mainSet"
                 };
 
-                this._aColumns = {};
                 this._columnLoadError = false;
                 var _oComponent = this.getOwnerComponent();
                 this._router = _oComponent.getRouter();
@@ -161,9 +170,7 @@ sap.ui.define([
 
                 this._oMultiInputPRNO = this.getView().byId("multiInputPRNO");
                 this._oMultiInputPRNO.addValidator(this._onMultiInputValidate.bind(this));
-
                 
-                this.callCaptionsAPI();
                 this.getPRNOSH([]);
             },
 
@@ -190,7 +197,7 @@ sap.ui.define([
             },
             onSearch: async function(){
                 var me = this;
-                this.showLoadingDialog(this.getView().getModel("captionMsg").getData()["LOADING"]);
+                Common.openLoadingDialog(that);
                 _promiseResult = new Promise((resolve, reject)=>{
                     resolve(this.getMain());
                 });
@@ -203,7 +210,7 @@ sap.ui.define([
                 
                 this.getDocTypSH([]);
                 await _promiseResult;
-                this.closeLoadingDialog();
+                Common.closeLoadingDialog(that);
 
             },
 
@@ -553,7 +560,7 @@ sap.ui.define([
                 if(this.getView().getModel("ui").getData().dataMode === 'NODATA'){
                     return;
                 }
-                this.showLoadingDialog(this.getView().getModel("captionMsg").getData()["LOADING"]);
+                Common.openLoadingDialog(that);
                 _promiseResult = new Promise((resolve, reject)=>{
                     resolve(this.getMain());
                 });
@@ -565,7 +572,7 @@ sap.ui.define([
                 await _promiseResult;
 
                 this.getProcessFlow();
-                this.closeLoadingDialog();                
+                Common.closeLoadingDialog(that);             
             },
             onSearchHeader: async function(oEvent){
                 if(this.getView().getModel("ui").getData().dataMode === 'NODATA'){
@@ -586,7 +593,7 @@ sap.ui.define([
                     oColumnsModel = this.getView().getModel("VENDORPOColumns");
                     oColumnsData = oColumnsModel.getProperty('/');
                     if(sQuery && sQuery !== undefined) {
-                        this.showLoadingDialog(this.getView().getModel("captionMsg").getData()["LOADING"]);
+                        Common.openLoadingDialog(that);
                         oTableSrc.getColumns().forEach((col, idx) => {
                             var sDataType = oColumnsData.filter(item => item.ColumnName === col.sId.split("-")[1])[0].ColumnName
         
@@ -622,10 +629,10 @@ sap.ui.define([
                             resolve();
                         })
                         await _promiseResult;;
-                        this.closeLoadingDialog();
+                        Common.closeLoadingDialog(that);
                     }
                     if(sQuery === "" && sQuery !== undefined){
-                        this.showLoadingDialog(this.getView().getModel("captionMsg").getData()["LOADING"]);
+                        Common.openLoadingDialog(that);
                         _promiseResult = new Promise((resolve, reject)=>{
                             resolve(this.getMain());
                         });
@@ -636,7 +643,7 @@ sap.ui.define([
                             resolve(this.getCols());
                         });
                         await _promiseResult;
-                        this.closeLoadingDialog();
+                        Common.closeLoadingDialog(that);
                     }
                 }
     
@@ -781,9 +788,13 @@ sap.ui.define([
                                         var oJSONModel = new sap.ui.model.json.JSONModel();
                                         oJSONModel.setData(oResults);
                                         me.getView().setModel(oJSONModel, "VPOHdr");
+
+                                        TableFilter.applyColFilters("mainTab", me);
                                         me.getView().getModel("ui").setProperty("/activePONo", poNo);
                                         me.getView().getModel("ui").setProperty("/activeCondRec", condrec);
                                         me.getView().getModel("ui").setProperty("/activeDocTyp", docType)
+                                        
+                                        me.getView().getModel("ui").setProperty("/poCount", oResults.results.length);
                                         resolve(me.getCounts());
                                         resolve(me.getPODetails2(poNo));
                                         resolve(me.getDelSchedule2(poNo));
@@ -825,7 +836,7 @@ sap.ui.define([
                                 }), "VPOCond");
                                 resolve();
                             }
-                            me.closeLoadingDialog();
+                            Common.closeLoadingDialog(that);
                             resolve();
                         },
                         error: function (err) { 
@@ -1121,6 +1132,7 @@ sap.ui.define([
                             if (oData.results.length > 0) {
                                 me._columnLoadError = false;
                                 if (modCode === 'VENDORPO') {
+                                    me._aColumns["advPymntHdrTbl"] = oData.results;
                                     oJSONColumnsModel.setData(oData.results);
                                     me.getView().setModel(oJSONColumnsModel, "VENDORPOColumns");
                                     me.setTableColumnsData(modCode);
@@ -1233,7 +1245,7 @@ sap.ui.define([
                             me.getView().getModel("ui").setProperty("/dataMode", 'NODATA');
                             me.getView().getModel("ui").setProperty("/activePONo", "");
                             me.getView().getModel("ui").setProperty("/activePOItem", "");
-                            me.closeLoadingDialog(that);
+                            Common.closeLoadingDialog(that);
                             resolve();
                         }
                     });
@@ -1511,54 +1523,68 @@ sap.ui.define([
 
                 });
 
-                //sorting with Date Sort
+                //date/number sorting
                 oTable.attachSort(function(oEvent) {
-         
                     var sPath = oEvent.getParameter("column").getSortProperty();
                     var bDescending = false;
                     
+                    //remove sort icon of currently sorted column
+                    oTable.getColumns().forEach(col => {
+                        if (col.getSorted()) {
+                            col.setSorted(false);
+                        }
+                    })
+
                     oEvent.getParameter("column").setSorted(true); //sort icon initiator
-                    if (oEvent.getParameter("sortOrder") == "Descending") {
+
+                    if (oEvent.getParameter("sortOrder") === "Descending") {
                         bDescending = true;
                         oEvent.getParameter("column").setSortOrder("Descending") //sort icon Descending
-                    }else{
+                    }
+                    else {
                         oEvent.getParameter("column").setSortOrder("Ascending") //sort icon Ascending
                     }
 
                     var oSorter = new sap.ui.model.Sorter(sPath, bDescending ); //sorter(columnData, If Ascending(false) or Descending(True))
-                    
-                    var columnType = oEvent.getParameter("column").getTemplate().getBindingInfo("text") === undefined ? "" : oEvent.getParameter("column").getTemplate().getBindingInfo("text").columnType;
+                    var oColumn = columnsData.filter(fItem => fItem.ColumnName === oEvent.getParameter("column").getProperty("sortProperty"));
+                    var columnType = oColumn[0].DataType;
+
                     if (columnType === "DATETIME") {
                         oSorter.fnCompare = function(a, b) {
-                        
                             // parse to Date object
                             var aDate = new Date(a);
                             var bDate = new Date(b);
-                            
-                            if (bDate == null) {
-                                return -1;
-                            }
-                            if (aDate == null) {
-                                return 1;
-                            }
-                            if (aDate < bDate) {
-                                return -1;
-                            }
-                            if (aDate > bDate) {
-                                return 1;
-                            }
+
+                            if (bDate === null) { return -1; }
+                            if (aDate === null) { return 1; }
+                            if (aDate < bDate) { return -1; }
+                            if (aDate > bDate) { return 1; }
+
                             return 0;
                         };
-                    } 
+                    }
+                    else if (columnType === "NUMBER") {
+                        oSorter.fnCompare = function(a, b) {
+                            // parse to Date object
+                            var aNumber = +a;
+                            var bNumber = +b;
+
+                            if (bNumber === null) { return -1; }
+                            if (aNumber === null) { return 1; }
+                            if (aNumber < bNumber) { return -1; }
+                            if (aNumber > bNumber) { return 1; }
+
+                            return 0;
+                        };
+                    }
                     
                     oTable.getBinding('rows').sort(oSorter);
-                     // prevent internal sorting by table
+                    // prevent internal sorting by table
                     oEvent.preventDefault();
-         
-         
                 });
                 //bind the data to the table
                 oTable.bindRows("/rows");
+                TableFilter.updateColumnMenu(table, this);
                 
             },
             columnTemplate: function(sColumnId, sColumnType){
@@ -1662,20 +1688,7 @@ sap.ui.define([
                 this._sbuChange = true;
                 this.getView().getModel("ui").setProperty("/sbu", this.getView().byId("cboxSBU").getSelectedKey());
             },
-            
-            showLoadingDialog(arg) {
-                if (!this._LoadingDialog) {
-                    this._LoadingDialog = sap.ui.xmlfragment("zuivendorpo.view.fragments.dialog.LoadingDialog", this);
-                    this.getView().addDependent(this._LoadingDialog);
-                }
-                // jQuery.sap.syncStyleClass("sapUiSizeCompact", this.getView(), this._LoadingDialog);
-                
-                this._LoadingDialog.setTitle(arg);
-                this._LoadingDialog.open();
-            },
-            closeLoadingDialog() {
-                this._LoadingDialog.close();
-            },
+
             onClickEdit: async function(){
                 var PONo = this.getView().getModel("ui").getProperty("/activePONo");
                 var CONDREC = this.getView().getModel("ui").getProperty("/activeCondRec");
@@ -2189,7 +2202,18 @@ sap.ui.define([
 
                     PONo = this.getView().getModel("ui").getProperty("/activePONo");
                     condrec = this.getView().getModel("ui").getProperty("/activeCondRec");
-                    _promiseResult = new Promise(async(resolve,reject)=> {
+                    
+                    await new Promise((resolve, reject)=>{
+                        oTable.getRows().forEach(row => {
+                            if(row.getBindingContext().sPath.replace("/rows/", "") === sRowPath.split("/")[2]){
+                                resolve(row.addStyleClass("activeRow"));
+                            }else{
+                                resolve(row.removeStyleClass("activeRow"));
+                            }
+                        });
+                    });
+
+                    await new Promise(async(resolve,reject)=> {
                         
                         me._tblChange = true;
                         await me.getPODetails2(PONo)
@@ -2200,20 +2224,10 @@ sap.ui.define([
                         await me.getConditions2(condrec, poItem)
                         resolve();
                     })
-                    await _promiseResult;
 
                     this.getProcessFlow();
     
-                    _promiseResult = new Promise((resolve, reject)=>{
-                        oTable.getRows().forEach(row => {
-                            if(row.getBindingContext().sPath.replace("/rows/", "") === sRowPath.split("/")[2]){
-                                resolve(row.addStyleClass("activeRow"));
-                            }else{
-                                resolve(row.removeStyleClass("activeRow"));
-                            }
-                        });
-                    });
-                    await _promiseResult;
+                    
                     this._tblChange = false;
                 }else if(oEvent.getParameters().id.includes("detailsTab")){
                     oRow = this.getView().getModel("VPODtls").getProperty(sRowPath)
@@ -2694,6 +2708,8 @@ sap.ui.define([
                 oDDTextParam.push({CODE: "PRNO"});
                 oDDTextParam.push({CODE: "IONO"});
 
+                oDDTextParam.push({CODE: "TOTAL"});
+
                 oModel.create("/CaptionMsgSet", { CaptionMsgItems: oDDTextParam  }, {
                     method: "POST",
                     success: function(oData, oResponse) {
@@ -2960,14 +2976,14 @@ sap.ui.define([
                             if (sError.length > 0) {
                                 boolResult = false;
                                 MessageBox.information(sError);
-                                me.closeLoadingDialog();
+                                Common.closeLoadingDialog(that);
                             }
                             resolve();
                         },
                         error: function(err) {
                             MessageBox.error(err);
                             resolve();
-                            me.closeLoadingDialog();
+                            Common.closeLoadingDialog(that);
                         }
                     });
                     
@@ -2994,11 +3010,54 @@ sap.ui.define([
                         error: function(err) {
                             MessageBox.error(err);
                             resolve();
-                            me.closeLoadingDialog();
+                            Common.closeLoadingDialog(that);
                         }
                     });
                 });
-            }
+            },
+
+            //******************************************* */
+            // Column Filtering
+            //******************************************* */
+
+            onColFilterClear: function(oEvent) {
+                TableFilter.onColFilterClear(oEvent, this);
+            },
+
+            onColFilterCancel: function(oEvent) {
+                TableFilter.onColFilterCancel(oEvent, this);
+            },
+
+            onColFilterConfirm: function(oEvent) {
+                TableFilter.onColFilterConfirm(oEvent, this);
+            },
+
+            onFilterItemPress: function(oEvent) {
+                TableFilter.onFilterItemPress(oEvent, this);
+            },
+
+            onFilterValuesSelectionChange: function(oEvent) {
+                TableFilter.onFilterValuesSelectionChange(oEvent, this);
+            },
+
+            onSearchFilterValue: function(oEvent) {
+                TableFilter.onSearchFilterValue(oEvent, this);
+            },
+
+            onCustomColFilterChange: function(oEvent) {
+                TableFilter.onCustomColFilterChange(oEvent, this);
+            },
+
+            onSetUseColFilter: function(oEvent) {
+                TableFilter.onSetUseColFilter(oEvent, this);
+            },
+
+            onRemoveColFilter: function(oEvent) {
+                TableFilter.onRemoveColFilter(oEvent, this);
+            },
+
+            pad: Common.pad
+
 
         });
     });
