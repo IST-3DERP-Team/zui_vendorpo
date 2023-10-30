@@ -73,6 +73,7 @@ sap.ui.define([
 				doc._LoadingDialog = sap.ui.xmlfragment("zuivendorpo.view.fragments.dialog.LoadingDialog", doc);
 				doc.getView().addDependent(doc._LoadingDialog);
 			}
+            doc._LoadingDialog.setTitle(doc.getView().getModel("captionMsg").getData()["LOADING"]);
 			jQuery.sap.syncStyleClass("sapUiSizeCompact", doc.getView(), doc._LoadingDialog);
 			doc._LoadingDialog.open();
 		},
@@ -81,6 +82,21 @@ sap.ui.define([
 			doc._LoadingDialog.close();
 		},
 
+        pad: function (num, size) {
+            try {
+                num = num.toString();
+                while (num.length < size) num = "0" + num;
+                return num;
+            } catch(err) {}
+        },
+
+        showMessage: function(oMessage) {
+			MessageToast.show(oMessage, {
+				duration: 3000,
+				animationDuration: 500
+			});
+		},
+		
         openProcessingDialog(doc, msg) {
             if (!doc._ProcessingDialog) {
                 doc._ProcessingDialog = sap.ui.xmlfragment("zuivendorpo.view.fragments.dialog.ProcessingDialog", doc);
