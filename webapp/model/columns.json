@@ -197,5 +197,47 @@
                 "ValueHelp": {"show": false}},
             {"ColumnName": "UNDERDELTOL", "type": "NUMBER", "required": false, "length": "3", "decimal": "1",
                 "ValueHelp": {"show": false}}             
+      ],
+      "topHeaderData": [
+            {
+                  "ColumnName": "SHIPTOPLANT", "TextFormatMode": "ValueKey",
+                  "ValueHelp": {"show": true, "items": {"path": "onSuggSHIPTOPLANT", "value": "Item", "text": "Desc"},
+                        "SuggestionItems": {"path": "onSuggSHIPTOPLANT>/", "text": "{onSuggSHIPTOPLANT>Item}", "additionalText": "{onSuggSHIPTOPLANT>Desc}", "maxSuggestionWidth": "300px" },
+                        "columns": "tvthd_shiptoplant"
+                  }
+            },
+            {
+                  "ColumnName": "PAYMNTTERMS", "TextFormatMode": "ValueKey",
+                  "ValueHelp": {"show": true, "items": {"path": "onSuggPAYMNTTERMS", "value": "Item", "text": "Desc"},
+                        "SuggestionItems": {"path": "onSuggPAYMNTTERMS>/", "text": "{onSuggPAYMNTTERMS>Item}", "additionalText": "{onSuggPAYMNTTERMS>Desc}", "maxSuggestionWidth": "300px" },
+                        "columns": "tvthd_paymntterms"
+                  }
+            },
+            {
+                  "ColumnName": "INCOTERMS", "TextFormatMode": "ValueKey",
+                  "ValueHelp": {"show": true, "items": {"path": "onSuggINCOTERMS", "value": "Item", "text": "Desc"},
+                        "SuggestionItems": {"path": "onSuggINCOTERMS>/", "text": "{onSuggINCOTERMS>Item}", "additionalText": "{onSuggINCOTERMS>Desc}", "maxSuggestionWidth": "300px" },
+                        "columns": "tvthd_incoterms"
+                  }
+            }
+      ],
+      "tvthd_shiptoplant": [
+            {"ColumnName": "SHIPTOPLANT", "DataType": "STRING", "ColumnWidth": "200px", "Visible": false, "Key": true, "Value": false},
+            {"ColumnName": "DESCRIPTION", "DataType": "STRING", "ColumnWidth": "300px", "Visible": true, "Key": false, "Value": true},
+            {"ColumnName": "ShipToPlant", "DataType": "STRING", "ColumnWidth": "200px", "Visible": true, "Key": false, "Value": false},
+            {"ColumnName": "Item", "DataType": "STRING", "ColumnWidth": "300px", "Visible": false, "Key": false, "Value": true},
+            {"ColumnName": "Desc", "DataType": "STRING", "ColumnWidth": "300px", "Visible": false, "Key": false, "Value": true}
+      ],
+      "tvthd_paymntterms": [
+            {"ColumnName": "PAYMNTTERMS", "DataType": "STRING", "ColumnWidth": "200px", "Visible": true, "Key": true, "Value": false},
+            {"ColumnName": "DESCRIPTION", "DataType": "STRING", "ColumnWidth": "300px", "Visible": true, "Key": false, "Value": true},
+            {"ColumnName": "Item", "DataType": "STRING", "ColumnWidth": "300px", "Visible": false, "Key": false, "Value": true},
+            {"ColumnName": "Desc", "DataType": "STRING", "ColumnWidth": "300px", "Visible": false, "Key": false, "Value": true}
+      ],
+      "tvthd_incoterms": [
+            {"ColumnName": "INCOTERMS", "DataType": "STRING", "ColumnWidth": "200px", "Visible": true, "Key": true, "Value": false},
+            {"ColumnName": "DESCRIPTION", "DataType": "STRING", "ColumnWidth": "300px", "Visible": true, "Key": false, "Value": true},
+            {"ColumnName": "Item", "DataType": "STRING", "ColumnWidth": "300px", "Visible": false, "Key": false, "Value": true},
+            {"ColumnName": "Desc", "DataType": "STRING", "ColumnWidth": "300px", "Visible": false, "Key": false, "Value": true}
       ]
 }

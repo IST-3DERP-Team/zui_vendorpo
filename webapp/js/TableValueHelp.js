@@ -15,8 +15,7 @@ sap.ui.define([
             me._inputValue = oSource.getValue();
             let input = oSource.getBindingInfo("value").parts[0].path.split("/");
             me._inputField = input[input.length-1].toUpperCase(); //slice and uppercase
-            console.log(oSource.getBindingInfo("value").parts);
-            console.log(me._oModelColumns)
+
             var sModel = oSource.getBindingInfo("value").parts[0].model;
             var sTitle = oSource.getProperty("name") === undefined || oSource.getProperty("name") === "" ? me._inputField : oSource.getProperty("name");
             var oTableSource = oSource.oParent.oParent;

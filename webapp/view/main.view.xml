@@ -9,7 +9,8 @@
     displayBlock="true"> 
     <Page id="page" title="{i18n>title}" showHeader="false">
         <dependents>
-            <core:CommandExecution id="comVpoMain" command="Edit" enabled="true" execute=".onClickEdit" />
+            <core:CommandExecution command="Edit" enabled="true" execute=".onClickEdit" />
+            <core:CommandExecution command="Refresh" enabled="true" execute=".onRefresh" />
         </dependents>
         <content>
             <smartfilterbar:SmartFilterBar id="smartFilterBar" entitySet="ZVB_3DERP_VPO_FILTERS" search="onSearch" showClearOnFB="true" persistencyKey="3DERP_StylesPKey" filterContainerWidth="15rem">

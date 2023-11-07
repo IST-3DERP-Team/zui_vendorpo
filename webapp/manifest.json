@@ -131,6 +131,9 @@
             },
             "Refresh": {
                 "shortcut": "Ctrl+R"
+            },
+            "Copy": {
+                "shortcut": "Ctrl+C"
             }
         },
         "contentDensities": {
