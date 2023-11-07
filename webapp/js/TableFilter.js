@@ -58,7 +58,6 @@ sap.ui.define([
                 sTableId = oEvent;
             }
             else {
-                console.log(sTableId);
                 sTableId = oEvent.getSource().data("TableName");
             }
 
@@ -87,7 +86,9 @@ sap.ui.define([
 
             var aTableColumns = jQuery.extend(true, [], me._aColumns[sTableId]);
             aTableColumns.forEach((col, idx) => {
-                if (!(col.ColumnName === "MANDT" || col.ColumnName === "DOCTYPE" || col.ColumnName === "SHORTTEXT" || col.ColumnName === "INFORECORD" || col.ColumnName === "COMPANY" || col.ColumnName === "PLANMONTH")) {
+                if (!(col.ColumnName === "MANDT" //|| col.ColumnName === "DOCTYPE" 
+                || col.ColumnName === "SHORTTEXT" || col.ColumnName === "INFORECORD" || //col.ColumnName === "COMPANY" || 
+                col.ColumnName === "PLANMONTH")) {
                     oTableColumns.push(col);
                 }
             });
@@ -211,7 +212,7 @@ sap.ui.define([
 
                 oSearchValues[col.ColumnName] = "";
             })
-
+            
             oDialog.getModel().setProperty("/sourceTabId", sTableId);
             oDialog.getModel().setProperty("/items", oTableColumns);
             oDialog.getModel().setProperty("/values", oColumnValues);
@@ -391,8 +392,10 @@ sap.ui.define([
             // me.setActiveRowHighlightByTableId(sSourceTabId);
 
             //additonal code
-            if (sSourceTabId === "advPymntHdrTbl") {
-                var vActiveRec = me.byId(sSourceTabId).getModel().getData().rows.filter((item,index) => index === 0)[0].TRANSNO;
+            if (sSourceTabId === "mainTab") {
+                var vActivePONo = me.byId(sSourceTabId).getModel().getData().rows.filter((item,index) => index === 0)[0].PONO;
+                var vActiveCondRec = me.byId(sSourceTabId).getModel().getData().rows.filter((item,index) => index === 0)[0].CONDREC;
+                var vActiveDocTyp = me.byId(sSourceTabId).getModel().getData().rows.filter((item,index) => index === 0)[0].DOCTYPE;
 
                 // if (me.getView().getModel("ui").getProperty("/activeDlv") !== vActiveRec) {
                 //     me.byId(sSourceTabId).getModel().getData().rows.forEach(item => {
@@ -404,10 +407,17 @@ sap.ui.define([
                 //     me.getView().getModel("ui").setProperty("/activeDlv", vActiveRec);
                 //     me.getDetailData(false);
                 // }
-                me.getView().getModel("ui").setProperty("/transNo", vActiveRec);
-                me.getView().getModel("ui").setProperty("/saldocCount", me.byId(sSourceTabId).getBinding("rows").aIndices.length);
+                me.getView().getModel("ui").setProperty("/activePONo", vActivePONo);
+                me.getView().getModel("ui").setProperty("/activeCondRec", vActiveCondRec);
+                me.getView().getModel("ui").setProperty("/activeDocTyp", vActiveDocTyp);
+                me.getView().getModel("ui").setProperty("/poCount", me.byId(sSourceTabId).getBinding("rows").aIndices.length);
                 me._tblChange = true;
-                await me.getDetails(vActiveRec)
+                await me.getPODetails2(vActivePONo);
+                await me.getDelSchedule2(vActivePONo);
+                await me.getDelInvoice2(vActivePONo);
+                var poItem = me.getView().getModel("ui").getProperty("/activePOItem");
+                await me.getPOHistory2(vActivePONo, poItem);
+                await me.getConditions2(vActiveCondRec, poItem);
                 me._tblChange = false;
             }
             // else if (sSourceTabId === "mainDetailTab") {
@@ -440,7 +450,6 @@ sap.ui.define([
         },
 
         onColFilterConfirm: async function(oEvent, oThis) {
-            console.log("clicked!")
             var me = oThis;
             var oDialog = me._GenericFilterDialog;
             var aColumnItems = oDialog.getModel().getProperty("/items");
@@ -510,41 +519,45 @@ sap.ui.define([
                 oFilter = "";
             }
 
-            // console.log(oFilter)
             me.byId(sSourceTabId).getBinding("rows").filter(oFilter, "Application");
             me._colFilters[sSourceTabId] = jQuery.extend(true, {}, oDialog.getModel().getData());
             
             //additonal code
             if (oFilter !== "") {
-                if (sSourceTabId === "advPymntHdrTbl") {
+                if (sSourceTabId === "mainTab") {
                     if (me.byId(sSourceTabId).getBinding("rows").aIndices.length === 0) {
-                        me.getView().getModel("ui").setProperty("/transNo", '');
-                        me.getView().getModel("ui").setProperty("/transItem", '');
-                        me.getView().getModel("ui").setProperty("/advPymntCount", 0);
+                        me.getView().getModel("ui").setProperty("/activePONo", '');
+                        me.getView().getModel("ui").setProperty("/activeCondRec", '');
+                        me.getView().getModel("ui").setProperty("/activeDocTyp", '');
+                        me.getView().getModel("ui").setProperty("/poCount", me.byId(sSourceTabId).getBinding("rows").aIndices.length);
                         me._tblChange = true;
-                        await me.getDetails('');
+                        await me.getPODetails2('');
+                        await me.getDelSchedule2('');
+                        await me.getDelInvoice2('');
+                        var poItem = me.getView().getModel("ui").getProperty("/activePOItem");
+                        await me.getPOHistory2('', poItem);
+                        await me.getConditions2('', poItem);
                         me._tblChange = false;
                         // me.byId("detailTab").setModel(new JSONModel({
                         //     rows: []
                         // }));
                     }
                     else {
-                        var vActiveRec = me.byId(sSourceTabId).getModel().getData().rows.filter((item,index) => index === me.byId(sSourceTabId).getBinding("rows").aIndices[0])[0].TRANSNO;
+                        var vActivePONo = me.byId(sSourceTabId).getModel().getData().rows.filter((item,index) => index === me.byId(sSourceTabId).getBinding("rows").aIndices[0])[0].PONO;
+                        var vActiveCondRec = me.byId(sSourceTabId).getModel().getData().rows.filter((item,index) => index === me.byId(sSourceTabId).getBinding("rows").aIndices[0])[0].CONDREC;
+                        var vActiveDocTyp = me.byId(sSourceTabId).getModel().getData().rows.filter((item,index) => index === me.byId(sSourceTabId).getBinding("rows").aIndices[0])[0].DOCTYPE;
 
-                        // if (me.getView().getModel("ui").getProperty("/activeSaldocNo") !== vActiveRec) {
-                        //     me.byId(sSourceTabId).getModel().getData().rows.forEach(item => {
-                        //         if (item.SALESDOCNO === vActiveRec) { item.ACTIVE = "X"; }
-                        //         else { item.ACTIVE = ""; }
-                        //     });
-
-                        //     me.setActiveRowHighlightByTableId(sSourceTabId);
-                        //     me.getView().getModel("ui").setProperty("/activeDlv", vActiveRec);
-                        //     // me.getDetailData(false);
-                        // }
-                        me.getView().getModel("ui").setProperty("/transNo", vActiveRec);
-                        me.getView().getModel("ui").setProperty("/advPymntCount", me.byId(sSourceTabId).getBinding("rows").aIndices.length);
+                        me.getView().getModel("ui").setProperty("/activePONo", vActivePONo);
+                        me.getView().getModel("ui").setProperty("/activeCondRec", vActiveCondRec);
+                        me.getView().getModel("ui").setProperty("/activeDocTyp", vActiveDocTyp);
+                        me.getView().getModel("ui").setProperty("/poCount", me.byId(sSourceTabId).getBinding("rows").aIndices.length);
                         me._tblChange = true;
-                        await me.getDetails(vActiveRec);
+                        await me.getPODetails2(vActivePONo);
+                        await me.getDelSchedule2(vActivePONo);
+                        await me.getDelInvoice2(vActivePONo);
+                        var poItem = me.getView().getModel("ui").getProperty("/activePOItem");
+                        await me.getPOHistory2(vActivePONo, poItem);
+                        await me.getConditions2(vActiveCondRec, poItem);
                         me._tblChange = false;
                     }
                 }
@@ -559,7 +572,7 @@ sap.ui.define([
                 // }
             }
             else {
-                me.getView().getModel("ui").setProperty("/advPymntCount", me.byId(sSourceTabId).getModel().getData().rows.length);
+                me.getView().getModel("ui").setProperty("/poCount", me.byId(sSourceTabId).getModel().getData().rows.length);
             }
         },
 
@@ -1110,14 +1123,21 @@ sap.ui.define([
                     // me._colFilters[sTableId] = jQuery.extend(true, {}, oDialog.getModel().getData());
 
                     //additonal code
-                    if (sTableId === "advPymntHdrTbl") {
+                    if (sTableId === "mainTab") {
                         if (me.byId(sTableId).getBinding("rows").aIndices.length === 0) {
-                            me.getView().getModel("ui").setProperty("/transNo", '');
-                            me.getView().getModel("ui").setProperty("/transItem", '');
-                            me.getView().getModel("ui").setProperty("/advPymntCount", 0);
+                            me.getView().getModel("ui").setProperty("/activePONo", '');
+                            me.getView().getModel("ui").setProperty("/activeCondRec", '');
+                            me.getView().getModel("ui").setProperty("/activeDocTyp", '');
+                            me.getView().getModel("ui").setProperty("/poCount", 0);
                             me._tblChange = true;
-                            await me.getDetails('');
+                            await me.getPODetails2('');
+                            await me.getDelSchedule2('');
+                            await me.getDelInvoice2('');
+                            var poItem = me.getView().getModel("ui").getProperty("/activePOItem");
+                            await me.getPOHistory2('', poItem);
+                            await me.getConditions2('', poItem);
                             me._tblChange = false;
+                            
                             // me.getView().getModel("ui").setProperty("/activeDlv", '');
                             // me.getView().getModel("counts").setProperty("/header", 0);
                             // me.getView().getModel("counts").setProperty("/detail", 0);
@@ -1126,9 +1146,23 @@ sap.ui.define([
                             //     rows: []
                             // }));
                         }
-                        else {
-                            var vActiveRec = me.byId(sTableId).getModel().getData().rows.filter((item,index) => index === me.byId(sTableId).getBinding("rows").aIndices[0])[0].TRANSNO;
-    
+                        else{
+                            var vActivePONo = me.byId(sTableId).getModel().getData().rows.filter((item,index) => index === me.byId(sTableId).getBinding("rows").aIndices[0])[0].PONO;
+                            var vActiveCondRec = me.byId(sTableId).getModel().getData().rows.filter((item,index) => index === me.byId(sTableId).getBinding("rows").aIndices[0])[0].CONDREC;
+                            var vActiveDocTyp = me.byId(sTableId).getModel().getData().rows.filter((item,index) => index === me.byId(sTableId).getBinding("rows").aIndices[0])[0].DOCTYPE;
+
+                            me.getView().getModel("ui").setProperty("/activePONo", vActivePONo);
+                            me.getView().getModel("ui").setProperty("/activeCondRec", vActiveCondRec);
+                            me.getView().getModel("ui").setProperty("/activeDocTyp", vActiveDocTyp);
+                            me.getView().getModel("ui").setProperty("/poCount", me.byId(sTableId).getBinding("rows").aIndices.length);
+                            me._tblChange = true;
+                            await me.getPODetails2(vActivePONo);
+                            await me.getDelSchedule2(vActivePONo);
+                            await me.getDelInvoice2(vActivePONo);
+                            var poItem = me.getView().getModel("ui").getProperty("/activePOItem");
+                            await me.getPOHistory2(vActivePONo, poItem);
+                            await me.getConditions2(vActiveCondRec, poItem);
+                            me._tblChange = false;
                             // if (me.getView().getModel("ui").getProperty("/activeDlv") !== vActiveRec) {
                             //     me.byId(sTableId).getModel().getData().rows.forEach(item => {
                             //         if (item.DLVNO === vActiveRec) { item.ACTIVE = "X"; }
@@ -1139,17 +1173,12 @@ sap.ui.define([
                             //     me.getView().getModel("ui").setProperty("/activeDlv", vActiveRec);
                             //     me.getDetailData(false);
                             // }
-                            me.getView().getModel("ui").setProperty("/transNo", vActiveRec);
-                            me.getView().getModel("ui").setProperty("/advPymntCount", me.byId(sTableId).getBinding("rows").aIndices.length);
-                            me._tblChange = true;
-                            await me.getDetails(vActiveRec);
-                            me._tblChange = false;
                         }
                     }
                     else {
                         var vCount = "";
 
-                        if (sTableId === "advPymntHdrTbl") { vCount = "/advPymntCount" }
+                        if (sTableId === "mainTab") { vCount = "/poCount" }
                         // else if (sTableId === "delvSchedTab") { vCount = "/dlvsched" }
                         // else if (sTableId === "delvDtlTab") { vCount = "/dlvdtls" }
                         // else if (sTableId === "delvStatTab") { vCount = "/dlvstat" }
