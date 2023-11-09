@@ -219,32 +219,7 @@ sap.ui.define([
                 this.getView().setModel(new JSONModel(this.getOwnerComponent().getModel("CAPTION_MSGS_MODEL").getData().text), "ddtext");
 
                 Common.openLoadingDialog(that);
-                await this.onSuggestionItems(); //Load Suggestion Items in Header
-                await this.getColumnProp();
-
-                
-                //Load header
-                await this.getHeaderData(); //get header data
-
-                await this.onLoadFabSpecsData();
-                this.loadReleaseStrategy();
-
-                await this.getMain();
-                
-                await this.getCols();
-                
-                this.hdrTextLoadCol();
-                _promiseResult = new Promise((resolve, reject)=>{
-                    resolve(me.pkngInstTblLoad());
-                });
-                await _promiseResult;
-
-                _promiseResult = new Promise((resolve, reject)=>{
-                    resolve(me.remarksTblLoad());
-                });
-                await _promiseResult;
-
-                this.getView().getModel("ui").setProperty("/dataMode", 'READ');
+                await this.loadAllData();
 
                 var chkIfZfab = await this.getView().getModel("ui").getProperty("/ifZfab");
                 if(!chkIfZfab){
@@ -296,15 +271,9 @@ sap.ui.define([
                 var poItem = this.getView().getModel("ui").getProperty("/activePOItem"); 
                 this.getProcessFlow(poItem);
                 this.hdrTextLoadCol();
-                _promiseResult = new Promise((resolve, reject)=>{
-                    resolve(me.pkngInstTblLoad());
-                });
-                await _promiseResult;
+                await this.pkngInstTblLoad();
 
-                _promiseResult = new Promise((resolve, reject)=>{
-                    resolve(me.remarksTblLoad());
-                });
-                await _promiseResult;
+                await this.remarksTblLoad();
 
                 this.getView().getModel("ui").setProperty("/dataMode", 'READ');
 
@@ -602,15 +571,14 @@ sap.ui.define([
                 var oView = this.getView();
                 var oJSONModel = new JSONModel();
 
-                var docTyp = this.byId("f1DocTyp").getValue().split('-')[0].trim();
-                var purchOrg = this.byId("f1PurOrg").getValue().split('-')[0].trim();
-                var purchGrp = this.byId("f1PurGrp").getValue().split('-')[0].trim();
-                var company = this.byId("f1Company").getValue().split('-')[0].trim();
-                var purchPlant = this.byId("f1PurPlant").getValue().split('-')[0].trim();
-                var shipToPlant = this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
-                var incoTerms = this.byId("f1Incoterms").getValue();
-                var paymntTerms = this.byId("f1PaymentTerms").getValue();
-                var shipMode = this.byId("f1ShipMode").getValue().split('-')[0].trim();
+                var topHeaderData = this.getView().getModel("topHeaderData").getData();
+
+                var docTyp = topHeaderData.DOCTYPE;//this.byId("f1DocTyp").getValue().split('-')[0].trim();
+                var purchOrg = topHeaderData.PURCHORG;//this.byId("f1PurOrg").getValue().split('-')[0].trim();
+                var purchGrp = topHeaderData.PURCHGRP;//this.byId("f1PurGrp").getValue().split('-')[0].trim();
+                var company = topHeaderData.COMPANY;//this.byId("f1Company").getValue().split('-')[0].trim();
+                var purchPlant = topHeaderData.PURCHPLANT;//this.byId("f1PurPlant").getValue().split('-')[0].trim();
+                var shipMode = topHeaderData.SHIPMODE;//this.byId("f1ShipMode").getValue().split('-')[0].trim();
 
                 var topHeaderDataChange = this.getView().getModel("topHeaderData").getData()
 
@@ -766,7 +734,6 @@ sap.ui.define([
                 await new Promise((resolve, reject) => {
                     filteroModel.read("/ZVB_3DERP_VPO_PAYMNTTERMS_SH", {
                         success: function (oData, oResponse) {
-                            console.log(oData);
                             var dataResult = [];
                             oData.results.forEach(item=>{
                                 item.Item = item.PAYMNTTERMS;
@@ -784,7 +751,6 @@ sap.ui.define([
                 await new Promise((resolve, reject) => {
                     filteroModel.read("/ZVB_3DERP_INCOTERMS", {
                         success: function (oData, oResponse) {
-                            console.log(oData);
                             var dataResult = [];
                             oData.results.forEach(item=>{
                                 item.Item = item.INCOTERMS;
@@ -1325,11 +1291,9 @@ sap.ui.define([
                             wrapping: false, 
                             tooltip: "{" + sColumnId + "}",
                             press: function(oEvent) {
-                                // console.log(oEvent.oSource)
                                 const vRow = oEvent.oSource.getBindingInfo("text").binding.getContext().sPath;
                                 const vPRNo =  oEvent.oSource.mProperties.text;
                                 const vPRItem =  oTable.getModel().getProperty(vRow + "/PRITM");
-                                // console.log(vPRNo, vPRItem);
                                 var oData = {
                                     DOCTYPE: "PR",
                                     PRNO: vPRNo,
@@ -1363,7 +1327,6 @@ sap.ui.define([
                             wrapping: false, 
                             tooltip: "{" + sColumnId + "}",
                             press: function(oEvent) {
-                                // console.log(oEvent.oSource)
                                 const vRow = oEvent.oSource.getBindingInfo("text").binding.getContext().sPath;
                                 const vMatDocNo =  oEvent.oSource.mProperties.text;
                                 const vMatDocItem =  oTable.getModel().getProperty(vRow + "/ITEM");
@@ -1685,7 +1648,7 @@ sap.ui.define([
                 await this.loadReleaseStrategy();
             },
 
-            remarksTblLoad(){
+            remarksTblLoad: async function(){
                 var me = this;
                 var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
                 var oParam = {};
@@ -1701,7 +1664,7 @@ sap.ui.define([
                     Object:     'EKKO',
                     N_Read_Text_Lines: [],
                 };
-                return new Promise((resolve, reject)=>{
+                await new Promise((resolve, reject)=>{
                     oModel.create("/READ_TEXTSet", oParam, { 
                         method: "POST",
                         success: function(oResult, oResponse) {
@@ -1726,7 +1689,7 @@ sap.ui.define([
                 })
                 
             },
-            pkngInstTblLoad(){
+            pkngInstTblLoad: async function(){
                 var me = this;
                 var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
                 var oParam = {};
@@ -1744,7 +1707,7 @@ sap.ui.define([
                 };
 
                 
-                return new Promise((resolve, reject)=>{
+                await new Promise((resolve, reject)=>{
                     oModel.create("/READ_TEXTSet", oParam, { 
                         method: "POST",
                         success: function(oResult, oResponse) {
@@ -2284,10 +2247,7 @@ sap.ui.define([
                         oTable = this.byId("RemarksTbl");
                         oSelectedIndices = oTable.getBinding("rows").aIndices;
                         if(oSelectedIndices.length > 0){
-                            _promiseResult = new Promise((resolve, reject)=>{
-                                resolve(this.remarksTblLoad());
-                            })
-                            await _promiseResult;
+                            await this.remarksTblLoad();
 
                             this.byId("vpoNewHdrTxtRemarks").setVisible(false);
                             this.byId("vpoEditHdrTxtRemarks").setVisible(false);
@@ -2311,11 +2271,8 @@ sap.ui.define([
                         oTable = this.byId("PackingInstTbl");
                         oSelectedIndices = oTable.getBinding("rows").aIndices;
                         if(oSelectedIndices.length > 0){
-                            _promiseResult = new Promise((resolve, reject)=>{
-                                resolve(this.pkngInstTblLoad());
-                            })
-                            await _promiseResult;
-        
+                            await this.pkngInstTblLoad();
+
                             this.byId("vpoNewHdrTxtPkgInst").setVisible(false);
                             this.byId("vpoEditHdrTxtPkgInst").setVisible(false);
                             this.byId("vpoDeleteHdrTxtPkgInst").setVisible(false);
@@ -2410,23 +2367,20 @@ sap.ui.define([
                         await _promiseResult;
                     }
 
-                    _promiseResult = new Promise((resolve, reject)=>{
-                        me.byId("vpoNewHdrTxtRemarks").setVisible(true);
-                        me.byId("vpoEditHdrTxtRemarks").setVisible(true);
-                        me.byId("vpoDeleteHdrTxtRemarks").setVisible(true);
-                        me.byId("vpoSaveHdrTxtRemarks").setVisible(false);
-                        me.byId("vpoCancelHdrTxtRemarks").setVisible(false);
+                    this.byId("vpoNewHdrTxtRemarks").setVisible(true);
+                    this.byId("vpoEditHdrTxtRemarks").setVisible(true);
+                    this.byId("vpoDeleteHdrTxtRemarks").setVisible(true);
+                    this.byId("vpoSaveHdrTxtRemarks").setVisible(false);
+                    this.byId("vpoCancelHdrTxtRemarks").setVisible(false);
 
-                        me.enableOtherTabs("idIconTabBarInlineMode");
-                        me.enableOtherTabs("vpoDetailTab");
+                    this.enableOtherTabs("idIconTabBarInlineMode");
+                    this.enableOtherTabs("vpoDetailTab");
 
-                        me.byId("vpoNewHdrTxtPkgInst").setEnabled(true);
-                        me.byId("vpoEditHdrTxtPkgInst").setEnabled(true);
-                        me.byId("vpoDeleteHdrTxtPkgInst").setEnabled(true);
-                        
-                        resolve(me.loadAllData())
-                    });
-                    await _promiseResult;
+                    this.byId("vpoNewHdrTxtPkgInst").setEnabled(true);
+                    this.byId("vpoEditHdrTxtPkgInst").setEnabled(true);
+                    this.byId("vpoDeleteHdrTxtPkgInst").setEnabled(true);
+                    
+                    await this.loadAllData();
                     
                     Common.closeLoadingDialog(that);
                 }
@@ -2484,23 +2438,20 @@ sap.ui.define([
                         await _promiseResult;
                     }
 
-                    _promiseResult = new Promise((resolve, reject)=>{
-                        me.byId("vpoNewHdrTxtPkgInst").setVisible(true);
-                        me.byId("vpoEditHdrTxtPkgInst").setVisible(true);
-                        me.byId("vpoDeleteHdrTxtPkgInst").setVisible(true);
-                        me.byId("vpoSaveHdrTxtPkgInst").setVisible(false);
-                        me.byId("vpoCancelHdrTxtPkgInst").setVisible(false);
+                    this.byId("vpoNewHdrTxtPkgInst").setVisible(true);
+                    this.byId("vpoEditHdrTxtPkgInst").setVisible(true);
+                    this.byId("vpoDeleteHdrTxtPkgInst").setVisible(true);
+                    this.byId("vpoSaveHdrTxtPkgInst").setVisible(false);
+                    this.byId("vpoCancelHdrTxtPkgInst").setVisible(false);
 
-                        me.enableOtherTabs("idIconTabBarInlineMode");
-                        me.enableOtherTabs("vpoDetailTab");
+                    this.enableOtherTabs("idIconTabBarInlineMode");
+                    this.enableOtherTabs("vpoDetailTab");
 
-                        me.byId("vpoNewHdrTxtRemarks").setEnabled(true);
-                        me.byId("vpoEditHdrTxtRemarks").setEnabled(true);
-                        me.byId("vpoDeleteHdrTxtRemarks").setEnabled(true);
-                        
-                        resolve(me.loadAllData());
-                    });
-                    await _promiseResult;
+                    this.byId("vpoNewHdrTxtRemarks").setEnabled(true);
+                    this.byId("vpoEditHdrTxtRemarks").setEnabled(true);
+                    this.byId("vpoDeleteHdrTxtRemarks").setEnabled(true);
+                    
+                    await this.loadAllData();
 
                     Common.closeLoadingDialog(that);
                 }
@@ -2607,10 +2558,7 @@ sap.ui.define([
                             });
                             await _promiseResult;
                             
-                            _promiseResult = new Promise((resolve, reject)=>{
-                                resolve(me.loadAllData())
-                            });
-                            await _promiseResult;
+                            await this.loadAllData();
                             Common.closeLoadingDialog(that);
                         }else{
                             MessageBox.error(this.getView().getModel("captionMsg").getData()["INFO_NO_DATA_DELETE"]);
@@ -2745,10 +2693,8 @@ sap.ui.define([
                             });
                             await _promiseResult;
                             
-                            _promiseResult = new Promise((resolve, reject)=>{
-                                resolve(me.loadAllData())
-                            });
-                            await _promiseResult;
+                            await this.loadAllData();
+
                             Common.closeLoadingDialog(that);
                         }else{
                             MessageBox.error(this.getView().getModel("captionMsg").getData()["INFO_NO_DATA_DELETE"]);
@@ -2850,10 +2796,7 @@ sap.ui.define([
                     this.byId("vpoEditHdrTxtRemarks").setEnabled(true);
                     this.byId("vpoDeleteHdrTxtRemarks").setEnabled(true);
                 }
-                _promiseResult = new Promise((resolve, reject)=>{
-                    resolve(this.loadAllData());
-                });
-                await _promiseResult;
+                await this.loadAllData();
             },
 
             onLoadFabSpecsData: async function(){
@@ -2993,10 +2936,13 @@ sap.ui.define([
                 var otherReq2 = this.byId("f1OtherReq2").getValue();
                 var colFastCrWet = this.byId("f1ColFastCrWet").getValue();
 
-                var shipToPlant = this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
-                var incoTerms = this.byId("f1Incoterms").getValue().split('-')[0].trim();
-                var destination = this.byId("f1Destination").getValue();
-                var shipMode = this.byId("f1ShipMode").getValue().split('-')[0].trim();
+                var topHeaderData = this.getView().getModel("topHeaderData").getData();
+
+                var shipToPlant = topHeaderData.SHIPTOPLANT;//this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
+                var incoTerms = topHeaderData.INCOTERMS;//this.byId("f1Incoterms").getValue().split('-')[0].trim();
+                var destination = topHeaderData.DEST;//this.byId("f1Destination").getValue();
+                var shipMode = topHeaderData.SHIPMODE;//this.byId("f1ShipMode").getValue().split('-')[0].trim();
+                
                 var message = "";
 
                 oSelectedIndices.forEach(item => {
@@ -4047,10 +3993,12 @@ sap.ui.define([
                 Common.openLoadingDialog(that);
 
                 var oParamInitParam = {}
-                var oParamDataPO = [];
-                var oParamDataPOClose = [];
+                // var oParamDataPO = [];
+                var oParamDataPOSched =[]
+                // var oParamDataPOClose = [];
                 var oParam = {};
-                var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
+                var oModel = this.getOwnerComponent().getModel();
+                var rfcModel = this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
                 var bProceed = true;
 
                 var message;
@@ -4060,11 +4008,17 @@ sap.ui.define([
                 var oSelectedIndices = oTable.getBinding("rows").aIndices;
                 var aData = oTable.getModel().getData().rows;
 
-                var shipToPlant = this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
-                var incoTerms = this.byId("f1Incoterms").getValue().split('-')[0].trim();
-                var destination = this.byId("f1Destination").getValue();
-                var shipMode = this.byId("f1ShipMode").getValue().split('-')[0].trim();
-                var validPOItem
+                var topHeaderData = this.getView().getModel("topHeaderData").getData();
+                
+                // var shipToPlant = topHeaderData.SHIPTOPLANT;//this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
+                // var incoTerms = topHeaderData.INCOTERMS;//this.byId("f1Incoterms").getValue().split('-')[0].trim();
+                // var destination = topHeaderData.DEST;//this.byId("f1Destination").getValue();
+                // var shipMode = topHeaderData.SHIPMODE;//this.byId("f1ShipMode").getValue().split('-')[0].trim();
+                // var validPOItem;
+
+                var poNo = this.getView().getModel("ui").getProperty("/activePONo");
+
+                var delSchedSet = [];
 
                 if(this._newDlvDate === undefined || this._newDlvDate === "" || this._newDlvDate === null){
                     MessageBox.error(_captionList.INFO_DLVDT_EMPTY)
@@ -4077,55 +4031,110 @@ sap.ui.define([
                 oSelectedIndices = oTmpSelectedIndices;
                 
                 if(bProceed){
+                    //get po Delivery Schedule Data
+                    await new Promise((resolve, reject)=>{
+                        oModel.read('/VPODelSchedSet', { 
+                            urlParameters: {
+                                "$filter": "PONO eq '" + poNo + "'"
+                            },
+                            success: function (data, response) {
+                                if (data.results.length > 0) {
+                                    data.results.forEach(item => {
+                                        item.DELDT = dateFormat.format(item.DELDT);
+                                        item.ETD = dateFormat.format(item.ETD);
+                                        item.ETDPORT = dateFormat.format(item.ETDPORT);
+                                        item.ETAFTY = dateFormat.format(item.ETAFTY);
+                                        item.EXFTY = dateFormat.format(item.EXFTY);
+                                        item.CREATEDDT = dateFormat.format(item.CREATEDDT);
+                                        item.UPDATEDDT = dateFormat.format(item.UPDATEDDT);
+                                        // item.DELETED = item.DELETED === "" ? false : true;
+                                    })
+
+                                    delSchedSet = data.results;
+                                    delSchedSet.sort((a,b) => (a.ITEM > b.ITEM) ? 1 : ((b.ITEM > a.ITEM) ? -1 : 0));
+                                }
+                                resolve();
+                            },
+                            error: function (err) {
+                                resolve();
+                            }
+                        });
+                    });
+
+
                     oSelectedIndices.forEach((item, index) => {
                         if (aData.at(item).DELETED === false) {
-                            validPOItem = item;
-
-                            oParamInitParam = {
-                                IPoNumber: me._pono,
-                                IDoDownload: "N",
-                                IChangeonlyHdrplants: "N",
+                            
+                            // var delSchedResult = delSchedSet.find(itemSched => itemSched.DELETED === false && new Date(itemSched.DELDT).toString() === new Date(aData.at(item).DELDT).toString())
+                            
+                            for(var x = 0; x < delSchedSet.length; x++){
+                                if(delSchedSet[x].DELETED === false){
+                                    if(aData.at(item).ITEM === delSchedSet[x].ITEM && new Date(delSchedSet[x].DELDT).toString() === new Date(aData.at(item).DELDT).toString()){
+                                        oParamInitParam = {
+                                            IPoNumber: poNo,
+                                            IDoDownload: "N",
+                                            IChangeonlyHdrplants: "N",
+                                        }
+                                        oParamDataPOSched.push({
+                                            PoNumber: poNo,
+                                            PoItem: delSchedSet[x].ITEM,
+                                            SchedLine: delSchedSet[x].SEQNO,
+                                            Quantity: delSchedSet[x].SCHEDQTY,
+                                            DelivDate: sapDateFormat.format(new Date(this._newDlvDate)) + "T00:00:00", //DlvDt
+                                            PreqNo: delSchedSet[x].PRNO,
+                                            PreqItem: delSchedSet[x].PRITM
+                                        })
+                                    }
+                                }
                             }
-                            oParamDataPO.push({
-                                Banfn: aData.at(validPOItem).PRNO, //PRNO
-                                Bnfpo: aData.at(validPOItem).PRITM, //PRITM
-                                Ebeln: this._pono,//pono
-                                Unsez: shipToPlant, //shipToPlant
-                                Inco1: incoTerms, // Incoterms
-                                Inco2: destination, //Destination
-                                Evers: shipMode, //ShipMode
-                                Ebelp: aData.at(validPOItem).ITEM,//poitem
-                                Txz01: aData.at(validPOItem).SHORTTEXT,//shorttext
-                                Menge: aData.at(validPOItem).POQTY,//POQTY
-                                Meins: aData.at(validPOItem).UOM,//UOM
-                                Netpr: aData.at(validPOItem).NETPRICE,//net price
-                                Peinh: aData.at(validPOItem).PER,//PER
-                                Bprme: aData.at(validPOItem).ORDERPRICEUOM, //Order Price Unit
-                                Repos: aData.at(validPOItem).INVRCPTIND, //IR Indicator
-                                Webre: aData.at(validPOItem).GRBASEDIVIND, //GR Based Ind
-                                Eindt: sapDateFormat.format(new Date(this._newDlvDate)) + "T00:00:00", //DlvDt
-                                Uebtk: aData.at(validPOItem).UNLIMITED,//Unlimited
-                                Uebto: aData.at(validPOItem).OVERDELTOL,//OverDel Tol.
-                                Untto: aData.at(validPOItem).UNDERDELTOL,//UnderDel Tol.
-                                Zzmakt: aData.at(validPOItem).POADDTLDESC, //PO Addtl Desc
-                                Elikz: aData.at(validPOItem).CLOSED, //Closed
-                                // Delete_Rec: aData.at(item).DELETED//Delete
-                            });
-                            oParamDataPOClose.push({
-                                Banfn: aData.at(validPOItem).PRNO, //PRNO
-                                Bnfpo: aData.at(validPOItem).PRITM, //PRITM
-                                Ebakz: "" 
-                            });
+
+                            // console.log(delSchedResult)
+                            // validPOItem = item;
+
+                            // oParamInitParam = {
+                            //     IPoNumber: poNo,
+                            //     IDoDownload: "N",
+                            //     IChangeonlyHdrplants: "N",
+                            // }
+                            // oParamDataPO.push({
+                            //     Banfn: aData.at(validPOItem).PRNO, //PRNO
+                            //     Bnfpo: aData.at(validPOItem).PRITM, //PRITM
+                            //     Ebeln: this._pono,//pono
+                            //     Unsez: shipToPlant, //shipToPlant
+                            //     Inco1: incoTerms, // Incoterms
+                            //     Inco2: destination, //Destination
+                            //     Evers: shipMode, //ShipMode
+                            //     Ebelp: aData.at(validPOItem).ITEM,//poitem
+                            //     Txz01: aData.at(validPOItem).SHORTTEXT,//shorttext
+                            //     Menge: aData.at(validPOItem).POQTY,//POQTY
+                            //     Meins: aData.at(validPOItem).UOM,//UOM
+                            //     Netpr: aData.at(validPOItem).NETPRICE,//net price
+                            //     Peinh: aData.at(validPOItem).PER,//PER
+                            //     Bprme: aData.at(validPOItem).ORDERPRICEUOM, //Order Price Unit
+                            //     Repos: aData.at(validPOItem).INVRCPTIND, //IR Indicator
+                            //     Webre: aData.at(validPOItem).GRBASEDIVIND, //GR Based Ind
+                            //     Eindt: sapDateFormat.format(new Date(this._newDlvDate)) + "T00:00:00", //DlvDt
+                            //     Uebtk: aData.at(validPOItem).UNLIMITED,//Unlimited
+                            //     Uebto: aData.at(validPOItem).OVERDELTOL,//OverDel Tol.
+                            //     Untto: aData.at(validPOItem).UNDERDELTOL,//UnderDel Tol.
+                            //     Zzmakt: aData.at(validPOItem).POADDTLDESC, //PO Addtl Desc
+                            //     Elikz: aData.at(validPOItem).CLOSED, //Closed
+                            //     // Delete_Rec: aData.at(item).DELETED//Delete
+                            // });
+                            // oParamDataPOClose.push({
+                            //     Banfn: aData.at(validPOItem).PRNO, //PRNO
+                            //     Bnfpo: aData.at(validPOItem).PRITM, //PRITM
+                            //     Ebakz: "" 
+                            // });
                         }
                     });
 
-                    if (oParamDataPO.length > 0) {
+                    if (oParamDataPOSched.length > 0) {
                         oParam = oParamInitParam;
-                        oParam['N_ChangePOItemParam'] = oParamDataPO;
-                        oParam['N_ChangePOClosePRParam'] = oParamDataPOClose;
+                        oParam['N_ChangePOItemSchedParam'] = oParamDataPOSched;
                         oParam['N_ChangePOReturn'] = [];
                         _promiseResult = new Promise((resolve, reject)=>{
-                            oModel.create("/ChangePOSet", oParam, {
+                            rfcModel.create("/ChangePOSet", oParam, {
                                 method: "POST",
                                 success: function(oData, oResponse){
                                     if(oData.N_ChangePOReturn.results.length > 0){
@@ -4169,10 +4178,13 @@ sap.ui.define([
                 var me = this;
                 var actionSel;
                 var poNo = this._pono;
-                var shipToPlant = this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
-                var incoTerms = this.byId("f1Incoterms").getValue().split('-')[0].trim();
-                var destination = this.byId("f1Destination").getValue();
-                var shipMode = this.byId("f1ShipMode").getValue().split('-')[0].trim();
+
+                var topHeaderData = this.getView().getModel("topHeaderData").getData();
+
+                var shipToPlant = topHeaderData.SHIPTOPLANT;//this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
+                var incoTerms = topHeaderData.INCOTERMS;//this.byId("f1Incoterms").getValue().split('-')[0].trim();
+                var destination = topHeaderData.DEST;//this.byId("f1Destination").getValue();
+                var shipMode = topHeaderData.SHIPMODE;//this.byId("f1ShipMode").getValue().split('-')[0].trim();
 
                 var bProceed = true
                 var isValid = true
@@ -4685,10 +4697,13 @@ sap.ui.define([
                 var aDataToEdit = [];
                 var iCounter = 0;
                 var bProceed = true;
-                var shipToPlant = this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
-                var incoTerms = this.byId("f1Incoterms").getValue().split('-')[0].trim();
-                var destination = this.byId("f1Destination").getValue();
-                var shipMode = this.byId("f1ShipMode").getValue().split('-')[0].trim();
+
+                var topHeaderData = this.getView().getModel("topHeaderData").getData();
+
+                var shipToPlant = topHeaderData.SHIPTOPLANT;//this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
+                var incoTerms = topHeaderData.INCOTERMS;//this.byId("f1Incoterms").getValue().split('-')[0].trim();
+                var destination = topHeaderData.DEST;//this.byId("f1Destination").getValue();
+                var shipMode = topHeaderData.SHIPMODE;//this.byId("f1ShipMode").getValue().split('-')[0].trim();
 
                 var message = "";
 
@@ -5518,10 +5533,13 @@ sap.ui.define([
                 var oParam = {};
                 var rfcModel = this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
                 var bProceed = true;
-                var shipToPlant = this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
-                var incoTerms = this.byId("f1Incoterms").getValue().split('-')[0].trim();
-                var destination = this.byId("f1Destination").getValue();
-                var shipMode = this.byId("f1ShipMode").getValue().split('-')[0].trim();
+                
+                var topHeaderData = this.getView().getModel("topHeaderData").getData();
+
+                var shipToPlant = topHeaderData.SHIPTOPLANT;//this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
+                var incoTerms = topHeaderData.INCOTERMS;//this.byId("f1Incoterms").getValue().split('-')[0].trim();
+                var destination = topHeaderData.DEST;//this.byId("f1Destination").getValue();
+                var shipMode = topHeaderData.SHIPMODE;//this.byId("f1ShipMode").getValue().split('-')[0].trim();
             
                 if (this._validationErrors.length != 0){
                     MessageBox.error(_captionList.INFO_REQUIRED_FIELD);
@@ -5733,10 +5751,13 @@ sap.ui.define([
                 var oParamDataPO = [];
                 var oParamDataPOClose = [];
                 var oParam = {};
-                var shipToPlant = this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
-                var incoTerms = this.byId("f1Incoterms").getValue().split('-')[0].trim();
-                var destination = this.byId("f1Destination").getValue();
-                var shipMode = this.byId("f1ShipMode").getValue().split('-')[0].trim();
+
+                var topHeaderData = this.getView().getModel("topHeaderData").getData();
+
+                var shipToPlant = topHeaderData.SHIPTOPLANT;//this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
+                var incoTerms = topHeaderData.INCOTERMS;//this.byId("f1Incoterms").getValue().split('-')[0].trim();
+                var destination = topHeaderData.DEST;//this.byId("f1Destination").getValue();
+                var shipMode = topHeaderData.SHIPMODE;//this.byId("f1ShipMode").getValue().split('-')[0].trim();
                 var message = "";
 
                 if (aSelIndices.length > 0) {
@@ -6605,10 +6626,13 @@ sap.ui.define([
                 var rfcModel = this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
                 var oModel = this.getOwnerComponent().getModel();
                 var bProceed = true;
-                var shipToPlant = this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
-                var incoTerms = this.byId("f1Incoterms").getValue().split('-')[0].trim();
-                var destination = this.byId("f1Destination").getValue();
-                var shipMode = this.byId("f1ShipMode").getValue().split('-')[0].trim();
+
+                var topHeaderData = this.getView().getModel("topHeaderData").getData();
+
+                var shipToPlant = topHeaderData.SHIPTOPLANT;//this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
+                var incoTerms = topHeaderData.INCOTERMS;//this.byId("f1Incoterms").getValue().split('-')[0].trim();
+                var destination = topHeaderData.DEST;//this.byId("f1Destination").getValue();
+                var shipMode = topHeaderData.SHIPMODE;//this.byId("f1ShipMode").getValue().split('-')[0].trim();
 
                 if (this._validationErrors.length != 0){
                     MessageBox.error(_captionList.INFO_REQUIRED_FIELD);
@@ -7211,10 +7235,13 @@ sap.ui.define([
                     var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
 
                     var message;
-                    var shipToPlant = this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
-                    var incoTerms = this.byId("f1Incoterms").getValue().split('-')[0].trim();
-                    var destination = this.byId("f1Destination").getValue();
-                    var shipMode = this.byId("f1ShipMode").getValue().split('-')[0].trim();
+
+                    var topHeaderData = this.getView().getModel("topHeaderData").getData();
+
+                    var shipToPlant = topHeaderData.SHIPTOPLANT;//this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
+                    var incoTerms = topHeaderData.INCOTERMS;//this.byId("f1Incoterms").getValue().split('-')[0].trim();
+                    var destination = topHeaderData.DEST;//this.byId("f1Destination").getValue();
+                    var shipMode = topHeaderData.SHIPMODE;//this.byId("f1ShipMode").getValue().split('-')[0].trim();
 
                     if(oSelectedIndices.length > 0){
                         oSelectedIndices.forEach(item => {
@@ -7437,10 +7464,12 @@ sap.ui.define([
                 var rfcModel = this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
                 var oModel = this.getOwnerComponent().getModel();
 
-                var shipToPlant = this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
-                var incoTerms = this.byId("f1Incoterms").getValue().split('-')[0].trim();
-                var destination = this.byId("f1Destination").getValue();
-                var shipMode = this.byId("f1ShipMode").getValue().split('-')[0].trim();
+                var topHeaderData = this.getView().getModel("topHeaderData").getData();
+
+                var shipToPlant = topHeaderData.SHIPTOPLANT;//this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
+                var incoTerms = topHeaderData.INCOTERMS;//this.byId("f1Incoterms").getValue().split('-')[0].trim();
+                var destination = topHeaderData.DEST;//this.byId("f1Destination").getValue();
+                var shipMode = topHeaderData.SHIPMODE;//this.byId("f1ShipMode").getValue().split('-')[0].trim();
                 var message;
                 var bProceed = true
 
@@ -8430,30 +8459,31 @@ sap.ui.define([
                         //Layout Error
                         sap.m.MessageBox.error(_captionList.INFO_NO_LAYOUT);
                     }
-                });                
+                });
             },
 
             disableOtherTabs: function (tabName) {
                 var oIconTabBar = this.byId(tabName);
+                this.byId("idChangesIconTabBar").setEnabled(false);
                 oIconTabBar.getItems().filter(item => item.getProperty("key") !== oIconTabBar.getSelectedKey())
                     .forEach(item => item.setProperty("enabled", false));
-
             },
             disableOtherTabsChild: function (tabName) {
                 var oIconTabBar = this.byId(tabName);
+                this.byId("idChangesIconTabBar").setEnabled(false);
                 oIconTabBar.getItems().filter(item => item.getProperty("key"))
                 .forEach(item => item.setProperty("enabled", false));
-
             },
             enableOtherTabs: function (tabName) {
                 var oIconTabBar = this.byId(tabName);
+                this.byId("idChangesIconTabBar").setEnabled(false);
                 oIconTabBar.getItems().forEach(item => item.setProperty("enabled", true));
             },
             enableOtherTabsChild: function (tabName) {
                 var oIconTabBar = this.byId(tabName);
+                this.byId("idChangesIconTabBar").setEnabled(false);
                 oIconTabBar.getItems().filter(item => item.getProperty("key"))
                 .forEach(item => item.setProperty("enabled", true));
-
             },
 
             getProcessFlow: function(poItem) {
@@ -8640,13 +8670,16 @@ sap.ui.define([
                     })) || ""; // generate the Hash to display style 
                 }
                 else if (oData.DOCTYPE === "PR") {
-                    var hash = (oCrossAppNavigator && oCrossAppNavigator.hrefForExternal({
-                        target: {
-                            semanticObject: "ZSO_3DERP_PUR_PR",
-                            action: "display&/PRDetail/" + vSBU + "/" + oData.PRNO + "/" + oData.PRITEM
-                        }
-                    })) || ""; 
+                    var hash = "ZSO_3DERP_PUR_PR-display&/PRDetail/" + vSBU + "/" + oData.PRNO + "/" + oData.PRITEM;
                 }
+                // else if (oData.DOCTYPE === "PR") {
+                //     var hash = (oCrossAppNavigator && oCrossAppNavigator.hrefForExternal({
+                //         target: {
+                //             semanticObject: "ZSO_3DERP_PUR_PR",
+                //             action: "display&/PRDetail/" + vSBU + "/" + oData.PRNO + "/" + oData.PRITEM
+                //         }
+                //     })) || ""; 
+                // }
 
                 oCrossAppNavigator.toExternal({
                     target: {

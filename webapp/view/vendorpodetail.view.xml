@@ -57,6 +57,7 @@
                                         <!-- Changes -->
                                         <IconTabFilter
                                             id="idChangesIconTabBar"
+                                            enabled="false"
                                             text="{captionMsg>/CHANGES}"
                                             key="itfCOSTING">
                                             <Text text="Changes..." />
