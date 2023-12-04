@@ -425,7 +425,7 @@
                             </uiT:template>
                         </uiT:Column>
                         <uiT:Column width="115px" hAlign="End">
-                            <Text text="{ddtext>/SPLITQTY}" />
+                            <Text text="{ddtext>/SPLITPOQTY}" />
                             <uiT:template>
                                 <Text text="{VPOSplitDtl>SPLITPOQTY}" />
                             </uiT:template>

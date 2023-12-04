@@ -421,7 +421,7 @@ sap.ui.define([
                 oDDTextParam.push({CODE: "POADDTLDESC"});
                 oDDTextParam.push({CODE: "BATCH"});
                 oDDTextParam.push({CODE: "ORIGPOQTY"});
-                oDDTextParam.push({CODE: "SPLITQTY"});
+                oDDTextParam.push({CODE: "SPLITPOQTY"});
                 oDDTextParam.push({CODE: "UOM"});
                 oDDTextParam.push({CODE: "DELDT"});
                 oDDTextParam.push({CODE: "NETPRICE"});
@@ -480,6 +480,7 @@ sap.ui.define([
                 oDDTextParam.push({CODE: "SEARCH"});
 
                 oDDTextParam.push({CODE: "LOADING"});
+
 
                 await new Promise((resolve)=>{
                     oModel.create("/CaptionMsgSet", { CaptionMsgItems: oDDTextParam  }, {

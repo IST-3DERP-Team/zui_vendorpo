@@ -65,12 +65,18 @@ function (Controller, JSONModel, MessageBox, History, MessageToast, TableValueHe
             this._sDataMode = "READ";
             this._sbu = this.getOwnerComponent().getModel("UI_MODEL").getData().sbu;
             this._selValueHelpIndex = "";
+            // this._bDataLoaded = false;
             
             if (sap.ui.getCore().byId("backBtn") !== undefined) {
                 sap.ui.getCore().byId("backBtn").mEventRegistry.press[0].fFunction = function(oEvent) {
                     me.onNavBack();
                 }
             }
+
+            // this.byId("splitPOPurchOrg").setEnabled(false);
+            this.byId("splitPOVendor").setEnabled(false);
+            this.byId("splitPOPurchOrg").setValue("");
+            this.byId("splitPOVendor").setValue("");
 
             // if (this.getView().getModel("payterms") !== undefined) this.getView().getModel("payterms").destroy();
             // if (this.getView().getModel("header") !== undefined) this.getView().getModel("header").destroy();
@@ -202,6 +208,8 @@ function (Controller, JSONModel, MessageBox, History, MessageToast, TableValueHe
             this.getView().setModel(new JSONModel(aDataFabSpecs), "fabspecs");
 
             this.getDiscRate();
+
+            // this.byId("splitPOPurchOrg").setEnabled(true);
         },
 
         onNavBack: function(oEvent) {
@@ -401,21 +409,13 @@ function (Controller, JSONModel, MessageBox, History, MessageToast, TableValueHe
             };
 
             me.getView().getModel("VPOSplitDtl").getData().forEach(item => {
-                if (me.getView().getModel("inforecchk").getData().filter(fItem => fItem.FIELD2 === item.MATTYP).length > 0) {
-                    oParamData.push({
-                        MATNO: item.MATNO,
-                        INFOREC: "",
-                        SRCLIST: "X",
-                        EXIST: ""
-                    })                    
-                }
-                else {
+                if (me.getView().getModel("inforecchk").getData().filter(fItem => fItem.FIELD2 === item.MATTYP).length === 0) {
                     oParamData.push({
                         MATNO: item.MATNO,
                         INFOREC: "X",
                         SRCLIST: "",
                         EXIST: ""
-                    })
+                    })                    
                 }
             })
 
@@ -427,6 +427,7 @@ function (Controller, JSONModel, MessageBox, History, MessageToast, TableValueHe
                 me._oModel.create("/VPOInfoRecSrcLstSet", oParam, {
                     method: "POST",
                     success: function(oResult, oResponse) {
+                        console.log(oResult)
                         var oData = [];
                         var noSourceList = oResult.N_InfoRecSrcLstItem.results.filter(fItem => fItem.SRCLIST === "X" && fItem.EXIST === "");
                         
@@ -453,9 +454,10 @@ function (Controller, JSONModel, MessageBox, History, MessageToast, TableValueHe
                                     var oItem = me.getView().getModel("VPOSplitDtl").getData().filter(fItem => fItem.MATNO === item.MATNO);
 
                                     if (oItem.length > 0) {
+                                        oItem[0].UOM = infoRec[0].PoUnit;
                                         oItem[0].NETPRICE = infoRec[0].NetPrice;
                                         oItem[0].PER = infoRec[0].PriceUnit;
-                                        oItem[0].ORDERPRICEUOM = infoRec[0].PoUnit;
+                                        oItem[0].ORDERPRICEUOM = infoRec[0].OrderprUn;
                                         oItem[0].NUMERATOR = infoRec[0].ConvNum1;
                                         oItem[0].DENOMINATOR = infoRec[0].ConvDen1;
                                         oItem[0].TAXCD = infoRec[0].TaxCode;
@@ -517,6 +519,164 @@ function (Controller, JSONModel, MessageBox, History, MessageToast, TableValueHe
             })
 
             return await oPromise;
+        },
+
+        getInfoRecordAndSourceList: async (me) => {
+            var oParamData = [];
+            var oHeaderData = me.getView().getModel("VPOSplitHdr").getData();
+
+            var oParam = {
+                VENDOR: oHeaderData.VENDOR,
+                PURCHORG: oHeaderData.PURCHORG,
+                PURCHGRP: oHeaderData.PURCHGRP,
+                PURCHPLANT: oHeaderData.PURCHPLANT,
+                PODT: sapDateFormat.format(new Date(oHeaderData.PODT))
+            };
+
+            me.getView().getModel("VPOSplitDtl").getData().forEach(item => {
+                if (me.getView().getModel("inforecchk").getData().filter(fItem => fItem.FIELD2 === item.MATTYP).length > 0) {
+                    oParamData.push({
+                        MATNO: item.MATNO,
+                        INFOREC: "",
+                        SRCLIST: "X",
+                        EXIST: ""
+                    })                    
+                }
+                else {
+                    oParamData.push({
+                        MATNO: item.MATNO,
+                        INFOREC: "X",
+                        SRCLIST: "",
+                        EXIST: ""
+                    })
+                }
+            })
+
+            oParam["N_InfoRecSrcLstItem"] = oParamData;
+            oParam["N_InfoRecord"] = [];
+            oParam["N_SourceList"] = [];
+
+            var oPromise = new Promise((resolve, reject) => {
+                me._oModel.create("/VPOInfoRecSrcLstSet", oParam, {
+                    method: "POST",
+                    success: function(oResult, oResponse) {
+                        console.log(oResult)
+                        var oData = [];
+                        var noSourceList = oResult.N_InfoRecSrcLstItem.results.filter(fItem => fItem.SRCLIST === "X" && fItem.EXIST === "");
+                        
+                        if (noSourceList.length > 0) {
+                            noSourceList.forEach(item => {
+                                oData.push({
+                                    MATNO: item.MATNO,
+                                    REMARKS: "No source list found."
+                                })
+                            })
+                        }
+
+                        oResult.N_InfoRecSrcLstItem.results.filter(fItem => fItem.INFOREC === "X").forEach(item => {
+                            var infoRec = oResult.N_InfoRecord.results.filter(fItem => fItem.Vendor === oResult.VENDOR && fItem.Material === item.MATNO && fItem.PurchOrg === oResult.PURCHORG);
+
+                            if (infoRec.length > 0) {
+                                if (infoRec[0].RetType === "E") {
+                                    oData.push({
+                                        MATNO: item.MATNO,
+                                        REMARKS: infoRec[0].RetMessage
+                                    })
+                                }
+                                else {
+                                    var oItem = me.getView().getModel("VPOSplitDtl").getData().filter(fItem => fItem.MATNO === item.MATNO);
+
+                                    if (oItem.length > 0) {
+                                        oItem[0].UOM = infoRec[0].PoUnit;
+                                        oItem[0].NETPRICE = infoRec[0].NetPrice;
+                                        oItem[0].PER = infoRec[0].PriceUnit;
+                                        oItem[0].ORDERPRICEUOM = infoRec[0].OrderprUn;
+                                        oItem[0].NUMERATOR = infoRec[0].ConvNum1;
+                                        oItem[0].DENOMINATOR = infoRec[0].ConvDen1;
+                                        oItem[0].TAXCD = infoRec[0].TaxCode;
+                                        oItem[0].UNLIMITED = infoRec[0].Unlimited;
+                                        oItem[0].OVERDELTOL = infoRec[0].Overdeltol;
+                                        oItem[0].UNDERDELTOL = infoRec[0].UnderTol;
+                                        oItem[0].GRBASEDIVIND = infoRec[0].Grbasediv;
+                                    }
+                                }
+                            }
+                            else {
+                                oData.push({
+                                    MATNO: item.MATNO,
+                                    REMARKS: "No info record found."
+                                })
+                            }
+                        })
+
+                        if (oData.length === 0) {
+                            me._isInfoRecRetrieve = true;
+                            resolve(true);
+                        }
+                        else {
+                            resolve(false);
+
+                            var vRowCount = oData.length > 7 ? oData : 7;
+
+                            if (!me._InfoRecordResultDialog) {
+                                me._InfoRecordResultDialog = sap.ui.xmlfragment("zuivendorpo.view.fragments.dialog.InfoRecordResultDialog", me);
+
+                                me._InfoRecordResultDialog.setModel(
+                                    new JSONModel({
+                                        items: oData,
+                                        ddtext: {
+                                            MATNO: me.getView().getModel("ddtext").getData()["MATNO"],
+                                            REMARKS: me.getView().getModel("ddtext").getData()["REMARKS"],
+                                        },
+                                        rowCount: vRowCount
+                                    })
+                                )
+
+                                me.getView().addDependent(this._InfoRecordResultDialog);
+                            }
+                            else {
+                                me._InfoRecordResultDialog.getModel().setProperty("/items", oData);
+                                me._InfoRecordResultDialog.getModel().setProperty("/rowCount", vRowCount);
+                            }
+
+                            me._InfoRecordResultDialog.setTitle("");
+                            me._InfoRecordResultDialog.open();
+                        }
+                    },
+                    error: function(err) {
+                        MessageBox.err(err.message);
+                        resolve(false);
+                        // Common.closeProcessingDialog(me);
+                    }
+                }); 
+            })
+
+            return await oPromise;
+        },
+
+        onInfoRecordClose: function(oEvent) {
+            this._InfoRecordResultDialog.close();
+
+            if (this._sDataMode === "READ") { 
+                return; 
+            }
+
+            this.setRowReadMode();
+
+            this.byId("btnEditSplitPODtl").setVisible(true);
+            this.byId("btnSaveSplitPODtl").setVisible(false);
+            this.byId("btnCancelSplitPODtl").setVisible(false);
+            this.byId("btnDeleteSplitPODtl").setVisible(true);
+            this.byId("btnRefreshSplitPODtl").setVisible(true);
+
+            this.byId("btnUpdDateSplitPOHdr").setEnabled(true);
+            this.byId("btnHdrTxtSplitPOHdr").setEnabled(true);
+            this.byId("btnGenPOSplitPOHdr").setEnabled(true);
+            this.byId("btnCancelPOSplitPOHdr").setEnabled(true);
+
+            this._sDataMode = "READ";
+
+            this.getView().getModel("VPOSplitDtl").setProperty("/", this._aDataBeforeChange);
         },
 
         setRowEditMode() {
@@ -728,7 +888,6 @@ function (Controller, JSONModel, MessageBox, History, MessageToast, TableValueHe
 
                 this._oModelColumns["VPOSplitDtl"].filter(fItem => fItem.required === true).forEach(item => {
                     this.getView().getModel("VPOSplitDtl").getData().forEach(val => {
-                        console.log(val[item.ColumnName]);
                         if (val[item.ColumnName] === "") {
                             bProceed = false;
                         }
@@ -752,7 +911,7 @@ function (Controller, JSONModel, MessageBox, History, MessageToast, TableValueHe
                 }
 
                 Common.openProcessingDialog(this);
-                bProceed = await this.getInfoRecord(this);
+                bProceed = await this.getInfoRecordAndSourceList(this);
 
                 if (!bProceed) {
                     Common.closeProcessingDialog(this);
@@ -832,27 +991,6 @@ function (Controller, JSONModel, MessageBox, History, MessageToast, TableValueHe
                     MessageBox.information(me.getView().getModel("ddtext").getData()["INFO_SEL_RECORD_TO_DELETE"]);
                 }
             }
-        },
-
-        onInfoRecordClose: function(oEvent) {
-            this.setRowReadMode();
-
-            this.byId("btnEditSplitPODtl").setVisible(true);
-            this.byId("btnSaveSplitPODtl").setVisible(false);
-            this.byId("btnCancelSplitPODtl").setVisible(false);
-            this.byId("btnDeleteSplitPODtl").setVisible(true);
-            this.byId("btnRefreshSplitPODtl").setVisible(true);
-
-            this.byId("btnUpdDateSplitPOHdr").setEnabled(true);
-            this.byId("btnHdrTxtSplitPOHdr").setEnabled(true);
-            this.byId("btnGenPOSplitPOHdr").setEnabled(true);
-            this.byId("btnCancelPOSplitPOHdr").setEnabled(true);
-
-            this._sDataMode = "READ";
-
-            this.getView().getModel("VPOSplitDtl").setProperty("/", this._aDataBeforeChange);
-
-            this._InfoRecordResultDialog.close();
         },
 
         handleSuggestionItemSelected: function (oEvent) {
@@ -1962,14 +2100,14 @@ function (Controller, JSONModel, MessageBox, History, MessageToast, TableValueHe
             })
 
             if (!bProceed) {
-                MessageBox.information(this.getView().getModel("ddtext").getData()["INFO_INPUT_DTL_REQD_FIELDS"].replace(".","") + ":\r\n" + aDtlReqFields.join(", "));
+                MessageBox.information(this.getView().getModel("ddtext").getData()["INFO_INPUT_DTL_REQD_FIELDS"].replace(".","") + ":\r\n" + [...new Set(aDtlReqFields)].join(", "));
                 return;
             }
 
             Common.openProcessingDialog(this);
 
             if (!this._isInfoRecRetrieve) {
-                bProceed = await this.getInfoRecord(this);
+                bProceed = await this.getInfoRecordAndSourceList(this);
             }
 
             if (!bProceed) {
@@ -2587,9 +2725,12 @@ function (Controller, JSONModel, MessageBox, History, MessageToast, TableValueHe
             TableValueHelp.handleFormValueHelp(oEvent, this);
         },
 
-        onFormValueHelpInputChange: function(oEvent) {
+        onFormValueHelpInputChange: async function(oEvent) {           
             var me = this;
             var oSource = oEvent.getSource();
+            // console.log(this._bDataLoaded)
+            // if (!this._bDataLoaded) { return; }
+
             var isInvalid = !oSource.getSelectedKey() && oSource.getValue().trim();
             oSource.setValueState(isInvalid ? "Error" : "None");
 
@@ -2685,6 +2826,20 @@ function (Controller, JSONModel, MessageBox, History, MessageToast, TableValueHe
                             this.byId("splitPODest").setValueState("None");
                         }
                     }
+
+                    var bProceed = false;
+
+                    this.getView().getModel("VPOSplitDtl").getData().forEach(item => {
+                        if (this.getView().getModel("inforecchk").getData().filter(fItem => fItem.FIELD2 === item.MATTYP).length === 0) {
+                            bProceed = true;                    
+                        }
+                    })
+
+                    if (!bProceed) { return; }
+
+                    Common.openProcessingDialog(this);
+                    await this.getInfoRecord(this);
+                    Common.closeProcessingDialog(this);
                 }
             }
 
