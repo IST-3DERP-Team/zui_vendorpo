@@ -5074,6 +5074,9 @@ sap.ui.define([
                                                 me.byId("vpoBtnSaveDetails").setVisible(true);
                                                 me.byId("vpoBtnCancelDetails").setVisible(true);
 
+                                                me.byId("vpoBtnUpdatePrice").setVisible(false);
+                                                me.byId("vpoBtnDelCompleteDetails").setVisible(false);
+
                                                 me.disableOtherTabsChild("idIconTabBarInlineMode");
                                                 me.disableOtherTabsChild("vpoHeaderTxtIconTab");
                                                 me.byId("vpoDelSchedIconTab").setEnabled(false);
@@ -5158,8 +5161,7 @@ sap.ui.define([
                                                     // id: "ipt" + ci.name,
                                                     value: "{path: '" + ci.ColumnName + "', mandatory: '"+ ci.Mandatory +"'}",
                                                     displayFormat:"short",
-                                                    change:"handleChange",
-                                                
+                                                    change: this.onInputLiveChange.bind(this),
                                                     liveChange: this.onInputLiveChange.bind(this)
                                                 }));
                                             }else if (sColumnType === "NUMBER"){
@@ -5204,8 +5206,7 @@ sap.ui.define([
                                                     // id: "ipt" + ci.name,
                                                     value: "{path: '" + ci.ColumnName + "', mandatory: '"+ ci.Mandatory +"'}",
                                                     displayFormat:"short",
-                                                    change:"handleChange",
-                                                
+                                                    change: this.onInputLiveChange.bind(this),
                                                     liveChange: this.onInputLiveChange.bind(this)
                                                 }));
                                             }else if (sColumnType === "NUMBER"){
@@ -5250,8 +5251,7 @@ sap.ui.define([
                                                     // id: "ipt" + ci.name,
                                                     value: "{path: '" + ci.ColumnName + "', mandatory: '"+ ci.Mandatory +"'}",
                                                     displayFormat:"short",
-                                                    change:"handleChange",
-                                                
+                                                    change: this.onInputLiveChange.bind(this),
                                                     liveChange: this.onInputLiveChange.bind(this)
                                                 }));
                                             }else if (sColumnType === "NUMBER"){
@@ -5322,8 +5322,7 @@ sap.ui.define([
                                                     // id: "ipt" + ci.name,
                                                     value: "{path: '" + ci.ColumnName + "', mandatory: '"+ ci.Mandatory +"'}",
                                                     displayFormat:"short",
-                                                    change:"handleChange",
-                                                
+                                                    change: this.onInputLiveChange.bind(this),
                                                     liveChange: this.onInputLiveChange.bind(this)
                                                 }));
                                             }else if (sColumnType === "NUMBER"){
@@ -5368,8 +5367,7 @@ sap.ui.define([
                                                     // id: "ipt" + ci.name,
                                                     value: "{path: '" + ci.ColumnName + "', mandatory: '"+ ci.Mandatory +"'}",
                                                     displayFormat:"short",
-                                                    change:"handleChange",
-                                                
+                                                    change: this.onInputLiveChange.bind(this),
                                                     liveChange: this.onInputLiveChange.bind(this)
                                                 }));
                                             }else if (sColumnType === "NUMBER"){
@@ -5414,8 +5412,7 @@ sap.ui.define([
                                                     // id: "ipt" + ci.name,
                                                     value: "{path: '" + ci.ColumnName + "', mandatory: '"+ ci.Mandatory +"'}",
                                                     displayFormat:"short",
-                                                    change:"handleChange",
-                                                
+                                                    change: this.onInputLiveChange.bind(this),
                                                     liveChange: this.onInputLiveChange.bind(this)
                                                 }));
                                             }else if (sColumnType === "NUMBER"){
@@ -5459,8 +5456,7 @@ sap.ui.define([
                                             // id: "ipt" + ci.name,
                                             value: "{path: '" + ci.ColumnName + "', mandatory: '"+ ci.Mandatory +"'}",
                                             displayFormat:"short",
-                                            change:"handleChange",
-                                        
+                                            change: this.onInputLiveChange.bind(this),
                                             liveChange: this.onInputLiveChange.bind(this)
                                         }));
                                     }else if (sColumnType === "NUMBER"){
@@ -5694,6 +5690,9 @@ sap.ui.define([
                         me.byId("vpoBtnSaveDetails").setVisible(false)
                         me.byId("vpoBtnCancelDetails").setVisible(false)
 
+                        me.byId("vpoBtnUpdatePrice").setVisible(true);
+                        me.byId("vpoBtnDelCompleteDetails").setVisible(true);
+
                         me.enableOtherTabsChild("idIconTabBarInlineMode");
                         me.enableOtherTabsChild("vpoHeaderTxtIconTab");
                         me.byId("vpoDelSchedIconTab").setEnabled(true);
@@ -5897,11 +5896,10 @@ sap.ui.define([
                 var oSelectedIndices = oTable.getBinding("rows").aIndices;
                 var oTmpSelectedIndices = [];
 
-                var aData = this._oDataBeforeChange.results != undefined? this._oDataBeforeChange.results : this.getView().getModel("VPODelSchedVPODet").getData().results;
+                var aData = this.getView().getModel("VPODelSchedVPODet").getData().results;
                 var aDataToEdit = [];
                 var iCounter = 0;
                 var bProceed = true;
-                var oParamPODATA = [];
 
                 if (aSelIndices.length > 0) {
                     aSelIndices.forEach(item => {
@@ -5919,7 +5917,7 @@ sap.ui.define([
                             },
                             success: async function (data, response) {
                                 data.results.forEach(async dataItem => {
-                                    if(aData.at(item).ITEM == dataItem.ITEM){
+                                    if(aData.at(item).ITEM === dataItem.ITEM && aData.at(item).SEQNO === dataItem.SEQNO){
                                         iCounter++;
                                         if (aData.at(item).DELETED === false ) {
                                             bProceed = true;
@@ -5930,8 +5928,8 @@ sap.ui.define([
 
                                         if(bProceed){
                                             if (aSelIndices.length === iCounter) {
-                                                me._oDataBeforeChange = me.getView().getModel("VPODelSchedVPODet").getProperty("/results");
                                                 me.getView().getModel("VPODelSchedVPODet").setProperty("/results", aDataToEdit);
+                                                
                                                 me.setTableColumnsData("VPODELSCHED");
                                                 // me.byId("vpoSearchFieldDetails").setVisible(false);
                                                 me.byId("vpoBtnLineSplit").setVisible(false);
@@ -5979,7 +5977,7 @@ sap.ui.define([
                             },
                             success: async function (data, response) {
                                 data.results.forEach(async dataItem => {
-                                    if(aData.at(item).ITEM == dataItem.ITEM){
+                                    if(aData.at(item).ITEM === dataItem.ITEM && aData.at(item).SEQNO === dataItem.SEQNO){
                                         iCounter++;
                                         if (aData.at(item).DELETED === false ) {
                                             bProceed = true;
@@ -5990,7 +5988,6 @@ sap.ui.define([
 
                                         if(bProceed){
                                             if (oSelectedIndices.length === iCounter) {
-                                                me._oDataBeforeChange = me.getView().getModel("VPODelSchedVPODet").getProperty("/results");
                                                 me.getView().getModel("VPODelSchedVPODet").setProperty("/results", aDataToEdit);
                                                 me.setTableColumnsData("VPODELSCHED");
                                                 // me.byId("vpoSearchFieldDetails").setVisible(false);
@@ -6152,7 +6149,8 @@ sap.ui.define([
                         oParam['N_ChangePOItemSchedParam'] = oParamDataPOSched;
                         oParam['N_ChangePOReturn'] = [];
                     }
-                    _promiseResult = new Promise((resolve, reject)=>{
+                    Common.openLoadingDialog(that);
+                    await new Promise((resolve, reject)=>{
                         rfcModel.create("/ChangePOSet", oParam, {
                             method: "POST",
                             success: async function(oData, oResponse){
@@ -6174,8 +6172,7 @@ sap.ui.define([
                             }
                         })
                     });
-
-                    await _promiseResult
+                    Common.closeLoadingDialog(that);
             
                 }
             },
@@ -6309,7 +6306,7 @@ sap.ui.define([
                 var bProceed = true;
 
                 var oTable = this.byId("vpoDelSchedTab");
-                var oSelectedIndices = oTable.getBinding("rows").aIndices;
+                var oSelectedIndices = oTable.getSelectedIndices();;
                 var oTmpSelectedIndices = [];
                 var aData = oTable.getModel().getData().rows;
                 var oParamInitParam = {}
