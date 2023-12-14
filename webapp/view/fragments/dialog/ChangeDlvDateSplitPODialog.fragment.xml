@@ -9,16 +9,9 @@ xmlns:f="sap.ui.layout.form">
                 <f:formContainers>
                     <f:FormContainer ariaLabelledBy="Grp1" class="sapUiNoContentPadding" >
                         <f:formElements>
-                            <f:FormElement label="{/POLabel}" visible="true">
-                                <f:fields>
-                                    <Input value="{/PONO}" editable="false" valueStateText="Required" 
-                                        change="onHeaderChange" liveChange="onHeaderChange">
-                                    </Input>
-                                </f:fields>
-                            </f:FormElement>
                             <f:FormElement label="{/NewDlvDateLabel}" visible="true">
                                 <f:fields>
-                                    <DatePicker id="dtNewDlvDate" value="{/NewDlvDate}" editable="true" valueFormat="MM-dd-yyyy" displayFormat="short" 
+                                    <DatePicker id="dtNewDlvDate" value="{/NewDlvDate}" editable="true" displayFormat="MM/dd/yyyy" valueFormat="MM/dd/yyyy"
                                     valueStateText="Required" change=".onDatePickVPODelvDateChange"/>
                                 </f:fields>
                             </f:FormElement>

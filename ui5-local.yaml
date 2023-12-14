@@ -30,6 +30,7 @@ server:
       configuration:
         ignoreCertError: false # If set to true, certificate errors will be ignored. E.g. self-signed certificates will be accepted
         backend:
+<<<<<<< HEAD
           - path: /sap
             url: http://190.92.230.65:8000
             client: '888'
@@ -38,10 +39,35 @@ server:
             url: http://190.92.230.65:8000
             client: '888'
             destination: LTD888_S4HANA2022
+=======
+          - path: /sap/opu/odata/sap/ZGW_3DERP_VPO_SRV/
+            url: http://190.92.230.65:8000
+            client: '888'
+            destination: LTD888_S4HANA2022
+          - path: /sap/opu/odata/sap/ZVB_3DERP_VPO_FILTERS_CDS/
+            url: http://190.92.230.65:8000
+            client: '888'
+            destination: LTD888_S4HANA2022
+          - path: /sap/opu/odata/sap/ZGW_3DERP_COMMON_SRV/
+            url: http://190.92.230.65:8000
+            client: '888'
+            destination: LTD888_S4HANA2022
+          - path: /sap/opu/odata/sap/ZGW_3DERP_RFC_SRV/
+            url: http://190.92.230.65:8000
+            client: '888'
+            destination: LTD888_S4HANA2022
+>>>>>>> ae1a0a137a849772509d04e99450a0e3328ada27
           - path: /sap/opu/odata/sap/ZGW_3DERP_SRV/
             url: http://190.92.230.65:8000
             client: '888'
             destination: LTD888_S4HANA2022
+<<<<<<< HEAD
+=======
+          - path: /sap/opu/odata/sap/ZGW_3DERP_LOCK2_SRV
+            url: http://190.92.230.65:8000
+            client: '888'
+            destination: LTD888_S4HANA2022
+>>>>>>> ae1a0a137a849772509d04e99450a0e3328ada27
     - name: sap-fe-mockserver
       beforeMiddleware: csp
       configuration:

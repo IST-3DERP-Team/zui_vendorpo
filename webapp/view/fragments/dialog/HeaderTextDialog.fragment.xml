@@ -1,0 +1,173 @@
+<core:FragmentDefinition
+		xmlns="sap.m"
+        xmlns:form="sap.ui.layout.form"
+		xmlns:core="sap.ui.core"
+        xmlns:uiT="sap.ui.table"
+        id="fragment-headertext" 
+        fragmentName="headertext">
+    <Dialog contentWidth="75%"
+        contentHeight="330px"
+        title="Header Text"
+        beforeOpen="beforeOpenHdrTxt"
+        resizable="true"
+        draggable="true">
+        <content>
+            <IconTabBar id="ITB1"
+                expanded="{device>/isNoPhone}" 
+                expandable="false" 
+                class="sapUiNoContentPadding" 
+                select="onSelectHdrTxtTab"
+                stretchContentHeight="true" 
+                applyContentPadding="false">               
+                <items>
+                    <IconTabFilter text="Remarks" key="remarks">
+                        <uiT:Table id="remarksTab"
+                            rows="{/rem_items}"
+                            class="sapUiTinyMargin"
+                            visibleRowCountMode="Auto"
+                            showColumnVisibilityMenu="true"
+                            enableColumnFreeze="true"
+                            selectionMode="MultiToggle">
+                            <uiT:columns>
+                                <uiT:Column width="100px">
+                                    <Text text="Item" />
+                                    <uiT:template>
+                                        <Text text="{ITEM}" />
+                                    </uiT:template>
+                                </uiT:Column>
+                                <uiT:Column width="1000px">
+                                    <Text text="Remarks" />
+                                    <uiT:template>
+                                        <Input value="{REMARKS}" maxLength="132" change="onRemarksChange" liveChange="onRemarksChange" />
+                                    </uiT:template>
+                                </uiT:Column>
+                            </uiT:columns>
+                        </uiT:Table> 
+                    </IconTabFilter>
+                    <IconTabFilter text="Packing Instructions" key="packins">
+                        <uiT:Table id="packinsTab"
+                            rows="{/packins_items}"
+                            class="sapUiTinyMargin"
+                            visibleRowCountMode="Auto"
+                            showColumnVisibilityMenu="true"
+                            enableColumnFreeze="true"
+                            selectionMode="MultiToggle">
+                            <uiT:columns>
+                                <uiT:Column width="100px">
+                                    <Text text="Item" />
+                                    <uiT:template>
+                                        <Text text="{ITEM}" />
+                                    </uiT:template>
+                                </uiT:Column>
+                                <uiT:Column width="1000px">
+                                    <Text text="Packing Instruction" />
+                                    <uiT:template>
+                                        <Input value="{PACKINS}" maxLength="132" change="onPackInsChange" liveChange="onPackInsChange" />
+                                    </uiT:template>
+                                </uiT:Column>
+                            </uiT:columns>
+                        </uiT:Table> 
+                    </IconTabFilter>
+                    <IconTabFilter text="Fab Specs" key="fabspecs" visible="true">
+                        <form:Form id="FabSpecsForm" editable="true" class="sapUiNoContentPadding">
+                            <form:layout>
+                                <form:ResponsiveGridLayout columnsXL="2" columnsL="2" />
+                            </form:layout>
+                            <form:formContainers>
+                                <form:FormContainer ariaLabelledBy="Grp1" class="sapUiNoContentPadding">
+                                    <form:formElements>
+                                        <form:FormElement label="{i18n>Additional Description}">
+                                            <form:fields>
+                                                <!-- <Text text="Color Fastness to Crocking Wet" /> -->
+                                                <Input id="ZZMAKT" value="{/fs/0/ZZMAKT}" change="onFabSpecsChange" liveChange="onFabSpecsChange" maxLength="68">
+                                                </Input>
+                                            </form:fields>
+                                        </form:FormElement>
+                                        <form:FormElement label="{i18n>Handfeel}">
+                                            <form:fields>
+                                                <Input id="ZZHAFE" value="{/fs/0/ZZHAFE}" change="onFabSpecsChange" liveChange="onFabSpecsChange" maxLength="40"/>
+                                            </form:fields>
+                                        </form:FormElement>
+                                        <form:FormElement label="{i18n>Shrinkage}">
+                                            <form:fields>
+                                                <Input id="ZZSHNK" value="{/fs/0/ZZSHNK}" change="onFabSpecsChange" liveChange="onFabSpecsChange" maxLength="5"/>
+                                            </form:fields>
+                                        </form:FormElement>
+                                        <form:FormElement label="{i18n>Change}">
+                                            <form:fields>
+                                                <Input id="ZZCHNG" value="{/fs/0/ZZCHNG}" change="onFabSpecsChange" liveChange="onFabSpecsChange" maxLength="8"/>
+                                            </form:fields>
+                                        </form:FormElement>
+                                        <form:FormElement label="{i18n>Stain}">
+                                            <form:fields>
+                                                <Input id="ZZSTAN" value="{/fs/0/ZZSTAN}" change="onFabSpecsChange" liveChange="onFabSpecsChange" maxLength="8"/>
+                                            </form:fields>
+                                        </form:FormElement>
+                                        <form:FormElement label="{i18n>Dry}">
+                                            <form:fields>
+                                                <Input id="ZZDRY" value="{/fs/0/ZZDRY}" change="onFabSpecsChange" liveChange="onFabSpecsChange" maxLength="8"/>
+                                            </form:fields>
+                                        </form:FormElement>
+                                        <form:FormElement label="{i18n>Color Fastness to Washing}">
+                                            <form:fields>
+                                                <Input id="ZZCFWA" value="{/fs/0/ZZCFWA}" change="onFabSpecsChange" liveChange="onFabSpecsChange" maxLength="8"/>
+                                            </form:fields>
+                                        </form:FormElement>
+                                    </form:formElements>
+                                </form:FormContainer>
+                                <form:FormContainer ariaLabelledBy="Grp2">
+                                    <form:formElements>
+                                        <form:FormElement label="{i18n>Color Fastness to Crocking Wet}">
+                                            <form:fields>
+                                                <Input id="ZZCFCW" value="{/fs/0/ZZCFCW}" change="onFabSpecsChange" liveChange="onFabSpecsChange" maxLength="8" />
+                                            </form:fields>
+                                        </form:FormElement>
+                                        <form:FormElement label="{i18n>Shipment Sample Requirements}">
+                                            <form:fields>
+                                                <Input id="ZZSHRQ" value="{/fs/0/ZZSHRQ}" change="onFabSpecsChange" liveChange="onFabSpecsChange" maxLength="40" />
+                                            </form:fields>
+                                        </form:FormElement>
+                                        <form:FormElement label="{i18n>Sample Shipment Date}">
+                                            <form:fields>
+                                                <DatePicker
+                                                    id="ZZSHDA"
+                                                    placeholder="Enter Date"
+                                                    displayFormat="MM/dd/yyyy"
+                                                    valueFormat="MM/dd/yyyy"
+                                                    value="{/fs/0/ZZSHDA}"
+                                                    change="onFabSpecsChange"
+                                                    />
+                                                <!-- <Input id="ZZSHDA" value="{fabspecs>/ZZSHDA}" change="onHeaderChange" liveChange="onHeaderChange"/> -->
+                                            </form:fields>
+                                        </form:FormElement>
+                                        <form:FormElement label="{i18n>Prod Year/Month}">
+                                            <form:fields>
+                                                <Text id="PLANMONTH1" text="{/fs/0/PLANMONTH}" />
+                                            </form:fields>
+                                        </form:FormElement>
+                                        <form:FormElement label="{i18n>Other Requirements (1)}">
+                                            <form:fields>
+                                                <Input id="ZZREQ1" value="{/fs/0/ZZREQ1}" change="onFabSpecsChange" liveChange="onFabSpecsChange" maxLength="40" />
+                                            </form:fields>
+                                        </form:FormElement>
+                                        <form:FormElement label="{i18n>Other Requirements (2)}">
+                                            <form:fields>
+                                                <Input id="ZZREQ2" value="{/fs/0/ZZREQ2}" change="onFabSpecsChange" liveChange="onFabSpecsChange" maxLength="40" />
+                                            </form:fields>
+                                        </form:FormElement>                            
+                                    </form:formElements>
+                                </form:FormContainer>
+                            </form:formContainers>
+                        </form:Form>
+                    </IconTabFilter>
+                </items>
+            </IconTabBar>  
+        </content>
+        <buttons>
+            <Button id="btnAddHdrTxt" icon="sap-icon://add" tooltip="{ddtext>/ADD}" press="onAddHdrTxt" />
+            <Button id="btnSaveHdrTxt" icon="sap-icon://save" tooltip="{ddtext>/SAVE}" press="onSaveHdrTxt" />
+            <Button id="btnDeleteHdrTxt" icon="sap-icon://delete" tooltip="{ddtext>/DELETE}" press="onDeleteHdrTxt" />
+            <Button icon="sap-icon://decline" tooltip="{ddtext>/CLOSE}" press="onCloseHdrTxt" />        
+        </buttons>
+    </Dialog>
+</core:FragmentDefinition>

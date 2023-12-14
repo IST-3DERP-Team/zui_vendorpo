@@ -8,18 +8,6 @@
         titleLevel="H3" class="iodet" showNavButton="true"  
         navButtonPress="onNavBack">
         <content>
-            <!-- <ObjectHeader id="objectHeader"  -->
-                <!-- responsive="true"  -->
-                <!-- fullScreenOptimized="true"   -->
-                <!-- backgroundDesign="Solid"  -->
-                <!-- icon="sap-icon://multiselect-none" -->
-                <!-- class="sapUiResponsivePadding-!-header sapMFlexItem-!-poObjectHdr"  -->
-                <!-- title="PONO# {topHeaderData>/PONO}" -->
-                <!-- > -->
-                <!-- <layoutData> -->
-                    <!-- <FlexItemData growFactor="0" /> -->
-                <!-- </layoutData> -->
-            <!-- </ObjectHeader> -->
             <VBox id="_IDGenVBox1" fitContainer="true" class="sidePadding vboxHeightPODet vendorPODtl">
                 <uiL:ResponsiveSplitter id="splitDet" defaultPane="default">
                     <uiL:PaneContainer orientation="Vertical">
@@ -69,6 +57,7 @@
                                         <!-- Changes -->
                                         <IconTabFilter
                                             id="idChangesIconTabBar"
+                                            enabled="false"
                                             text="{captionMsg>/CHANGES}"
                                             key="itfCOSTING">
                                             <Text text="Changes..." />

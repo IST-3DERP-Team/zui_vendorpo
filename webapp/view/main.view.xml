@@ -9,10 +9,10 @@
     displayBlock="true"> 
     <Page id="page" title="{i18n>title}" showHeader="false">
         <dependents>
-            <core:CommandExecution id="comVpoMain" command="Edit" enabled="true" execute=".onClickEdit" />
+            <core:CommandExecution command="Edit" enabled="true" execute=".onClickEdit" />
+            <core:CommandExecution command="Refresh" enabled="true" execute=".onRefresh" />
         </dependents>
         <content>
-            
             <smartfilterbar:SmartFilterBar id="smartFilterBar" entitySet="ZVB_3DERP_VPO_FILTERS" search="onSearch" showClearOnFB="true" persistencyKey="3DERP_StylesPKey" filterContainerWidth="15rem">
                 <smartfilterbar:controlConfiguration>
                     <smartfilterbar:ControlConfiguration key="SBU" groupId="_BASIC" label="{captionMsg>/SBU}" mandatory="mandatory" width="50px">
@@ -37,7 +37,37 @@
                     </smartfilterbar:ControlConfiguration>
                 </smartfilterbar:controlConfiguration>
                 <smartfilterbar:controlConfiguration>
-                    <smartfilterbar:ControlConfiguration key="DOCTYPE" label="{captionMsg>/DOCTYP}" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false" displayBehaviour ="idOnly"/>
+                    <smartfilterbar:ControlConfiguration key="DOCTYPE" label="{captionMsg>/DOCTYP}" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false">
+                        <smartfilterbar:customControl>
+                            <MultiInput id="multiInputDOCTYPE"
+                                change="onCustomSmartFilterValueHelpChange"
+                                valueHelpRequest=".onCustomSmartFilterValueHelp"
+                                tokenUpdate="onCustomSmartFilterValueHelpTokenUpdate"
+                                suggestionRows="{
+                                    path: 'docTypSHSource>/results',
+                                    sorter: { path: 'DocType' },
+                                    length: 1000,
+                                    templateShareable: false
+                                }">
+                                <suggestionColumns>
+                                    <Column>
+                                        <Label text="Document Type"/>
+                                    </Column>
+                                    <Column>
+                                        <Label text="Description"/>
+                                    </Column>
+                                </suggestionColumns>
+                                <suggestionRows>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <Label text="{docTypSHSource>DocType}" />
+                                             <Label text="{docTypSHSource>Description}" />
+                                        </cells>
+                                    </ColumnListItem>
+                                </suggestionRows>
+                            </MultiInput>
+                        </smartfilterbar:customControl>
+                    </smartfilterbar:ControlConfiguration>
                 </smartfilterbar:controlConfiguration>
                 <smartfilterbar:controlConfiguration>
                     <smartfilterbar:ControlConfiguration key="COMPANY" label="{captionMsg>/COMPANY}" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false" displayBehaviour ="idOnly"/>
@@ -50,6 +80,44 @@
                 </smartfilterbar:controlConfiguration>
                 <smartfilterbar:controlConfiguration>
                     <smartfilterbar:ControlConfiguration key="CREATEDBY" label="{captionMsg>/CREATEDBY}" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false" displayBehaviour ="idOnly"/>
+                </smartfilterbar:controlConfiguration>
+                <smartfilterbar:controlConfiguration>
+                    <smartfilterbar:ControlConfiguration key="PRNO" label="{captionMsg>/PRNO}" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false">
+                        <smartfilterbar:customControl>
+                            <MultiInput id="multiInputPRNO"
+                                change="onCustomSmartFilterValueHelpChange"
+                                valueHelpRequest=".onCustomSmartFilterValueHelp"
+                                tokenUpdate="onCustomSmartFilterValueHelpTokenUpdate"
+                                suggestionRows="{
+                                    path: 'prNoSHSource>/results',
+                                    sorter: { path: 'PRNumber' },
+                                    length: 1000,
+                                    templateShareable: false
+                                }">
+                                <suggestionColumns>
+                                    <Column>
+                                        <Label text="PR Number"/>
+                                    </Column>
+                                    <!-- <Column>
+                                        <Label text="Description"/>
+                                    </Column> -->
+                                </suggestionColumns>
+                                <suggestionRows>
+                                    <ColumnListItem>
+                                        <cells>
+                                            <Label text="{prNoSHSource>PRNumber}" />
+                                        </cells>
+                                    </ColumnListItem>
+                                </suggestionRows>
+                            </MultiInput>
+                        </smartfilterbar:customControl>
+                    </smartfilterbar:ControlConfiguration>
+                </smartfilterbar:controlConfiguration>
+                 <smartfilterbar:controlConfiguration>
+                    <smartfilterbar:ControlConfiguration key="IONO" label="{captionMsg>/IONO}" groupId="_BASIC" preventInitialDataFetchInValueHelpDialog="false">
+                        <smartfilterbar:customControl>
+                        </smartfilterbar:customControl>
+                    </smartfilterbar:ControlConfiguration>
                 </smartfilterbar:controlConfiguration>
                 <smartfilterbar:layoutData>
                     <FlexItemData growFactor="0"/>
@@ -82,6 +150,9 @@
                                 <uiT:extension>
                                     <Toolbar>
                                         <uiL:HorizontalLayout class="sapUiTinyMarginTop sapUiTinyMarginBegin sapUiTinyMarginEnd">
+                                            <GenericTag text="{captionMsg>/TOTAL}" design="StatusIconHidden" status="Information" class="sapUiTinyMarginEnd">
+                                                <ObjectNumber emphasized="true" number="{ui>/poCount}" state="Information" id="forecastNumber"/>
+                                            </GenericTag>
                                             <GenericTag text="{captionMsg>/UNRELEASEDPO}" design="StatusIconHidden" status="Warning" class="sapUiTinyMarginEnd" >
                                                 <ObjectNumber emphasized="true" number="{counts>/unreleasedpo}" state="Information" id="unreleasedPO"/>
                                             </GenericTag>
@@ -131,45 +202,36 @@
                                         </MenuButton>
                                         <Button id="btnEdit"
                                             icon="sap-icon://edit" 
+                                            text="{captionMsg>/EDIT}" 
                                             tooltip="{captionMsg>/EDIT}" 
                                             press=".onClickEdit"/>
                                         <Button id="btnRefreshMain" 
                                             icon="sap-icon://refresh"
+                                            text="{captionMsg>/REFRESH}" 
                                             tooltip="{captionMsg>/REFRESH}"
                                             press=".onRefresh"
                                             visible="true" />
                                         <Button id="btnExportToExcel" 
                                             icon="sap-icon://excel-attachment"
+                                            text="{captionMsg>/EXPORTTOEXCEL}" 
                                             tooltip="{captionMsg>/EXPORTTOEXCEL}"
                                             press=".onExportToExcel"
                                             visible="true" />
-                                        <Button icon="sap-icon://full-screen"
+                                        <Button id="btnFullScreen" 
+                                            icon="sap-icon://full-screen"
                                             press="onTableResize"
+                                            text="{captionMsg>/FULLSCREEN}" 
                                             tooltip="{captionMsg>/FULLSCREEN}"
                                             visible="true" />
-                                        <!-- <Button id="btnSortMain" 
-                                            icon="sap-icon://sort"
-                                            press=".onColSort"
-                                            visible="true" />
-                                        <Button id="btnFilterMain" 
-                                            icon="sap-icon://filter"
-                                            press=".onColFilter"
-                                            visible="true" /> -->
-                                        <!-- <Button id="btnFullScreenMain" 
-                                            icon="sap-icon://full-screen"
-                                            press="onTableResize('Main','Max')"
-                                            visible="true" />
-                                        <Button id="btnExitFullScreenMain" 
+                                        <Button id="btnExitFullScreen" 
                                             icon="sap-icon://exit-full-screen"
-                                            press="onTableResize('Main','Min')"
+                                            press="onExitTableResize"
+                                            text="{captionMsg>/EXITFULLSCREEN}" 
+                                            tooltip="{captionMsg>/EXITFULLSCREEN}"
                                             visible="false" />
-                                        <Button id="btnColPropMain" 
-                                            icon="sap-icon://table-column"
-                                            press="onColumnProp"
-                                            tooltip="Columns"
-                                            visible="true" /> -->
                                         <Button id="btnTabLayout"
                                             icon="sap-icon://grid" 
+                                            text="{captionMsg>/SAVELAYOUT}" 
                                             tooltip="{captionMsg>/SAVELAYOUT}" 
                                             press=".onSaveTableLayout('mainTab')"/>
                                     </Toolbar>
@@ -208,20 +270,31 @@
                                                     <Button id="btnRefreshDetails" 
                                                         icon="sap-icon://refresh"
                                                         press=".onRefresh"
+                                                        text="{captionMsg>/REFRESH}"
                                                         tooltip="{captionMsg>/REFRESH}"
                                                         visible="true" />
                                                     <Button id="btnExportToExcelDetails" 
                                                         icon="sap-icon://excel-attachment"
+                                                        text="{captionMsg>/EXPORTTOEXCEL}"
                                                         tooltip="{captionMsg>/EXPORTTOEXCEL}"
                                                         press=".onExportToExcel"
                                                         visible="true" />
-                                                    <Button icon="sap-icon://full-screen"
-                                                        tooltip="{captionMsg>/FULLSCREEN}"
+                                                    <Button id="btnFullScreenDetails" 
+                                                        icon="sap-icon://full-screen"
                                                         press="onTableResize"
+                                                        text="{captionMsg>/FULLSCREEN}"
+                                                        tooltip="{captionMsg>/FULLSCREEN}"
                                                         visible="true" />
+                                                    <Button id="btnExitFullScreenDetails" 
+                                                        icon="sap-icon://exit-full-screen"
+                                                        press="onExitTableResize"
+                                                        text="{captionMsg>/EXITFULLSCREEN}"
+                                                        tooltip="{captionMsg>/EXITFULLSCREEN}"
+                                                        visible="false" />
                                                     <Button id="btnColPropDetails" 
                                                         icon="sap-icon://table-column"
                                                         press=".onSaveTableLayout('detailsTab')"
+                                                        text="{captionMsg>/SAVELAYOUT}"
                                                         tooltip="{captionMsg>/SAVELAYOUT}"
                                                         visible="true" />
                                                 </Toolbar>
@@ -249,20 +322,31 @@
                                                     <Button id="btnRefresDelSched" 
                                                         icon="sap-icon://refresh"
                                                         press=".onRefresh"
+                                                        text="{captionMsg>/REFRESH}"
                                                         tooltip="{captionMsg>/REFRESH}"
                                                         visible="true" />
                                                     <Button id="btnExportToExcelDelSched" 
                                                         icon="sap-icon://excel-attachment"
+                                                        text="{captionMsg>/EXPORTTOEXCEL}"
                                                         tooltip="{captionMsg>/EXPORTTOEXCEL}"
                                                         press=".onExportToExcel"
                                                         visible="true" />
-                                                    <Button icon="sap-icon://full-screen"
-                                                        tooltip="{captionMsg>/FULLSCREEN}"
+                                                    <Button id="btnFullScreenDelSched" 
+                                                        icon="sap-icon://full-screen"
                                                         press="onTableResize"
+                                                        text="{captionMsg>/FULLSCREEN}"
+                                                        tooltip="{captionMsg>/FULLSCREEN}"
                                                         visible="true" />
+                                                    <Button id="btnExitFullScreenDelSched" 
+                                                        icon="sap-icon://exit-full-screen"
+                                                        press="onExitTableResize"
+                                                        text="{captionMsg>/EXITFULLSCREEN}"
+                                                        tooltip="{captionMsg>/EXITFULLSCREEN}"
+                                                        visible="false" />
                                                     <Button id="btnColPropDelSched" 
                                                         icon="sap-icon://table-column"
                                                         press=".onSaveTableLayout('delSchedTab')"
+                                                        text="{captionMsg>/SAVELAYOUT}"
                                                         tooltip="{captionMsg>/SAVELAYOUT}"
                                                         visible="true" />
                                                 </Toolbar>
@@ -290,30 +374,43 @@
                                                     <Button id="btnArrUpDelInv" 
                                                         icon="sap-icon://slim-arrow-up"
                                                         press="onKeyUpDelInv"
+                                                        text="{captionMsg>/ARROWUP}"
                                                         tooltip="{captionMsg>/ARROWUP}"
                                                         visible="true" />
                                                     <Button id="btnArrDownDelInv" 
                                                         icon="sap-icon://slim-arrow-down"
                                                         press="onKeyDownDelInv"
+                                                        text="{captionMsg>/ARROWDOWN}"
                                                         tooltip="{captionMsg>/ARROWDOWN}"
                                                         visible="true" />
                                                     <Button id="btnRefresDelInv" 
                                                         icon="sap-icon://refresh"
                                                         press=".onRefresh"
+                                                        text="{captionMsg>/REFRESH}"
                                                         tooltip="{captionMsg>/REFRESH}"
                                                         visible="true" />
                                                     <Button id="btnExportToExcelDelInv" 
                                                         icon="sap-icon://excel-attachment"
+                                                        text="{captionMsg>/EXPORTTOEXCEL}"
                                                         tooltip="{captionMsg>/EXPORTTOEXCEL}"
                                                         press=".onExportToExcel"
                                                         visible="true" />
-                                                    <Button icon="sap-icon://full-screen"
-                                                        tooltip="{captionMsg>/FULLSCREEN}"
+                                                    <Button id="btnFullScreenDelInv" 
+                                                        icon="sap-icon://full-screen"
                                                         press="onTableResize"
+                                                        text="{captionMsg>/FULLSCREEN}"
+                                                        tooltip="{captionMsg>/FULLSCREEN}"
                                                         visible="true" />
+                                                    <Button id="btnExitFullScreenDelInv" 
+                                                        icon="sap-icon://exit-full-screen"
+                                                        press="onExitTableResize"
+                                                        text="{captionMsg>/EXITFULLSCREEN}"
+                                                        tooltip="{captionMsg>/EXITFULLSCREEN}"
+                                                        visible="false" />
                                                     <Button id="btnColPropDelInv" 
                                                         icon="sap-icon://table-column"
                                                         press=".onSaveTableLayout('delInvTab')"
+                                                        text="{captionMsg>/SAVELAYOUT}"
                                                         tooltip="{captionMsg>/SAVELAYOUT}"
                                                         visible="true" />
                                                 </Toolbar>
@@ -329,9 +426,12 @@
                                             <Button id="btnRefreshProcFlow" 
                                                 icon="sap-icon://refresh"
                                                 press=".onRefresh"
+                                                text="{captionMsg>/REFRESH}"
                                                 tooltip="{captionMsg>/REFRESH}"
                                                 visible="true" />
                                             <Button icon="sap-icon://full-screen"
+                                                text="{captionMsg>/FULLSCREEN}"
+                                                tooltip="{captionMsg>/FULLSCREEN}"
                                                 press="onTableResize"
                                                 visible="true" />
                                         </Toolbar>
@@ -388,30 +488,43 @@
                                                     <Button id="btnArrUpPOHistory" 
                                                         icon="sap-icon://slim-arrow-up"
                                                         press=".onKeyUpPOHistory"
+                                                        text="{captionMsg>/ARROWUP}"
                                                         tooltip="{captionMsg>/ARROWUP}"
                                                         visible="true" />
                                                     <Button id="btnArrDownPOHistory" 
                                                         icon="sap-icon://slim-arrow-down"
                                                         press=".onKeyDownPOHistory"
+                                                        text="{captionMsg>/ARROWDOWN}"
                                                         tooltip="{captionMsg>/ARROWDOWN}"
                                                         visible="true" />
                                                     <Button id="btnRefreshPOHistory" 
                                                         icon="sap-icon://refresh"
                                                         press=".onRefresh"
+                                                        text="{captionMsg>/REFRESH}"
                                                         tooltip="{captionMsg>/REFRESH}"
                                                         visible="true" />
                                                     <Button id="btnExportToExcelPOHistory" 
                                                         icon="sap-icon://excel-attachment"
+                                                        text="{captionMsg>/EXPORTTOEXCEL}"
                                                         tooltip="{captionMsg>/EXPORTTOEXCEL}"
                                                         press=".onExportToExcel"
                                                         visible="true" />
-                                                    <Button icon="sap-icon://full-screen"
-                                                        tooltip="{captionMsg>/FULLSCREEN}"
+                                                    <Button id="btnFullScreenPOHistory" 
+                                                        icon="sap-icon://full-screen"
                                                         press="onTableResize"
+                                                        text="{captionMsg>/FULLSCREEN}"
+                                                        tooltip="{captionMsg>/FULLSCREEN}"
                                                         visible="true" />
+                                                    <Button id="btnExitFullScreenPOHistory" 
+                                                        icon="sap-icon://exit-full-screen"
+                                                        press="onExitTableResize"
+                                                        text="{captionMsg>/EXITFULLSCREEN}"
+                                                        tooltip="{captionMsg>/EXITFULLSCREEN}"
+                                                        visible="false" />
                                                     <Button id="btnColPropPOHistory" 
                                                         icon="sap-icon://table-column"
                                                         press=".onSaveTableLayout('poHistTab')"
+                                                        text="{captionMsg>/SAVELAYOUT}"
                                                         tooltip="{captionMsg>/SAVELAYOUT}"
                                                         visible="true" />
                                                 </Toolbar>
@@ -441,30 +554,43 @@
                                                     <Button id="btnArrUpConditions" 
                                                         icon="sap-icon://slim-arrow-up"
                                                         press=".onKeyUpCond"
+                                                        text="{captionMsg>/ARROWUP}"
                                                         tooltip="{captionMsg>/ARROWUP}"
                                                         visible="true" />
                                                     <Button id="btnArrDownConditions" 
                                                         icon="sap-icon://slim-arrow-down"
                                                         press=".onKeyDownCond"
+                                                        text="{captionMsg>/ARROWDOWN}"
                                                         tooltip="{captionMsg>/ARROWDOWN}"
                                                         visible="true" />
                                                     <Button id="btnRefreshConditions" 
                                                         icon="sap-icon://refresh"
                                                         press=".onRefresh"
+                                                        text="{captionMsg>/REFRESH}"
                                                         tooltip="{captionMsg>/REFRESH}"
                                                         visible="true" />
                                                     <Button id="btnExportToExcelConditions" 
                                                         icon="sap-icon://excel-attachment"
+                                                        text="{captionMsg>/EXPORTTOEXCEL}"
                                                         tooltip="{captionMsg>/EXPORTTOEXCEL}"
                                                         press=".onExportToExcel"
                                                         visible="true" />
-                                                    <Button icon="sap-icon://full-screen"
-                                                        tooltip="{captionMsg>/FULLSCREEN}"
+                                                    <Button id="btnFullScreenConditions" 
+                                                        icon="sap-icon://full-screen"
                                                         press="onTableResize"
+                                                        text="{captionMsg>/FULLSCREEN}"
+                                                        tooltip="{captionMsg>/FULLSCREEN}"
                                                         visible="true" />
+                                                    <Button id="btnExitFullScreenConditions" 
+                                                        icon="sap-icon://exit-full-screen"
+                                                        press="onExitTableResize"
+                                                        text="{captionMsg>/EXITFULLSCREEN}"
+                                                        tooltip="{captionMsg>/EXITFULLSCREEN}"
+                                                        visible="false" />
                                                     <Button id="btnColPropConditions" 
                                                         icon="sap-icon://table-column"
                                                         press=".onSaveTableLayout('conditionsTab')"
+                                                        text="{captionMsg>/SAVELAYOUT}"
                                                         tooltip="{captionMsg>/SAVELAYOUT}"
                                                         visible="true" />
                                                 </Toolbar>

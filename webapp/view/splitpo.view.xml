@@ -1,0 +1,542 @@
+<mvc:View controllerName="zuivendorpo.controller.splitpo"
+    xmlns:mvc="sap.ui.core.mvc" 
+    xmlns:core="sap.ui.core"
+    xmlns:uiL="sap.ui.layout"
+    xmlns:uiT="sap.ui.table"
+    xmlns:form="sap.ui.layout.form"
+    xmlns:tnt="sap.tnt"
+    xmlns="sap.m"
+    xmlns:f="sap.f"
+    xmlns:semantic="sap.m.semantic"
+    height="100%"
+    displayBlock="true">
+    <Page showHeader="false" title="{ddtext>/SPLITPO}" showNavButton="true" navButtonPress="onNavBack">
+        <dependents>
+            <core:CommandExecution id="CE_CANCEL" command="Cancel" enabled="true" execute=".onCancelSplitPO" />
+        </dependents>
+        <content>
+            <VBox fitContainer="true" class="splitpo"> 
+                <Panel class="sapUiNoContentPadding hdrFormBgColor">
+                    <OverflowToolbar>
+                        <Title id="titlePOSplit" level="H3" text="{ddtext>/SPLITPO}" class="sapUiTinyMarginBegin splitPOTitle" />
+                        <ToolbarSpacer/>
+                        <Button id="btnUpdDateSplitPOHdr" 
+                            text="{ddtext>/CHANGEDELVDATE}"
+                            icon="sap-icon://calendar"
+                            press="onUpdDate"
+                            tooltip="{ddtext>/CHANGEDELVDATE}"
+                            visible="true"/>
+                        <Button id="btnHdrTxtSplitPOHdr" 
+                            text="{ddtext>/HEADERTEXT}"
+                            icon="sap-icon://header"
+                            press="onHdrText"
+                            tooltip="{ddtext>/HEADERTEXT}"
+                            visible="true"/>
+                        <Button id="btnGenPOSplitPOHdr" 
+                            text="{ddtext>/GENERATEPO}"
+                            icon="sap-icon://add-document"
+                            press="onGeneratePO"
+                            tooltip="{ddtext>/GENERATEPO}"
+                            visible="true"/>                          
+                        <Button id="btnCancelPOSplitPOHdr"
+                            icon="sap-icon://sys-cancel"
+                            press="onCancelPO"
+                            tooltip="{ddtext>/CANCEL}"
+                            visible="true"/>                         
+                    </OverflowToolbar>
+
+                    <form:Form id="splitPOHeaderForm" editable="true" class="sapUiNoContentPadding" busy="false">
+                        <form:layout>
+                            <form:ResponsiveGridLayout
+                                labelSpanXL="4"
+                                labelSpanL="4"
+                                labelSpanM="4"
+                                labelSpanS="12"
+                                adjustLabelSpan="false"
+                                emptySpanXL="0"
+                                emptySpanL="0"
+                                emptySpanM="0"
+                                emptySpanS="0"
+                                columnsXL="3"
+                                columnsL="3"
+                                columnsM="2"
+                                singleContainerFullSize="false" />
+                        </form:layout>
+                        <form:formContainers>
+                            <form:FormContainer ariaLabelledBy="Grp1" class="sapUiNoContentPadding">
+                                <form:formElements>
+                                    <!-- <form:FormElement label="{ddtext>/PONO}">
+                                        <form:fields>
+                                            <Input value="{VPOSplitHdr>/PONO}" editable="false" />
+                                        </form:fields>
+                                    </form:FormElement> -->
+                                    <form:FormElement label="{ddtext>/PODATE}">
+                                        <form:fields>
+                                            <Input value="{VPOSplitHdr>/PODT}" editable="false" />
+                                        </form:fields>
+                                    </form:FormElement>
+                                    <form:FormElement label="{ddtext>/DOCTYP}">
+                                        <form:fields>
+                                            <Input 
+                                                value="{ 
+                                                    parts: [{ path: 'VPOSplitHdr>/DOCTYPE' }, { value: 'podoctype' }, { value: 'PODOCTYP' }, { value: 'SHORTTEXT' }, { value: 'ValueKey' }],
+                                                    formatter: '.formatValueHelp'
+                                                }" 
+                                                textFormatMode="ValueKey"
+                                                editable="false" 
+                                            />
+                                        </form:fields>
+                                    </form:FormElement>
+                                    <form:FormElement>
+                                        <form:label>
+                                            <Label text="{ddtext>/PURCHORG}" required="true"></Label>
+                                        </form:label>
+                                        <form:fields>
+                                            <Input id="splitPOPurchOrg"
+                                                type="Text" 
+                                                value="{ 
+                                                    parts: [{ path: 'VPOSplitHdr>/PURCHORG' }, { value: 'purchorg' }, { value: 'PURCHORG' }, { value: 'DESCRIP' }, { value: 'ValueKey' }],
+                                                    formatter: '.formatValueHelp'
+                                                }" 
+                                                textFormatMode="ValueKey"
+                                                showValueHelp="true"
+                                                valueHelpRequest="handleFormValueHelp" 
+                                                showSuggestion="true" 
+                                                suggestionItems="{path: 'purchorg>/', length: 10000, templateShareable: false}" 
+                                                maxSuggestionWidth="160px"
+                                                change="onFormValueHelpInputChange">
+                                                <suggestionItems>
+                                                    <core:ListItem key="{purchorg>PURCHORG}" text="{purchorg>DESCRIP}" additionalText="{purchorg>PURCHORG}" />
+                                                </suggestionItems>
+                                            </Input>
+                                        </form:fields>
+                                    </form:FormElement>
+                                    <form:FormElement>
+                                        <form:label>
+                                            <Label text="{ddtext>/VENDOR}" required="true"></Label>
+                                        </form:label>
+                                        <form:fields>
+                                            <Input id="splitPOVendor"
+                                                type="Text" 
+                                                value="{ 
+                                                    parts: [{ path: 'VPOSplitHdr>/VENDOR' }, { value: 'vendor' }, { value: 'LIFNR' }, { value: 'NAME1' }, { value: 'ValueKey' }],
+                                                    formatter: '.formatValueHelp'
+                                                }" 
+                                                textFormatMode="ValueKey"
+                                                showValueHelp="true"
+                                                valueHelpRequest="handleFormValueHelp" 
+                                                showSuggestion="true" 
+                                                suggestionItems="{path: 'vendor>/', length: 10000, templateShareable: false}" 
+                                                maxSuggestionWidth="485px"
+                                                change="onFormValueHelpInputChange"
+                                                suggestionItemSelected="handleSuggestionItemSelected"
+                                                enabled="false">
+                                                <suggestionItems>
+                                                    <core:ListItem key="{vendor>LIFNR}" text="{vendor>NAME1}" additionalText="{vendor>LIFNR} | {vendor>PURPLANTCD}" />
+                                                </suggestionItems>
+                                            </Input>
+                                        </form:fields>
+                                    </form:FormElement>
+                                </form:formElements>
+                            </form:FormContainer>
+                            <form:FormContainer ariaLabelledBy="Grp2" class="sapUiNoContentPadding">
+                                <form:formElements>
+                                    <form:FormElement>
+                                        <form:label>
+                                            <Label text="{ddtext>/PURCHGRP}" required="true"></Label>
+                                        </form:label>
+                                        <form:fields>
+                                            <Input type="Text" 
+                                                value="{ 
+                                                    parts: [{ path: 'VPOSplitHdr>/PURCHGRP' }, { value: 'purchgrp' }, { value: 'PURCHGRP' }, { value: 'DESCRIP' }, { value: 'ValueKey' }],
+                                                    formatter: '.formatValueHelp'
+                                                }" 
+                                                textFormatMode="ValueKey"
+                                                showValueHelp="true"
+                                                valueHelpRequest="handleFormValueHelp" 
+                                                showSuggestion="true" 
+                                                suggestionItems="{path: 'purchgrp>/', length: 10000, templateShareable: false}" 
+                                                maxSuggestionWidth="160px"
+                                                change="onFormValueHelpInputChange">
+                                                <suggestionItems>
+                                                    <core:ListItem key="{purchgrp>PURCHGRP}" text="{purchgrp>DESCRIP}" additionalText="{purchgrp>PURCHGRP}" />
+                                                </suggestionItems>
+                                            </Input>
+                                        </form:fields>
+                                    </form:FormElement>
+                                    <form:FormElement label="{ddtext>/PURCHPLANT}">
+                                        <form:fields>
+                                            <Input 
+                                                value="{ 
+                                                    parts: [{ path: 'VPOSplitHdr>/PURCHPLANT' }, { value: 'plant' }, { value: 'WERKS' }, { value: 'NAME1' }, { value: 'ValueKey' }],
+                                                    formatter: '.formatValueHelp'
+                                                }" 
+                                                textFormatMode="ValueKey"
+                                                editable="false" 
+                                            />
+                                        </form:fields>
+                                    </form:FormElement>
+                                    <form:FormElement label="{ddtext>/SHIPTOPLANT}">
+                                        <form:fields>
+                                            <Input 
+                                                value="{ 
+                                                    parts: [{ path: 'VPOSplitHdr>/SHIPTOPLANT' }, { value: 'plant' }, { value: 'WERKS' }, { value: 'NAME1' }, { value: 'ValueKey' }],
+                                                    formatter: '.formatValueHelp'
+                                                }" 
+                                                textFormatMode="ValueKey"
+                                                editable="false" 
+                                            />
+                                        </form:fields>
+                                    </form:FormElement>
+                                    <form:FormElement label="{ddtext>/COMPANY}">
+                                        <form:fields>
+                                            <Input 
+                                                value="{ 
+                                                    parts: [{ path: 'VPOSplitHdr>/COMPANY' }, { value: 'company' }, { value: 'BUKRS' }, { value: 'BUTXT' }, { value: 'ValueKey' }],
+                                                    formatter: '.formatValueHelp'
+                                                }" 
+                                                textFormatMode="ValueKey"
+                                                editable="false" 
+                                            />
+                                        </form:fields>
+                                    </form:FormElement>                                
+                                    <!-- <form:FormElement label="{ddtext>/RELSTAT}">
+                                        <form:fields>
+                                            <Input value="{VPOSplitHdr>/RELSTAT}" editable="false" />
+                                        </form:fields>
+                                    </form:FormElement> -->
+                                </form:formElements>                                                                                                                          
+                            </form:FormContainer>
+                            <form:FormContainer ariaLabelledBy="Grp3" class="sapUiNoContentPadding">
+                                <form:formElements>
+                                    <form:FormElement label="{ddtext>/CURRENCY}">
+                                        <form:fields>
+                                            <Input 
+                                                value="{ 
+                                                    parts: [{ path: 'VPOSplitHdr>/CURRENCY' }, { value: 'currency' }, { value: 'WAERS' }, { value: 'LTEXT' }, { value: 'ValueKey' }],
+                                                    formatter: '.formatValueHelp'
+                                                }" 
+                                                textFormatMode="ValueKey"
+                                                editable="false" 
+                                            />
+                                        </form:fields>
+                                    </form:FormElement>
+                                    <form:FormElement>
+                                        <form:label>
+                                            <Label text="{ddtext>/PAYMNTTERMS}" required="true"></Label>
+                                        </form:label>
+                                        <form:fields>
+                                            <Input id="splitPOPayTerms"
+                                                type="Text" 
+                                                value="{ 
+                                                    parts: [{ path: 'VPOSplitHdr>/PAYMNTTERMS' }, { value: 'payterms' }, { value: 'ZTERM' }, { value: 'VTEXT' }, { value: 'ValueKey' }],
+                                                    formatter: '.formatValueHelp'
+                                                }"
+                                                textFormatMode="ValueKey"
+                                                showValueHelp="true"
+                                                valueHelpRequest="handleFormValueHelp" 
+                                                showSuggestion="true" 
+                                                suggestionItems="{path: 'payterms>/', length: 10000, templateShareable: false}" 
+                                                maxSuggestionWidth="160px"
+                                                change="onFormValueHelpInputChange">
+                                                <suggestionItems>
+                                                    <core:ListItem key="{payterms>ZTERM}" text="{payterms>VTEXT}" additionalText="{payterms>ZTERM}" />
+                                                </suggestionItems>
+                                            </Input>
+                                        </form:fields>
+                                    </form:FormElement>
+                                    <form:FormElement>
+                                        <form:label>
+                                            <Label text="{ddtext>/INCOTERMS}" required="true"></Label>
+                                        </form:label>
+                                        <form:fields>
+                                            <Input id="splitPOIncoTerms"
+                                                type="Text" 
+                                                value="{ 
+                                                    parts: [{ path: 'VPOSplitHdr>/INCOTERMS' }, { value: 'incoterms' }, { value: 'INCOTERMS' }, { value: 'DESCRIP' }, { value: 'ValueKey' }],
+                                                    formatter: '.formatValueHelp'
+                                                }" 
+                                                textFormatMode="ValueKey"
+                                                showValueHelp="true"
+                                                valueHelpRequest="handleFormValueHelp" 
+                                                showSuggestion="true" 
+                                                suggestionItems="{path: 'incoterms>/', length: 10000, templateShareable: false}" 
+                                                maxSuggestionWidth="160px"
+                                                change="onFormValueHelpInputChange">
+                                                <suggestionItems>
+                                                    <core:ListItem key="{incoterms>INCOTERMS}" text="{incoterms>DESCRIP}" additionalText="{incoterms>INCOTERMS}" />
+                                                </suggestionItems>
+                                            </Input>
+                                        </form:fields>
+                                    </form:FormElement>
+                                    <form:FormElement>
+                                        <form:label>
+                                            <Label text="{ddtext>/DESTINATION}" required="true"></Label>
+                                        </form:label>
+                                        <form:fields>
+                                            <Input id="splitPODest"
+                                                value="{VPOSplitHdr>/DEST}" 
+                                                maxLength="28" 
+                                                required="true"
+                                                liveChange="onInputLiveChange" /> 
+                                        </form:fields>
+                                    </form:FormElement>
+                                    <form:FormElement>
+                                        <form:label>
+                                            <Label text="{ddtext>/SHIPMODE}" required="true"></Label>
+                                        </form:label>
+                                        <form:fields>
+                                            <Input type="Text" 
+                                                value="{ 
+                                                    parts: [{ path: 'VPOSplitHdr>/SHIPMODE' }, { value: 'shipmode' }, { value: 'SHIPMODE' }, { value: 'DESCRIP' }, { value: 'ValueKey' }],
+                                                    formatter: '.formatValueHelp'
+                                                }" 
+                                                textFormatMode="ValueKey"
+                                                showValueHelp="true"
+                                                valueHelpRequest="handleFormValueHelp" 
+                                                showSuggestion="true" 
+                                                suggestionItems="{path: 'shipmode>/', length: 10000, templateShareable: false}" 
+                                                maxSuggestionWidth="160px"
+                                                change="onFormValueHelpInputChange">
+                                                <suggestionItems>
+                                                    <core:ListItem key="{shipmode>SHIPMODE}" text="{shipmode>DESCRIP}" additionalText="{shipmode>SHIPMODE}" />
+                                                </suggestionItems>
+                                            </Input>                                            
+                                        </form:fields>
+                                    </form:FormElement>
+                                </form:formElements>
+                            </form:FormContainer>
+                        </form:formContainers>
+                    </form:Form>
+                    <layoutData>
+                        <FlexItemData growFactor="0" />
+                    </layoutData>
+                </Panel>
+
+                <uiT:Table id="VPOSplitDtlTab" busy="false"
+                    rows="{VPOSplitDtl>/}"
+                    class="sapUiTinyMargin"
+                    visibleRowCountMode="Auto"
+                    minAutoRowCount="1"
+                    showColumnVisibilityMenu="true"
+                    enableColumnFreeze="true"
+                    selectionMode="MultiToggle">
+                    <uiT:rowSettingsTemplate>
+                        <uiT:RowSettings highlight="{= ${VPOSplitDtl>EDITED} === true ? 'Warning' : null}" />
+                    </uiT:rowSettingsTemplate>
+                    <uiT:extension>
+                        <OverflowToolbar>
+                            <!-- <Text text="{counts>/gmc} GMC" class="selHdrKeyFontStyle" /> -->
+                            <ToolbarSpacer/>
+                            <Button id="btnEditSplitPODtl" 
+                                icon="sap-icon://edit"
+                                press="onEdit"
+                                tooltip="{ddtext>/EDIT}"
+                                visible="true" >
+                                <customData>
+                                    <core:CustomData key="TableId" value="VPOSplitDtlTab" />
+                                </customData>
+                            </Button>
+                            <Button id="btnSaveSplitPODtl" 
+                                icon="sap-icon://save"
+                                press="onSave" 
+                                tooltip="{ddtext>/SAVE}"
+                                visible="false" >
+                                <customData>
+                                    <core:CustomData key="TableId" value="VPOSplitDtlTab" />
+                                </customData>
+                            </Button>
+                            <Button id="btnCancelSplitPODtl" 
+                                icon="sap-icon://sys-cancel"
+                                press="onCancel" 
+                                tooltip="{ddtext>/CANCEL}"
+                                visible="false" >
+                                <customData>
+                                    <core:CustomData key="TableId" value="VPOSplitDtlTab" />
+                                </customData>
+                            </Button>                                       
+                            <Button id="btnDeleteSplitPODtl" 
+                                icon="sap-icon://delete"
+                                press="onDelete"
+                                tooltip="{ddtext>/DELETE}"
+                                visible="true" >
+                                <customData>
+                                    <core:CustomData key="TableId" value="VPOSplitDtlTab" />
+                                </customData>
+                            </Button>
+                            <Button id="btnRefreshSplitPODtl" 
+                                icon="sap-icon://refresh"
+                                press="onRefresh"
+                                tooltip="{ddtext>/REFRESH}"
+                                visible="true"/> 
+                            <Button id="btnFullScreenSplitPODtl" 
+                                icon="sap-icon://full-screen"
+                                press="onTableResize('Hdr','Max')"
+                                tooltip="{ddtext>/FULLSCREEN}"
+                                visible="false" />
+                            <Button id="btnExitFullScreenSplitPODtl" 
+                                icon="sap-icon://exit-full-screen"
+                                press="onTableResize('Hdr','Min')"
+                                tooltip="{ddtext>/EXITFULLSCREEN}"
+                                visible="false" />
+                        </OverflowToolbar>
+                    </uiT:extension>
+                    <uiT:columns>
+                        <uiT:Column width="100px">
+                            <Text text="{ddtext>/ITEM}" />
+                            <uiT:template>
+                                <Text text="{VPOSplitDtl>ITEM}" wrapping="false" tooltip="{VPOSplitDtl>ITEM}" />
+                            </uiT:template>
+                        </uiT:Column>
+                        <uiT:Column width="135px">
+                            <Text text="{ddtext>/MATNO}" />
+                            <uiT:template>
+                                <Text text="{VPOSplitDtl>MATNO}" wrapping="false" tooltip="{VPOSplitDtl>MATNO}" />
+                            </uiT:template>
+                        </uiT:Column>
+                        <uiT:Column width="300px">
+                            <Text text="{ddtext>/GMCDESC}" />
+                            <uiT:template>
+                                <Text text="{VPOSplitDtl>GMCDESC}" wrapping="false" tooltip="{VPOSplitDtl>GMCDESC}" />
+                            </uiT:template>
+                        </uiT:Column>
+                        <uiT:Column width="300px">
+                            <Text text="{ddtext>/ADDTLDESC}" />
+                            <uiT:template>
+                                <Text text="{VPOSplitDtl>ADDTLDESC}" tooltip="{VPOSplitDtl>ADDTLDESC}" />
+                            </uiT:template>
+                        </uiT:Column>
+                        <uiT:Column width="300px">
+                            <Text text="{ddtext>/POADDTLDESC}" />
+                            <uiT:template>
+                                <Text text="{VPOSplitDtl>POADDTLDESC}" tooltip="{VPOSplitDtl>POADDTLDESC}" />
+                            </uiT:template>
+                        </uiT:Column>
+                        <uiT:Column width="100px">
+                            <Text text="{ddtext>/BATCH}" />
+                            <uiT:template>
+                                <Text text="{VPOSplitDtl>BATCH}" wrapping="false" tooltip="{VPOSplitDtl>BATCH}" />
+                            </uiT:template>
+                        </uiT:Column>
+                        <uiT:Column width="115px" hAlign="End">
+                            <Text text="{ddtext>/ORIGPOQTY}" />
+                            <uiT:template>
+                                <Text text="{VPOSplitDtl>POQTY}" wrapping="false" />
+                            </uiT:template>
+                        </uiT:Column>
+                        <uiT:Column width="115px" hAlign="End">
+                            <Text text="{ddtext>/SPLITPOQTY}" />
+                            <uiT:template>
+                                <Text text="{VPOSplitDtl>SPLITPOQTY}" />
+                            </uiT:template>
+                        </uiT:Column>
+                        <uiT:Column width="125px">
+                            <Text text="{ddtext>/UOM}" />
+                            <uiT:template>
+                                <Text 
+                                    text="{ 
+                                            parts: [{ path: 'VPOSplitDtl>UOM' }, { value: 'uom' }, { value: 'MSEHI' }, { value: 'MSEHL' }, { value: 'ValueKey' }],
+                                            formatter: '.formatValueHelp'
+                                        }"
+                                    wrapping="false" tooltip="{VPOSplitDtl>UOM}" />
+                            </uiT:template>
+                        </uiT:Column>
+                        <uiT:Column width="140px">
+                            <Text text="{ddtext>/DELDT}" />
+                            <uiT:template>
+                                <Text text="{VPOSplitDtl>DELDT}" wrapping="false" tooltip="{VPOSplitDtl>DELDT}" />
+                            </uiT:template>
+                        </uiT:Column>
+                        <uiT:Column width="115px" hAlign="End">
+                            <Text text="{ddtext>/NETPRICE}" />
+                            <uiT:template>
+                                <Text text="{VPOSplitDtl>NETPRICE}" textAlign="Right" />
+                            </uiT:template>
+                        </uiT:Column>
+                        <uiT:Column width="100px" hAlign="End">
+                            <Text text="{ddtext>/PER}" />
+                            <uiT:template>
+                                <Text text="{VPOSplitDtl>PER}" textAlign="Right" />
+                            </uiT:template>
+                        </uiT:Column>
+                        <uiT:Column width="125px">
+                            <Text text="{ddtext>/ORDERPRICEUOM}" />
+                            <uiT:template>
+                                <Text text="{VPOSplitDtl>ORDERPRICEUOM}" />
+                            </uiT:template>
+                        </uiT:Column>                                            
+                        <uiT:Column width="100px" hAlign="End">
+                            <Text text="{ddtext>/DENOMINATOR}" />
+                            <uiT:template>
+                                <Text text="{VPOSplitDtl>DENOMINATOR}" wrapping="false" />
+                            </uiT:template>
+                        </uiT:Column>
+                        <uiT:Column width="100px" hAlign="End">
+                            <Text text="{ddtext>/NUMERATOR}" />
+                            <uiT:template>
+                                <Text text="{VPOSplitDtl>NUMERATOR}" wrapping="false"/>
+                            </uiT:template>
+                        </uiT:Column>
+                        <uiT:Column width="115px">
+                            <Text text="{ddtext>/TAXCD}" />
+                            <uiT:template>
+                                <Text text="{VPOSplitDtl>TAXCD}" wrapping="false" tooltip="{VPOSplitDtl>TAXCD}" />
+                            </uiT:template>
+                        </uiT:Column>
+                        <uiT:Column width="200px">
+                            <Text text="{ddtext>/SUPPLYTYP}" />
+                            <uiT:template>
+                                <Text text="{VPOSplitDtl>SUPPLYTYP}" tooltip="{VPOSplitDtl>SUPPLYTYP}" />
+                            </uiT:template>
+                        </uiT:Column> 
+                        <uiT:Column width="100px" hAlign="Center" visible="{= ${ui>/infnr} === '' ? true : false }" >
+                            <Text text="{ddtext>/UNLIMITED}" />
+                            <uiT:template>
+                                <CheckBox selected="{VPOSplitDtl>UNLIMITED}" visible="false" />
+                            </uiT:template>
+                        </uiT:Column>    
+                        <uiT:Column width="100px" hAlign="End" visible="{= ${ui>/infnr} === '' ? true : false }" >
+                            <Text text="{ddtext>/OVERDELTOL}" />
+                            <uiT:template>
+                                <Text text="{VPOSplitDtl>OVERDELTOL}" textAlign="Right" />
+                            </uiT:template>
+                        </uiT:Column>
+                        <uiT:Column width="100px" hAlign="End" visible="{= ${ui>/infnr} === '' ? true : false }" >
+                            <Text text="{ddtext>/UNDERDELTOL}" />
+                            <uiT:template>
+                                <Text text="{VPOSplitDtl>UNDERDELTOL}" textAlign="Right" />
+                            </uiT:template>
+                        </uiT:Column>    
+                        <uiT:Column width="115px">
+                            <Text text="{ddtext>/PRNO}" />
+                            <uiT:template>
+                                <Text text="{VPOSplitDtl>PRNO}" wrapping="false" tooltip="{VPOSplitDtl>PRNO}" />
+                            </uiT:template>
+                        </uiT:Column>
+                        <uiT:Column width="100px">
+                            <Text text="{ddtext>/PRITM}" />
+                            <uiT:template>
+                                <Text text="{VPOSplitDtl>PRITM}" wrapping="false" tooltip="{VPOSplitDtl>PRITM}" />
+                            </uiT:template>
+                        </uiT:Column>   
+                        <uiT:Column width="100px" hAlign="Center">
+                            <Text text="{ddtext>/GRBASEDIVIND}" />
+                            <uiT:template>
+                                <CheckBox selected="{VPOSplitDtl>GRBASEDIVIND}" editable="false" />
+                            </uiT:template>
+                        </uiT:Column>
+                        <uiT:Column width="100px" hAlign="Center">
+                            <Text text="{ddtext>/INVRCPTIND}" />
+                            <uiT:template>
+                                <CheckBox selected="{VPOSplitDtl>INVRCPTIND}" editable="false" />
+                            </uiT:template>
+                        </uiT:Column>
+                    </uiT:columns>
+                    <uiT:layoutData>
+                        <FlexItemData growFactor="0.98" baseSize="0%"/>
+                    </uiT:layoutData> 
+                </uiT:Table>  
+            </VBox>
+        </content>
+    </Page>
+</mvc:View>

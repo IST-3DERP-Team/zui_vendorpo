@@ -1,34 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 <edmx:Edmx Version="1.0" xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx" xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata" xmlns:sap="http://www.sap.com/Protocols/SAPData">
-    <edmx:Reference Uri="./sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_COMMON',Version='0001',SAP__Origin='')/$value" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
-        <edmx:Include Namespace="com.sap.vocabularies.Common.v1" Alias="Common"/>
-    </edmx:Reference>
-    <edmx:Reference Uri="./sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_CAPABILITIES',Version='0001',SAP__Origin='')/$value" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
-        <edmx:Include Namespace="Org.OData.Capabilities.V1" Alias="Capabilities"/>
-    </edmx:Reference>
-    <edmx:Reference Uri="./sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_COMMUNICATION',Version='0001',SAP__Origin='')/$value" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
-        <edmx:Include Namespace="com.sap.vocabularies.Communication.v1" Alias="Communication"/>
-    </edmx:Reference>
-    <edmx:Reference Uri="./sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_AGGREGATION',Version='0001',SAP__Origin='')/$value" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+    <edmx:Reference Uri="./sap/opu/odata/iwfnd/catalogservice;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_AGGREGATION',Version='0001',SAP__Origin='')/$value" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
         <edmx:Include Namespace="Org.OData.Aggregation.V1" Alias="Aggregation"/>
     </edmx:Reference>
-    <edmx:Reference Uri="./sap/opu/odata/IWFND/CATALOGSERVICE;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_PERSONALDATA',Version='0001',SAP__Origin='')/$value" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+    <edmx:Reference Uri="./sap/opu/odata/iwfnd/catalogservice;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_ANALYTICS',Version='0001',SAP__Origin='')/$value" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+        <edmx:Include Namespace="com.sap.vocabularies.Analytics.v1" Alias="Analytics"/>
+    </edmx:Reference>
+    <edmx:Reference Uri="./sap/opu/odata/iwfnd/catalogservice;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_CAPABILITIES',Version='0001',SAP__Origin='')/$value" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+        <edmx:Include Namespace="Org.OData.Capabilities.V1" Alias="Capabilities"/>
+    </edmx:Reference>
+    <edmx:Reference Uri="./sap/opu/odata/iwfnd/catalogservice;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_CODELIST',Version='0001',SAP__Origin='')/$value" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+        <edmx:Include Namespace="com.sap.vocabularies.CodeList.v1" Alias="SAP__CodeList"/>
+    </edmx:Reference>
+    <edmx:Reference Uri="./sap/opu/odata/iwfnd/catalogservice;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_COMMON',Version='0001',SAP__Origin='')/$value" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+        <edmx:Include Namespace="com.sap.vocabularies.Common.v1" Alias="Common"/>
+    </edmx:Reference>
+    <edmx:Reference Uri="./sap/opu/odata/iwfnd/catalogservice;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_COMMUNICATION',Version='0001',SAP__Origin='')/$value" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+        <edmx:Include Namespace="com.sap.vocabularies.Communication.v1" Alias="Communication"/>
+    </edmx:Reference>
+    <edmx:Reference Uri="./sap/opu/odata/iwfnd/catalogservice;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_MEASURES',Version='0001',SAP__Origin='')/$value" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+        <edmx:Include Namespace="Org.OData.Measures.V1" Alias="Measures"/>
+    </edmx:Reference>
+    <edmx:Reference Uri="./sap/opu/odata/iwfnd/catalogservice;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_PERSONALDATA',Version='0001',SAP__Origin='')/$value" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
         <edmx:Include Namespace="com.sap.vocabularies.PersonalData.v1" Alias="PersonalData"/>
+    </edmx:Reference>
+    <edmx:Reference Uri="./sap/opu/odata/iwfnd/catalogservice;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_UI',Version='0001',SAP__Origin='')/$value" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+        <edmx:Include Namespace="com.sap.vocabularies.UI.v1" Alias="UI"/>
+    </edmx:Reference>
+    <edmx:Reference Uri="./sap/opu/odata/iwfnd/catalogservice;v=2/Vocabularies(TechnicalName='%2FIWBEP%2FVOC_VALIDATION',Version='0001',SAP__Origin='')/$value" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+        <edmx:Include Namespace="Org.OData.Validation.V1" Alias="Validation"/>
     </edmx:Reference>
     <edmx:DataServices m:DataServiceVersion="2.0">
         <Schema Namespace="ZVB_3DERP_VPO_FILTERS_CDS" xml:lang="en" sap:schema-version="1" xmlns="http://schemas.microsoft.com/ado/2008/09/edm">
-            <EntityType Name="ZVB_3DERP_COMPANY_SHType" sap:label="3DERP : Company" sap:value-list="true" sap:content-version="1">
-                <Key>
-                    <PropertyRef Name="Company"/>
-                </Key>
-                <Property Name="Company" Type="Edm.String" Nullable="false" MaxLength="4" sap:display-format="UpperCase" sap:label="Company Code"/>
-            </EntityType>
+            <Annotation Term="Core.SchemaVersion" String="1.0.0" xmlns="http://docs.oasis-open.org/odata/ns/edm"/>
             <EntityType Name="ZVB_3DERP_DOCTYPE_SHType" sap:label="3DERP: Document Type" sap:value-list="true" sap:content-version="1">
                 <Key>
                     <PropertyRef Name="DocType"/>
                 </Key>
                 <Property Name="DocType" Type="Edm.String" Nullable="false" MaxLength="4" sap:display-format="UpperCase" sap:text="Description" sap:label="Purchasing Doc. Type" sap:quickinfo="Purchasing Document Type"/>
                 <Property Name="Description" Type="Edm.String" MaxLength="20" sap:label="Doc. Type Descript." sap:quickinfo="Short Description of Purchasing Document Type"/>
+                <Property Name="SBU" Type="Edm.String" MaxLength="5" sap:display-format="UpperCase" sap:label="SBU" sap:quickinfo="ERP SBU"/>
             </EntityType>
             <EntityType Name="ZVB_3DERP_INCOTERMSType" sap:label="3DERP: Incoterms Source" sap:value-list="true" sap:content-version="1">
                 <Key>
@@ -36,6 +47,20 @@
                 </Key>
                 <Property Name="INCOTERMS" Type="Edm.String" Nullable="false" MaxLength="3" sap:display-format="UpperCase" sap:label="Incoterms" sap:quickinfo="Incoterms (Part 1)"/>
                 <Property Name="INCOTERMSDET" Type="Edm.String" MaxLength="30" sap:label="Description"/>
+            </EntityType>
+            <EntityType Name="ZVB_3DERP_PRNO_SHType" sap:label="3DERP: PR Number" sap:value-list="true" sap:content-version="1">
+                <Key>
+                    <PropertyRef Name="PRNumber"/>
+                </Key>
+                <Property Name="PRNumber" Type="Edm.String" Nullable="false" MaxLength="10" sap:display-format="UpperCase" sap:label="Purchase Requisition" sap:quickinfo="Purchase Requisition Number"/>
+                <Property Name="DocType" Type="Edm.String" MaxLength="4" sap:display-format="UpperCase" sap:label="Document Type" sap:quickinfo="Purchase Requisition Document Type"/>
+            </EntityType>
+            <EntityType Name="ZVB_3DERP_PURCHORG_SHType" sap:label="Purchasing Org" sap:value-list="true" sap:content-version="1">
+                <Key>
+                    <PropertyRef Name="PurchOrg"/>
+                </Key>
+                <Property Name="PurchOrg" Type="Edm.String" Nullable="false" MaxLength="4" sap:display-format="UpperCase" sap:label="Purch. Organization" sap:quickinfo="Purchasing Organization"/>
+                <Property Name="Description" Type="Edm.String" MaxLength="20" sap:label="Description" sap:quickinfo="Description of purchasing organization"/>
             </EntityType>
             <EntityType Name="ZVB_3DERP_SBU_SHType" sap:label="3DERP: SBU" sap:value-list="true" sap:content-version="1">
                 <Key>
@@ -47,47 +72,100 @@
                 <Key>
                     <PropertyRef Name="ShipToPlant"/>
                 </Key>
-                <Property Name="ShipToPlant" Type="Edm.String" Nullable="false" MaxLength="4" sap:display-format="UpperCase" sap:label="Plant"/>
+                <Property Name="ShipToPlant" Type="Edm.String" Nullable="false" MaxLength="4" sap:display-format="UpperCase" sap:text="DESCRIPTION" sap:label="Plant"/>
+                <Property Name="DESCRIPTION" Type="Edm.String" MaxLength="30" sap:label="Name 1" sap:quickinfo="Name"/>
             </EntityType>
             <EntityType Name="ZVB_3DERP_VENDOR_SHType" sap:label="3DERP: Vendor" sap:value-list="true" sap:content-version="1">
                 <Key>
                     <PropertyRef Name="Vendor"/>
                 </Key>
-                <Property Name="Vendor" Type="Edm.String" Nullable="false" MaxLength="10" sap:display-format="UpperCase" sap:text="Description" sap:label="Vendor" sap:quickinfo="Account Number of Vendor or Creditor"/>
+                <Property Name="Vendor" Type="Edm.String" Nullable="false" MaxLength="10" sap:display-format="UpperCase" sap:text="Description" sap:label="Supplier" sap:quickinfo="Account Number of Supplier"/>
                 <Property Name="Description" Type="Edm.String" MaxLength="35" sap:label="Name" sap:quickinfo="Name 1"/>
-                <Property Name="CountryCode" Type="Edm.String" MaxLength="3" sap:display-format="UpperCase" sap:label="Country" sap:quickinfo="Country Key"/>
+                <Property Name="CountryCode" Type="Edm.String" MaxLength="3" sap:display-format="UpperCase" sap:label="Country/Region Key"/>
+            </EntityType>
+            <EntityType Name="ZVB_3DERP_VPO_COMPANYType" sap:label="3DERP: Vendor PO: Company Search Help" sap:value-list="true" sap:content-version="1">
+                <Key>
+                    <PropertyRef Name="COMPANY"/>
+                </Key>
+                <Property Name="COMPANY" Type="Edm.String" Nullable="false" MaxLength="4" sap:display-format="UpperCase" sap:label="Company Code"/>
+                <Property Name="DESCRIPTION" Type="Edm.String" MaxLength="25" sap:label="Company Name" sap:quickinfo="Name of Company Code or Company"/>
+                <Property Name="SBU" Type="Edm.String" MaxLength="5" sap:display-format="UpperCase" sap:label="SBU" sap:quickinfo="ERP SBU"/>
             </EntityType>
             <EntityType Name="ZVB_3DERP_VPO_FILTERSType" sap:label="3DERP : Vendor PO" sap:content-version="1">
                 <Key>
                     <PropertyRef Name="SBU"/>
                 </Key>
                 <Property Name="SBU" Type="Edm.String" Nullable="false" MaxLength="1" sap:value-list="standard"/>
-                <Property Name="VENDOR" Type="Edm.String" MaxLength="10" sap:display-format="UpperCase" sap:label="Vendor" sap:quickinfo="Vendor's account number" sap:value-list="standard"/>
+                <Property Name="PONO" Type="Edm.String" MaxLength="10" sap:display-format="UpperCase" sap:label="Purchasing Document" sap:quickinfo="Purchasing Document Number" sap:value-list="standard"/>
+                <Property Name="VENDOR" Type="Edm.String" MaxLength="10" sap:display-format="UpperCase" sap:label="Supplier" sap:quickinfo="Vendor's account number" sap:value-list="standard"/>
                 <Property Name="DOCTYPE" Type="Edm.String" MaxLength="4" sap:display-format="UpperCase" sap:label="Purchasing Doc. Type" sap:quickinfo="Purchasing Document Type" sap:value-list="standard"/>
                 <Property Name="COMPANY" Type="Edm.String" MaxLength="4" sap:display-format="UpperCase" sap:label="Company Code" sap:value-list="standard"/>
                 <Property Name="SHIPTOPLANT" Type="Edm.String" MaxLength="12" sap:label="Our Reference" sap:value-list="standard"/>
-                <Property Name="PONO" Type="Edm.String" MaxLength="10" sap:display-format="UpperCase" sap:label="Purchasing Document" sap:quickinfo="Purchasing Document Number"/>
-                <Property Name="PODT" Type="Edm.DateTime" Precision="0" sap:display-format="Date" sap:label="Created on" sap:quickinfo="Date on which the record was created"/>
+                <Property Name="PODT" Type="Edm.DateTime" Precision="0" sap:display-format="Date" sap:label="Created On" sap:quickinfo="Creation Date of Purchasing Document"/>
                 <Property Name="NAME" Type="Edm.String" MaxLength="35" sap:label="Name" sap:quickinfo="Name 1"/>
-                <Property Name="RELSTAT" Type="Edm.String" MaxLength="8" sap:display-format="UpperCase" sap:label="Release State"/>
-                <Property Name="PURCHGRP" Type="Edm.String" MaxLength="3" sap:display-format="UpperCase" sap:label="Purchasing Group"/>
-                <Property Name="PURCHORG" Type="Edm.String" MaxLength="4" sap:display-format="UpperCase" sap:label="Purch. organization" sap:quickinfo="Purchasing organization"/>
-                <Property Name="PURCHPLANT" Type="Edm.String" MaxLength="4" sap:display-format="UpperCase" sap:label="Plant"/>
-                <Property Name="CURRENCY" Type="Edm.String" MaxLength="5" sap:label="Currency" sap:quickinfo="Currency Key" sap:semantics="currency-code"/>
-                <Property Name="PAYMNTTERMS" Type="Edm.String" MaxLength="4" sap:display-format="UpperCase" sap:label="Payment terms" sap:quickinfo="Terms of payment key"/>
+                <Property Name="RELSTAT" Type="Edm.String" MaxLength="32"/>
+                <Property Name="PURCHGRP" Type="Edm.String" MaxLength="3" sap:display-format="UpperCase" sap:label="Purchasing Group" sap:value-list="standard"/>
+                <Property Name="PURCHORG" Type="Edm.String" MaxLength="4" sap:display-format="UpperCase" sap:label="Purch. Organization" sap:quickinfo="Purchasing Organization" sap:value-list="standard"/>
+                <Property Name="PURCHPLANT" Type="Edm.String" MaxLength="4" sap:display-format="UpperCase" sap:label="Plant" sap:value-list="standard"/>
+                <Property Name="CURRENCY" Type="Edm.String" MaxLength="5" sap:display-format="UpperCase" sap:label="Currency" sap:quickinfo="Currency Key" sap:semantics="currency-code"/>
+                <Property Name="PAYMNTTERMS" Type="Edm.String" MaxLength="4" sap:display-format="UpperCase" sap:label="Terms of Payment" sap:quickinfo="Terms of Payment Key" sap:value-list="standard"/>
                 <Property Name="INCOTERMS" Type="Edm.String" MaxLength="3" sap:display-format="UpperCase" sap:label="Incoterms" sap:quickinfo="Incoterms (Part 1)" sap:value-list="standard"/>
+                <Property Name="CREATEDBY" Type="Edm.String" MaxLength="12" sap:display-format="UpperCase" sap:label="Created By" sap:quickinfo="User of person who created a purchasing document"/>
                 <Property Name="DEST" Type="Edm.String" MaxLength="28" sap:label="Incoterms (Part 2)"/>
-                <Property Name="SHIPMODE" Type="Edm.String" MaxLength="2" sap:display-format="UpperCase" sap:label="Shipping Instr." sap:quickinfo="Shipping Instructions"/>
+                <Property Name="SHIPMODE" Type="Edm.String" MaxLength="2" sap:display-format="UpperCase" sap:label="Shipping Instr." sap:quickinfo="Shipping Instructions" sap:value-list="standard"/>
                 <Property Name="CONDREC" Type="Edm.String" MaxLength="10" sap:display-format="UpperCase" sap:label="Doc. Condition No." sap:quickinfo="Number of the Document Condition"/>
+                <Property Name="PRNO" Type="Edm.String" MaxLength="10" sap:display-format="UpperCase" sap:label="Purchase Requisition" sap:quickinfo="Purchase Requisition Number" sap:value-list="standard"/>
+            </EntityType>
+            <EntityType Name="ZVB_3DERP_VPO_PAYMNTTERMS_SHType" sap:label="3DERP: Vendor PO: Payment Terms Search Help" sap:value-list="true" sap:content-version="1">
+                <Key>
+                    <PropertyRef Name="PAYMNTTERMS"/>
+                </Key>
+                <Property Name="PAYMNTTERMS" Type="Edm.String" Nullable="false" MaxLength="4" sap:display-format="UpperCase" sap:label="Terms of Payment" sap:quickinfo="Terms of Payment Key"/>
+                <Property Name="DESCRIPTION" Type="Edm.String" MaxLength="30" sap:label="Description" sap:quickinfo="Description of terms of payment"/>
+            </EntityType>
+            <EntityType Name="ZVB_3DERP_VPO_PONO_SHType" sap:label="3DERP: Vendor PO: PO Number Search Help" sap:value-list="true" sap:content-version="1">
+                <Key>
+                    <PropertyRef Name="PONo"/>
+                </Key>
+                <Property Name="PONo" Type="Edm.String" Nullable="false" MaxLength="10" sap:display-format="UpperCase" sap:label="Purchasing Document" sap:quickinfo="Purchasing Document Number"/>
+            </EntityType>
+            <EntityType Name="ZVB_3DERP_VPO_PURCHPLANT_SHType" sap:label="3DERP: Vendor PO: Purchasing Plant Search Help" sap:value-list="true" sap:content-version="1">
+                <Key>
+                    <PropertyRef Name="PURCHPLANT"/>
+                </Key>
+                <Property Name="PURCHPLANT" Type="Edm.String" Nullable="false" MaxLength="4" sap:display-format="UpperCase" sap:label="Plant"/>
+                <Property Name="DESCRIPTION" Type="Edm.String" MaxLength="30" sap:label="Name 1" sap:quickinfo="Name"/>
+            </EntityType>
+            <EntityType Name="ZVB_3DERP_VPO_PURGRP_SHType" sap:label="3DERP: Vendor PO: PurchOrg Search Help" sap:value-list="true" sap:content-version="1">
+                <Key>
+                    <PropertyRef Name="PURCHGRP"/>
+                </Key>
+                <Property Name="PURCHGRP" Type="Edm.String" Nullable="false" MaxLength="3" sap:display-format="UpperCase" sap:label="Purchasing Group"/>
+                <Property Name="DESCRIPTION" Type="Edm.String" MaxLength="18" sap:label="Description p. group" sap:quickinfo="Description of purchasing group"/>
+            </EntityType>
+            <EntityType Name="ZVB_3DERP_VPO_SHIPMODE_SHType" sap:label="3DERP: Vendor PO: Ship Mode Search Help" sap:value-list="true" sap:content-version="1">
+                <Key>
+                    <PropertyRef Name="SHIPMODE"/>
+                </Key>
+                <Property Name="SHIPMODE" Type="Edm.String" Nullable="false" MaxLength="2" sap:display-format="UpperCase" sap:label="Shipping Instr." sap:quickinfo="Shipping Instructions"/>
+                <Property Name="DESCRIPTION" Type="Edm.String" MaxLength="30" sap:label="Shipping Instr." sap:quickinfo="Shipping Instructions: Description"/>
+                <Property Name="SBU" Type="Edm.String" MaxLength="5" sap:display-format="UpperCase" sap:label="SBU" sap:quickinfo="ERP SBU"/>
             </EntityType>
             <EntityContainer Name="ZVB_3DERP_VPO_FILTERS_CDS_Entities" m:IsDefaultEntityContainer="true" sap:message-scope-supported="true" sap:supported-formats="atom json xlsx">
-                <EntitySet Name="ZVB_3DERP_COMPANY_SH" EntityType="ZVB_3DERP_VPO_FILTERS_CDS.ZVB_3DERP_COMPANY_SHType" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:content-version="1"/>
                 <EntitySet Name="ZVB_3DERP_DOCTYPE_SH" EntityType="ZVB_3DERP_VPO_FILTERS_CDS.ZVB_3DERP_DOCTYPE_SHType" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:content-version="1"/>
                 <EntitySet Name="ZVB_3DERP_INCOTERMS" EntityType="ZVB_3DERP_VPO_FILTERS_CDS.ZVB_3DERP_INCOTERMSType" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:content-version="1"/>
+                <EntitySet Name="ZVB_3DERP_PRNO_SH" EntityType="ZVB_3DERP_VPO_FILTERS_CDS.ZVB_3DERP_PRNO_SHType" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:content-version="1"/>
+                <EntitySet Name="ZVB_3DERP_PURCHORG_SH" EntityType="ZVB_3DERP_VPO_FILTERS_CDS.ZVB_3DERP_PURCHORG_SHType" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:content-version="1"/>
                 <EntitySet Name="ZVB_3DERP_SBU_SH" EntityType="ZVB_3DERP_VPO_FILTERS_CDS.ZVB_3DERP_SBU_SHType" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:content-version="1"/>
                 <EntitySet Name="ZVB_3DERP_SHIPTOPLANT_SH" EntityType="ZVB_3DERP_VPO_FILTERS_CDS.ZVB_3DERP_SHIPTOPLANT_SHType" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:content-version="1"/>
                 <EntitySet Name="ZVB_3DERP_VENDOR_SH" EntityType="ZVB_3DERP_VPO_FILTERS_CDS.ZVB_3DERP_VENDOR_SHType" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:content-version="1"/>
+                <EntitySet Name="ZVB_3DERP_VPO_COMPANY" EntityType="ZVB_3DERP_VPO_FILTERS_CDS.ZVB_3DERP_VPO_COMPANYType" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:content-version="1"/>
                 <EntitySet Name="ZVB_3DERP_VPO_FILTERS" EntityType="ZVB_3DERP_VPO_FILTERS_CDS.ZVB_3DERP_VPO_FILTERSType" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:content-version="1"/>
+                <EntitySet Name="ZVB_3DERP_VPO_PAYMNTTERMS_SH" EntityType="ZVB_3DERP_VPO_FILTERS_CDS.ZVB_3DERP_VPO_PAYMNTTERMS_SHType" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:content-version="1"/>
+                <EntitySet Name="ZVB_3DERP_VPO_PONO_SH" EntityType="ZVB_3DERP_VPO_FILTERS_CDS.ZVB_3DERP_VPO_PONO_SHType" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:content-version="1"/>
+                <EntitySet Name="ZVB_3DERP_VPO_PURCHPLANT_SH" EntityType="ZVB_3DERP_VPO_FILTERS_CDS.ZVB_3DERP_VPO_PURCHPLANT_SHType" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:content-version="1"/>
+                <EntitySet Name="ZVB_3DERP_VPO_PURGRP_SH" EntityType="ZVB_3DERP_VPO_FILTERS_CDS.ZVB_3DERP_VPO_PURGRP_SHType" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:content-version="1"/>
+                <EntitySet Name="ZVB_3DERP_VPO_SHIPMODE_SH" EntityType="ZVB_3DERP_VPO_FILTERS_CDS.ZVB_3DERP_VPO_SHIPMODE_SHType" sap:creatable="false" sap:updatable="false" sap:deletable="false" sap:content-version="1"/>
             </EntityContainer>
             <Annotations Target="ZVB_3DERP_VPO_FILTERS_CDS.ZVB_3DERP_VPO_FILTERSType/SBU" xmlns="http://docs.oasis-open.org/odata/ns/edm">
                 <Annotation Term="Common.ValueList">
@@ -100,6 +178,23 @@
                                 <Record Type="Common.ValueListParameterInOut">
                                     <PropertyValue Property="LocalDataProperty" PropertyPath="SBU"/>
                                     <PropertyValue Property="ValueListProperty" String="SBU"/>
+                                </Record>
+                            </Collection>
+                        </PropertyValue>
+                    </Record>
+                </Annotation>
+            </Annotations>
+            <Annotations Target="ZVB_3DERP_VPO_FILTERS_CDS.ZVB_3DERP_VPO_FILTERSType/PONO" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+                <Annotation Term="Common.ValueList">
+                    <Record>
+                        <PropertyValue Property="Label" String="3DERP: Vendor PO: PO Number Search Help"/>
+                        <PropertyValue Property="CollectionPath" String="ZVB_3DERP_VPO_PONO_SH"/>
+                        <PropertyValue Property="SearchSupported" Bool="false"/>
+                        <PropertyValue Property="Parameters">
+                            <Collection>
+                                <Record Type="Common.ValueListParameterInOut">
+                                    <PropertyValue Property="LocalDataProperty" PropertyPath="PONO"/>
+                                    <PropertyValue Property="ValueListProperty" String="PONo"/>
                                 </Record>
                             </Collection>
                         </PropertyValue>
@@ -144,6 +239,9 @@
                                 <Record Type="Common.ValueListParameterDisplayOnly">
                                     <PropertyValue Property="ValueListProperty" String="Description"/>
                                 </Record>
+                                <Record Type="Common.ValueListParameterDisplayOnly">
+                                    <PropertyValue Property="ValueListProperty" String="SBU"/>
+                                </Record>
                             </Collection>
                         </PropertyValue>
                     </Record>
@@ -152,14 +250,20 @@
             <Annotations Target="ZVB_3DERP_VPO_FILTERS_CDS.ZVB_3DERP_VPO_FILTERSType/COMPANY" xmlns="http://docs.oasis-open.org/odata/ns/edm">
                 <Annotation Term="Common.ValueList">
                     <Record>
-                        <PropertyValue Property="Label" String="3DERP : Company"/>
-                        <PropertyValue Property="CollectionPath" String="ZVB_3DERP_COMPANY_SH"/>
+                        <PropertyValue Property="Label" String="3DERP: Vendor PO: Company Search Help"/>
+                        <PropertyValue Property="CollectionPath" String="ZVB_3DERP_VPO_COMPANY"/>
                         <PropertyValue Property="SearchSupported" Bool="false"/>
                         <PropertyValue Property="Parameters">
                             <Collection>
                                 <Record Type="Common.ValueListParameterInOut">
                                     <PropertyValue Property="LocalDataProperty" PropertyPath="COMPANY"/>
-                                    <PropertyValue Property="ValueListProperty" String="Company"/>
+                                    <PropertyValue Property="ValueListProperty" String="COMPANY"/>
+                                </Record>
+                                <Record Type="Common.ValueListParameterDisplayOnly">
+                                    <PropertyValue Property="ValueListProperty" String="DESCRIPTION"/>
+                                </Record>
+                                <Record Type="Common.ValueListParameterDisplayOnly">
+                                    <PropertyValue Property="ValueListProperty" String="SBU"/>
                                 </Record>
                             </Collection>
                         </PropertyValue>
@@ -177,6 +281,92 @@
                                 <Record Type="Common.ValueListParameterInOut">
                                     <PropertyValue Property="LocalDataProperty" PropertyPath="SHIPTOPLANT"/>
                                     <PropertyValue Property="ValueListProperty" String="ShipToPlant"/>
+                                </Record>
+                                <Record Type="Common.ValueListParameterDisplayOnly">
+                                    <PropertyValue Property="ValueListProperty" String="DESCRIPTION"/>
+                                </Record>
+                            </Collection>
+                        </PropertyValue>
+                    </Record>
+                </Annotation>
+            </Annotations>
+            <Annotations Target="ZVB_3DERP_VPO_FILTERS_CDS.ZVB_3DERP_VPO_FILTERSType/PURCHGRP" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+                <Annotation Term="Common.ValueList">
+                    <Record>
+                        <PropertyValue Property="Label" String="3DERP: Vendor PO: PurchOrg Search Help"/>
+                        <PropertyValue Property="CollectionPath" String="ZVB_3DERP_VPO_PURGRP_SH"/>
+                        <PropertyValue Property="SearchSupported" Bool="false"/>
+                        <PropertyValue Property="Parameters">
+                            <Collection>
+                                <Record Type="Common.ValueListParameterInOut">
+                                    <PropertyValue Property="LocalDataProperty" PropertyPath="PURCHGRP"/>
+                                    <PropertyValue Property="ValueListProperty" String="PURCHGRP"/>
+                                </Record>
+                                <Record Type="Common.ValueListParameterDisplayOnly">
+                                    <PropertyValue Property="ValueListProperty" String="DESCRIPTION"/>
+                                </Record>
+                            </Collection>
+                        </PropertyValue>
+                    </Record>
+                </Annotation>
+            </Annotations>
+            <Annotations Target="ZVB_3DERP_VPO_FILTERS_CDS.ZVB_3DERP_VPO_FILTERSType/PURCHORG" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+                <Annotation Term="Common.ValueList">
+                    <Record>
+                        <PropertyValue Property="Label" String="Purchasing Org"/>
+                        <PropertyValue Property="CollectionPath" String="ZVB_3DERP_PURCHORG_SH"/>
+                        <PropertyValue Property="SearchSupported" Bool="false"/>
+                        <PropertyValue Property="Parameters">
+                            <Collection>
+                                <Record Type="Common.ValueListParameterInOut">
+                                    <PropertyValue Property="LocalDataProperty" PropertyPath="PURCHORG"/>
+                                    <PropertyValue Property="ValueListProperty" String="PURCHORG"/>
+                                </Record>
+                                <Record Type="Common.ValueListParameterDisplayOnly">
+                                    <PropertyValue Property="ValueListProperty" String="PurchOrg"/>
+                                </Record>
+                                <Record Type="Common.ValueListParameterDisplayOnly">
+                                    <PropertyValue Property="ValueListProperty" String="Description"/>
+                                </Record>
+                            </Collection>
+                        </PropertyValue>
+                    </Record>
+                </Annotation>
+            </Annotations>
+            <Annotations Target="ZVB_3DERP_VPO_FILTERS_CDS.ZVB_3DERP_VPO_FILTERSType/PURCHPLANT" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+                <Annotation Term="Common.ValueList">
+                    <Record>
+                        <PropertyValue Property="Label" String="3DERP: Vendor PO: Purchasing Plant Search Help"/>
+                        <PropertyValue Property="CollectionPath" String="ZVB_3DERP_VPO_PURCHPLANT_SH"/>
+                        <PropertyValue Property="SearchSupported" Bool="false"/>
+                        <PropertyValue Property="Parameters">
+                            <Collection>
+                                <Record Type="Common.ValueListParameterInOut">
+                                    <PropertyValue Property="LocalDataProperty" PropertyPath="PURCHPLANT"/>
+                                    <PropertyValue Property="ValueListProperty" String="PURCHPLANT"/>
+                                </Record>
+                                <Record Type="Common.ValueListParameterDisplayOnly">
+                                    <PropertyValue Property="ValueListProperty" String="DESCRIPTION"/>
+                                </Record>
+                            </Collection>
+                        </PropertyValue>
+                    </Record>
+                </Annotation>
+            </Annotations>
+            <Annotations Target="ZVB_3DERP_VPO_FILTERS_CDS.ZVB_3DERP_VPO_FILTERSType/PAYMNTTERMS" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+                <Annotation Term="Common.ValueList">
+                    <Record>
+                        <PropertyValue Property="Label" String="3DERP: Vendor PO: Payment Terms Search Help"/>
+                        <PropertyValue Property="CollectionPath" String="ZVB_3DERP_VPO_PAYMNTTERMS_SH"/>
+                        <PropertyValue Property="SearchSupported" Bool="false"/>
+                        <PropertyValue Property="Parameters">
+                            <Collection>
+                                <Record Type="Common.ValueListParameterInOut">
+                                    <PropertyValue Property="LocalDataProperty" PropertyPath="PAYMNTTERMS"/>
+                                    <PropertyValue Property="ValueListProperty" String="PAYMNTTERMS"/>
+                                </Record>
+                                <Record Type="Common.ValueListParameterDisplayOnly">
+                                    <PropertyValue Property="ValueListProperty" String="DESCRIPTION"/>
                                 </Record>
                             </Collection>
                         </PropertyValue>
@@ -203,20 +393,55 @@
                     </Record>
                 </Annotation>
             </Annotations>
-            <Annotations Target="ZVB_3DERP_VPO_FILTERS_CDS.ZVB_3DERP_VPO_FILTERS_CDS_Entities" xmlns="http://docs.oasis-open.org/odata/ns/edm">
-                <Annotation Term="Aggregation.ApplySupported">
+            <Annotations Target="ZVB_3DERP_VPO_FILTERS_CDS.ZVB_3DERP_VPO_FILTERSType/SHIPMODE" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+                <Annotation Term="Common.ValueList">
                     <Record>
-                        <PropertyValue Property="Transformations">
+                        <PropertyValue Property="Label" String="3DERP: Vendor PO: Ship Mode Search Help"/>
+                        <PropertyValue Property="CollectionPath" String="ZVB_3DERP_VPO_SHIPMODE_SH"/>
+                        <PropertyValue Property="SearchSupported" Bool="false"/>
+                        <PropertyValue Property="Parameters">
                             <Collection>
-                                <String>aggregate</String>
-                                <String>groupby</String>
-                                <String>filter</String>
+                                <Record Type="Common.ValueListParameterInOut">
+                                    <PropertyValue Property="LocalDataProperty" PropertyPath="SHIPMODE"/>
+                                    <PropertyValue Property="ValueListProperty" String="SHIPMODE"/>
+                                </Record>
+                                <Record Type="Common.ValueListParameterDisplayOnly">
+                                    <PropertyValue Property="ValueListProperty" String="DESCRIPTION"/>
+                                </Record>
+                                <Record Type="Common.ValueListParameterDisplayOnly">
+                                    <PropertyValue Property="ValueListProperty" String="SBU"/>
+                                </Record>
                             </Collection>
                         </PropertyValue>
-                        <PropertyValue Property="Rollup" EnumMember="None"/>
                     </Record>
                 </Annotation>
             </Annotations>
+<<<<<<< HEAD
+=======
+            <Annotations Target="ZVB_3DERP_VPO_FILTERS_CDS.ZVB_3DERP_VPO_FILTERSType/PRNO" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+                <Annotation Term="Common.ValueList">
+                    <Record>
+                        <PropertyValue Property="Label" String="3DERP: PR Number"/>
+                        <PropertyValue Property="CollectionPath" String="ZVB_3DERP_PRNO_SH"/>
+                        <PropertyValue Property="SearchSupported" Bool="false"/>
+                        <PropertyValue Property="Parameters">
+                            <Collection>
+                                <Record Type="Common.ValueListParameterInOut">
+                                    <PropertyValue Property="LocalDataProperty" PropertyPath="PRNO"/>
+                                    <PropertyValue Property="ValueListProperty" String="PRNumber"/>
+                                </Record>
+                                <Record Type="Common.ValueListParameterDisplayOnly">
+                                    <PropertyValue Property="ValueListProperty" String="DocType"/>
+                                </Record>
+                            </Collection>
+                        </PropertyValue>
+                    </Record>
+                </Annotation>
+            </Annotations>
+            <Annotations Target="ZVB_3DERP_VPO_FILTERS_CDS.ZVB_3DERP_VPO_FILTERS_CDS_Entities" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+                <Annotation Term="Common.ApplyMultiUnitBehaviorForSortingAndFiltering" Bool="true"/>
+            </Annotations>
+>>>>>>> ae1a0a137a849772509d04e99450a0e3328ada27
             <atom:link rel="self" href="http://190.92.230.65:8000/sap/opu/odata/sap/ZVB_3DERP_VPO_FILTERS_CDS/$metadata" xmlns:atom="http://www.w3.org/2005/Atom"/>
             <atom:link rel="latest-version" href="http://190.92.230.65:8000/sap/opu/odata/sap/ZVB_3DERP_VPO_FILTERS_CDS/$metadata" xmlns:atom="http://www.w3.org/2005/Atom"/>
         </Schema>

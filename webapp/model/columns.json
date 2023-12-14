@@ -79,34 +79,165 @@
 		{"name": "UNDERDELTOL", "position": 22, "type": "Edm.String", "visible": true, "required": false, "width": "120px", "hideOnChange": false, "showable": true, "sort": "Ascending",
             "valueHelp": {"show": false, "source": "", "value": "", "desc": ""}}
 	],
-    "VPODelSched":[
-        {"name": "PONO", "position": 0, "type": "Edm.String", "visible": true, "required": false, "width": "120px", "hideOnChange": false, "showable": true, "sort": "Ascending",
-            "valueHelp": {"show": false, "source": "", "value": "", "desc": ""}}
-    ],
-    "VPODelInv":[
-        {"name": "PONO", "position": 0, "type": "Edm.String", "visible": true, "required": false, "width": "120px", "hideOnChange": false, "showable": true, "sort": "Ascending",
-            "valueHelp": {"show": false, "source": "", "value": "", "desc": ""}}
-    ],
-    "VPOPOHist":[
-        {"name": "PONO", "position": 0, "type": "Edm.String", "visible": true, "required": false, "width": "120px", "hideOnChange": false, "showable": true, "sort": "Ascending",
-            "valueHelp": {"show": false, "source": "", "value": "", "desc": ""}}
-    ],
-    "VPOCond":[
-        {"name": "PONO", "position": 0, "type": "Edm.String", "visible": true, "required": false, "width": "120px", "hideOnChange": false, "showable": true, "sort": "Ascending",
-            "valueHelp": {"show": false, "source": "", "value": "", "desc": ""}}
-    ],
-    "VPOManualDtl":[
-        {"name": "UOM",
-            "valueHelp": {"show": true, "items": {"path": "/VPOManualUomRscSet", "value": "UOM", "text": "DESCRIP"},
-            "suggestionItems": {"path": "uom>/results", "text": "{uom>UOM}", "additionalText": "{uom>DESCRIP}", "maxSuggestionWidth": "350px"}}
-        },
-        {"name": "ORDERPRICEUNIT",
-            "valueHelp": {"show": true, "items": {"path": "/VPOManualUomRscSet", "value": "UOM", "text": "DESCRIP"},
-            "suggestionItems": {"path": "uom>/results", "text": "{uom>UOM}", "additionalText": "{uom>DESCRIP}", "maxSuggestionWidth": "350px"}}
-        },
-        {"name": "ORDERNO",
-            "valueHelp": {"show": true, "items": {"path": "/VPOManualOrderNoRscSet", "value": "IONO", "text": "IODESC"},
-            "suggestionItems": {"path": "orderNo>/results", "text": "{orderNo>IONO}", "additionalText": "{orderNo>IODESC}", "maxSuggestionWidth": "350px"}}
-        }
-    ]
+      "VPODelSched":[
+            {"name": "PONO", "position": 0, "type": "Edm.String", "visible": true, "required": false, "width": "120px", "hideOnChange": false, "showable": true, "sort": "Ascending",
+                  "valueHelp": {"show": false, "source": "", "value": "", "desc": ""}}
+      ],
+      "VPODelInv":[
+            {"name": "PONO", "position": 0, "type": "Edm.String", "visible": true, "required": false, "width": "120px", "hideOnChange": false, "showable": true, "sort": "Ascending",
+                  "valueHelp": {"show": false, "source": "", "value": "", "desc": ""}}
+      ],
+      "VPOPOHist":[
+            {"name": "PONO", "position": 0, "type": "Edm.String", "visible": true, "required": false, "width": "120px", "hideOnChange": false, "showable": true, "sort": "Ascending",
+                  "valueHelp": {"show": false, "source": "", "value": "", "desc": ""}}
+      ],
+      "VPOCond":[
+            {"name": "PONO", "position": 0, "type": "Edm.String", "visible": true, "required": false, "width": "120px", "hideOnChange": false, "showable": true, "sort": "Ascending",
+                  "valueHelp": {"show": false, "source": "", "value": "", "desc": ""}}
+      ],
+      "VPOManualDtl":[
+            {"name": "UOM",
+                  "valueHelp": {"show": true, "items": {"path": "/VPOManualUomRscSet", "value": "UOM", "text": "DESCRIP"},
+                  "suggestionItems": {"path": "uom>/results", "text": "{uom>UOM}", "additionalText": "{uom>DESCRIP}", "maxSuggestionWidth": "350px"}}
+            },
+            {"name": "ORDERPRICEUNIT",
+                  "valueHelp": {"show": true, "items": {"path": "/VPOManualUomRscSet", "value": "UOM", "text": "DESCRIP"},
+                  "suggestionItems": {"path": "uom>/results", "text": "{uom>UOM}", "additionalText": "{uom>DESCRIP}", "maxSuggestionWidth": "350px"}}
+            },
+            {"name": "ORDERNO",
+                  "valueHelp": {"show": true, "items": {"path": "/VPOManualOrderNoRscSet", "value": "IONO", "text": "IODESC"},
+                  "suggestionItems": {"path": "orderNo>/results", "text": "{orderNo>IONO}", "additionalText": "{orderNo>IODESC}", "maxSuggestionWidth": "350px"}}
+            }
+      ],
+      "VPOSplitHdr": [
+            {"ColumnName": "PURCHORG", "TextFormatMode": "ValueKey",
+                  "ValueHelp": {"show": true, "items": {"path": "purchorg", "value": "PURCHORG", "text": "DESCRIP"},
+                        "SuggestionItems": {"path": "purchorg>/", "text": "{purchorg>PURCHORG}", "additionalText": "{purchorg>DESCRIP}", "maxSuggestionWidth": "200px"},
+                        "columns": "tvh_purchorg"
+                  }
+            },     
+            {"ColumnName": "VENDOR", "TextFormatMode": "ValueKey",
+                  "ValueHelp": {"show": true, "items": {"path": "vendor", "value": "LIFNR", "text": "NAME1"},
+                        "SuggestionItems": {"path": "vendor>/", "text": "{vendor>LIFNR}", "additionalText": "{vendor>NAME1}", "maxSuggestionWidth": "200px"},
+                        "columns": "tvh_vendor"
+                  }
+            },
+            {"ColumnName": "PURCHGRP", "TextFormatMode": "ValueKey",
+                  "ValueHelp": {"show": true, "items": {"path": "purchgrp", "value": "PURCHGRP", "text": "DESCRIP"},
+                        "SuggestionItems": {"path": "purchgrp>/", "text": "{purchgrp>PURCHGRP}", "additionalText": "{purchgrp>DESCRIP}", "maxSuggestionWidth": "200px"},
+                        "columns": "tvh_purchgrp"
+                  }
+            },       
+            {"ColumnName": "SHIPMODE", "TextFormatMode": "ValueKey",
+                  "ValueHelp": {"show": true, "items": {"path": "shipmode", "value": "SHIPMODE", "text": "DESCRIP"},
+                        "SuggestionItems": {"path": "shipmode>/", "text": "{shipmode>SHIPMODE}", "additionalText": "{shipmode>DESCRIP}", "maxSuggestionWidth": "200px"},
+                        "columns": "tvh_shipmode"
+                  }
+            },
+            {"ColumnName": "PAYMNTTERMS", "TextFormatMode": "ValueKey",
+                  "ValueHelp": {"show": true, "items": {"path": "payterms", "value": "ZTERM", "text": "VTEXT"},
+                        "SuggestionItems": {"path": "payterms>/", "text": "{payterms>ZTERM}", "additionalText": "{payterms>VTEXT}", "maxSuggestionWidth": "200px" },
+                        "columns": "tvh_payterms"
+                  }
+            },
+            {"ColumnName": "INCOTERMS", "TextFormatMode": "ValueKey",
+                  "ValueHelp": {"show": true, "items": {"path": "incoterms", "value": "INCOTERMS", "text": "DESCRIP"},
+                        "SuggestionItems": {"path": "incoterms", "text": "{incoterms>INCOTERMS}", "additionalText": "{incoterms>DESCRIP}", "maxSuggestionWidth": "200px" },
+                        "columns": "tvh_incoterms"
+                  }
+            }
+      ],
+      "tvh_purchorg": [
+            {"ColumnName": "PURCHORG", "DataType": "STRING", "ColumnWidth": "100px", "Visible": true, "Key": true, "Value": false},
+            {"ColumnName": "DESCRIP", "DataType": "STRING", "ColumnWidth": "300px", "Visible": true, "Key": false, "Value": true}
+      ],
+      "tvh_vendor": [
+            {"ColumnName": "LIFNR", "DataType": "STRING", "ColumnWidth": "100px", "Visible": true, "Key": true, "Value": false},
+            {"ColumnName": "NAME1", "DataType": "STRING", "ColumnWidth": "350px", "Visible": true, "Key": false, "Value": true},
+            {"ColumnName": "REQPLANTCD", "DataType": "STRING", "ColumnWidth": "100px", "Visible": false, "Key": false, "Value": false},
+            {"ColumnName": "PURPLANTCD", "DataType": "STRING", "ColumnWidth": "100px", "Visible": true, "Key": false, "Value": false},
+            {"ColumnName": "REQPLANTCD", "DataType": "STRING", "ColumnWidth": "100px", "Visible": false, "Key": false, "Value": false},
+            {"ColumnName": "EKORG", "DataType": "STRING", "ColumnWidth": "100px", "Visible": false, "Key": false, "Value": false},
+            {"ColumnName": "WAERS", "DataType": "STRING", "ColumnWidth": "100px", "Visible": false, "Key": false, "Value": false},
+            {"ColumnName": "ZTERM", "DataType": "STRING", "ColumnWidth": "100px", "Visible": false, "Key": false, "Value": false},
+            {"ColumnName": "INCO1", "DataType": "STRING", "ColumnWidth": "100px", "Visible": false, "Key": false, "Value": false},
+            {"ColumnName": "INCO2", "DataType": "STRING", "ColumnWidth": "100px", "Visible": false, "Key": false, "Value": false},
+            {"ColumnName": "COMPANYCD", "DataType": "STRING", "ColumnWidth": "100px", "Visible": false, "Key": false, "Value": false}
+      ],
+      "tvh_purchgrp": [
+            {"ColumnName": "PURCHGRP", "DataType": "STRING", "ColumnWidth": "100px", "Visible": true, "Key": true, "Value": false},
+            {"ColumnName": "DESCRIP", "DataType": "STRING", "ColumnWidth": "300px", "Visible": true, "Key": false, "Value": true},
+            {"ColumnName": "SBU", "DataType": "STRING", "ColumnWidth": "100px", "Visible": false, "Key": false, "Value": false}
+      ],
+      "tvh_shipmode": [
+            {"ColumnName": "SHIPMODE", "DataType": "STRING", "ColumnWidth": "100px", "Visible": true, "Key": true, "Value": false},
+            {"ColumnName": "DESCRIP", "DataType": "STRING", "ColumnWidth": "300px", "Visible": true, "Key": false, "Value": true},
+            {"ColumnName": "SBU", "DataType": "STRING", "ColumnWidth": "100px", "Visible": false, "Key": false, "Value": false}
+      ],
+      "tvh_payterms": [
+            {"ColumnName": "ZTERM", "DataType": "STRING", "ColumnWidth": "150px", "Visible": true, "Key": true, "Value": false},
+            {"ColumnName": "VTEXT", "DataType": "STRING", "ColumnWidth": "250px", "Visible": true, "Key": false, "Value": true}
+      ],
+      "tvh_incoterm": [
+            {"ColumnName": "INCOTERMS", "DataType": "STRING", "ColumnWidth": "100px", "Visible": true, "Key": true, "Value": false},
+            {"ColumnName": "DESCRIP", "DataType": "STRING", "ColumnWidth": "300px", "Visible": true, "Key": false, "Value": true}
+      ],
+      "VPOSplitDtl": [
+            {"ColumnName": "POADDTLDESC", "type": "STRING", "required": false, "length": "68",
+                "ValueHelp": {"show": false}},
+            {"ColumnName": "SPLITPOQTY", "type": "NUMBER", "required": true, "length": "13", "decimal": "3",
+                "ValueHelp": {"show": false}},
+            {"ColumnName": "NETPRICE", "type": "NUMBER", "required": false, "length": "11", "decimal": "2",
+                "ValueHelp": {"show": false}},
+            {"ColumnName": "PER", "type": "NUMBER", "required": false, "length": "5", "decimal": "0",
+                "ValueHelp": {"show": false}},
+            {"ColumnName": "UNLIMITED", "type": "BOOLEAN", "required": false, "length": "1", 
+                "ValueHelp": {"show": false}},
+            {"ColumnName": "OVERDELTOL", "type": "NUMBER", "required": false, "length": "3", "decimal": "1",
+                "ValueHelp": {"show": false}},
+            {"ColumnName": "UNDERDELTOL", "type": "NUMBER", "required": false, "length": "3", "decimal": "1",
+                "ValueHelp": {"show": false}}             
+      ],
+      "topHeaderData": [
+            {
+                  "ColumnName": "SHIPTOPLANT", "TextFormatMode": "ValueKey",
+                  "ValueHelp": {"show": true, "items": {"path": "onSuggSHIPTOPLANT", "value": "Item", "text": "Desc"},
+                        "SuggestionItems": {"path": "onSuggSHIPTOPLANT>/", "text": "{onSuggSHIPTOPLANT>Item}", "additionalText": "{onSuggSHIPTOPLANT>Desc}", "maxSuggestionWidth": "300px" },
+                        "columns": "tvthd_shiptoplant"
+                  }
+            },
+            {
+                  "ColumnName": "PAYMNTTERMS", "TextFormatMode": "ValueKey",
+                  "ValueHelp": {"show": true, "items": {"path": "onSuggPAYMNTTERMS", "value": "Item", "text": "Desc"},
+                        "SuggestionItems": {"path": "onSuggPAYMNTTERMS>/", "text": "{onSuggPAYMNTTERMS>Item}", "additionalText": "{onSuggPAYMNTTERMS>Desc}", "maxSuggestionWidth": "300px" },
+                        "columns": "tvthd_paymntterms"
+                  }
+            },
+            {
+                  "ColumnName": "INCOTERMS", "TextFormatMode": "ValueKey",
+                  "ValueHelp": {"show": true, "items": {"path": "onSuggINCOTERMS", "value": "Item", "text": "Desc"},
+                        "SuggestionItems": {"path": "onSuggINCOTERMS>/", "text": "{onSuggINCOTERMS>Item}", "additionalText": "{onSuggINCOTERMS>Desc}", "maxSuggestionWidth": "300px" },
+                        "columns": "tvthd_incoterms"
+                  }
+            }
+      ],
+      "tvthd_shiptoplant": [
+            {"ColumnName": "SHIPTOPLANT", "DataType": "STRING", "ColumnWidth": "200px", "Visible": false, "Key": true, "Value": false},
+            {"ColumnName": "DESCRIPTION", "DataType": "STRING", "ColumnWidth": "300px", "Visible": true, "Key": false, "Value": true},
+            {"ColumnName": "ShipToPlant", "DataType": "STRING", "ColumnWidth": "200px", "Visible": true, "Key": false, "Value": false},
+            {"ColumnName": "Item", "DataType": "STRING", "ColumnWidth": "300px", "Visible": false, "Key": false, "Value": true},
+            {"ColumnName": "Desc", "DataType": "STRING", "ColumnWidth": "300px", "Visible": false, "Key": false, "Value": true}
+      ],
+      "tvthd_paymntterms": [
+            {"ColumnName": "PAYMNTTERMS", "DataType": "STRING", "ColumnWidth": "200px", "Visible": true, "Key": true, "Value": false},
+            {"ColumnName": "DESCRIPTION", "DataType": "STRING", "ColumnWidth": "300px", "Visible": true, "Key": false, "Value": true},
+            {"ColumnName": "Item", "DataType": "STRING", "ColumnWidth": "300px", "Visible": false, "Key": false, "Value": true},
+            {"ColumnName": "Desc", "DataType": "STRING", "ColumnWidth": "300px", "Visible": false, "Key": false, "Value": true}
+      ],
+      "tvthd_incoterms": [
+            {"ColumnName": "INCOTERMS", "DataType": "STRING", "ColumnWidth": "200px", "Visible": true, "Key": true, "Value": false},
+            {"ColumnName": "DESCRIPTION", "DataType": "STRING", "ColumnWidth": "300px", "Visible": true, "Key": false, "Value": true},
+            {"ColumnName": "Item", "DataType": "STRING", "ColumnWidth": "300px", "Visible": false, "Key": false, "Value": true},
+            {"ColumnName": "Desc", "DataType": "STRING", "ColumnWidth": "300px", "Visible": false, "Key": false, "Value": true}
+      ]
 }

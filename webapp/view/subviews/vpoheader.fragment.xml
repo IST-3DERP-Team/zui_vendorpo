@@ -31,11 +31,11 @@
                             </Menu>
                         </menu>                    
                     </MenuButton>
-                    <Button id ="vpoBtnEditHeader" type="Ghost"  icon="sap-icon://edit" tooltip="{captionMsg>/EDIT}" press=".onEditVPOHeader"/>
-                    <Button id ="vpoBtnRefreshtHeader" type="Ghost"  icon="sap-icon://refresh" tooltip="{captionMsg>/REFRESH}" press=".onRefresh"/>
+                    <Button id ="vpoBtnEditHeader" type="Ghost"  icon="sap-icon://edit" text="{captionMsg>/EDIT}" tooltip="{captionMsg>/EDIT}" press=".onEditVPOHeader"/>
+                    <Button id ="vpoBtnRefreshtHeader" type="Ghost"  icon="sap-icon://refresh" text="{captionMsg>/REFRESH}" tooltip="{captionMsg>/REFRESH}" press=".onRefresh"/>
                     
-                    <Button id ="vpoBtnSaveHeader" type="Ghost"  icon="sap-icon://save" visible="false" tooltip="{captionMsg>/SAVE}" press=".onSaveVPOHeader"/>
-                    <Button id ="vpoBtnCancelHeader" type="Ghost"  icon="sap-icon://sys-cancel" visible="false" tooltip="{captionMsg>/CANCEL}" press=".onCancelVPOHeader"/>
+                    <Button id ="vpoBtnSaveHeader" type="Ghost"  icon="sap-icon://save" visible="false" text="{captionMsg>/SAVE}" tooltip="{captionMsg>/SAVE}" press=".onSaveVPOHeader"/>
+                    <Button id ="vpoBtnCancelHeader" type="Ghost"  icon="sap-icon://sys-cancel" visible="false" text="{captionMsg>/CANCEL}" tooltip="{captionMsg>/CANCEL}" press=".onCancelVPOHeader"/>
                 </OverflowToolbar>
 
                 <MessageStrip id="HeaderMessageStrip" text="" showIcon="true" showCloseButton="true" class="sapUiMediumMarginBottom" type="Error" visible="false"/>
@@ -103,7 +103,7 @@
                                 </f:FormElement>
                                 <f:FormElement label="{captionMsg>/SHIPTOPLANT}" visible="true">
                                     <f:fields>
-                                        <ComboBox
+                                        <!-- <ComboBox
                                             id="f1ShipToPlant"
                                             showSecondaryValues= "true"
                                             value= "{topHeaderData>/SHIPTOPLANT}{topHeaderData>/ShipToPlantDesc}"
@@ -113,7 +113,27 @@
                                             editable="{topHeaderDataEdit>/SHIPTOPLANT}"
                                             selectionChange="onHeaderInputChange">
                                             <core:Item key="{ShipToPlant}" text="{ShipToPlant} - {DESCRIPTION}"/>
-                                        </ComboBox>
+                                        </ComboBox> -->
+                                        <Input id="f1ShipToPlant" 
+                                            type="Text"
+                                            value="{
+                                                parts: [{path: 'topHeaderData>/SHIPTOPLANT'}, { value: 'onSuggSHIPTOPLANT' }, { value: 'Item' }, { value: 'Desc' }, { value: 'ValueKey' }],
+                                                formatter: '.formatValueHelp',
+                                                mandatory: 'SHIPTOPLANT'
+                                            }" 
+                                            textFormatMode="ValueKey"
+                                            showValueHelp="true" 
+                                            editable="{topHeaderDataEdit>/SHIPTOPLANT}"
+                                            valueStateText="Required"
+                                            valueHelpRequest="handleFormValueHelp"
+                                            showSuggestion="true" 
+                                            suggestionItems="{path: 'onSuggSHIPTOPLANT>/', length: 10000, templateShareable: false}"
+                                            maxSuggestionWidth="160px"
+                                            change="onInputLiveChangeSuggestion">
+                                                <suggestionItems>
+                                                    <core:ListItem key="{onSuggSHIPTOPLANT>Item}" text="{onSuggSHIPTOPLANT>Desc}" additionalText="{onSuggSHIPTOPLANT>Item}" />
+                                                </suggestionItems>
+                                        </Input>
                                         <!-- <Input id="f1ShipToPlant" value="{topHeaderData>/SHIPTOPLANT}" editable="{topHeaderDataEdit>/SHIPTOPLANT}" valueStateText="Required" 
                                             change="onHeaderChange" liveChange="onHeaderChange"/> -->
                                     </f:fields>
@@ -130,7 +150,7 @@
                                 </f:FormElement>
                                 <f:FormElement label="{captionMsg>/PAYMNTTERMS}" visible="true">
                                     <f:fields>
-                                        <ComboBox
+                                        <!-- <ComboBox
                                             id="f1PaymentTerms"
                                             showSecondaryValues= "true"
                                             value= "{topHeaderData>/PAYMNTTERMS}{topHeaderData>/PaymnttermsDesc}"
@@ -140,14 +160,34 @@
                                             editable="{topHeaderDataEdit>/PAYMNTTERMS}"
                                             selectionChange="onHeaderInputChange">
                                             <core:Item key="{PAYMNTTERMS}" text="{PAYMNTTERMS} - {DESCRIPTION}"/>
-                                        </ComboBox>
+                                        </ComboBox> -->
+                                        <Input id="f1PaymentTerms" 
+                                            type="Text"
+                                            value="{
+                                                parts: [{path: 'topHeaderData>/PAYMNTTERMS'}, { value: 'onSuggPAYMNTTERMS' }, { value: 'Item' }, { value: 'Desc' }, { value: 'ValueKey' }],
+                                                formatter: '.formatValueHelp',
+                                                mandatory: 'PAYMNTTERMS'
+                                            }" 
+                                            textFormatMode="ValueKey"
+                                            showValueHelp="true" 
+                                            editable="{topHeaderDataEdit>/PAYMNTTERMS}"
+                                            valueStateText="Required"
+                                            valueHelpRequest="handleFormValueHelp"
+                                            showSuggestion="true" 
+                                            suggestionItems="{path: 'onSuggPAYMNTTERMS>/', length: 10000, templateShareable: false}"
+                                            maxSuggestionWidth="160px"
+                                            change="onInputLiveChangeSuggestion">
+                                                <suggestionItems>
+                                                    <core:ListItem key="{onSuggPAYMNTTERMS>Item}" text="{onSuggPAYMNTTERMS>Desc}" additionalText="{onSuggPAYMNTTERMS>Item}" />
+                                                </suggestionItems>
+                                        </Input>
                                         <!-- <Input id="f1PaymentTerms" value="{topHeaderData>/PAYMNTTERMS}{topHeaderData>/PaymnttermsDesc}" editable="{topHeaderDataEdit>/PAYMNTTERMS}" valueStateText="Required" 
                                             change="onHeaderInputChange" liveChange="onHeaderInputChange"/> -->
                                     </f:fields>
                                 </f:FormElement>
                                 <f:FormElement label="{captionMsg>/INCOTERMS}" visible="true">
                                     <f:fields>
-                                        <ComboBox
+                                        <!-- <ComboBox
                                             id="f1Incoterms"
                                             showSecondaryValues= "true"
                                             value= "{topHeaderData>/INCOTERMS}{topHeaderData>/IncotermsDesc}"
@@ -157,7 +197,27 @@
                                             editable="{topHeaderDataEdit>/INCOTERMS}"
                                             selectionChange="onHeaderInputChange">
                                             <core:Item key="{INCOTERMS}" text="{INCOTERMS} - {INCOTERMSDET}"/>
-                                        </ComboBox>
+                                        </ComboBox> -->
+                                        <Input id="f1Incoterms" 
+                                            type="Text"
+                                            value="{
+                                                parts: [{path: 'topHeaderData>/INCOTERMS'}, { value: 'onSuggINCOTERMS' }, { value: 'Item' }, { value: 'Desc' }, { value: 'ValueKey' }],
+                                                formatter: '.formatValueHelp',
+                                                mandatory: 'INCOTERMS'
+                                            }" 
+                                            textFormatMode="ValueKey"
+                                            showValueHelp="true" 
+                                            editable="{topHeaderDataEdit>/INCOTERMS}"
+                                            valueStateText="Required"
+                                            valueHelpRequest="handleFormValueHelp"
+                                            showSuggestion="true" 
+                                            suggestionItems="{path: 'onSuggINCOTERMS>/', length: 10000, templateShareable: false}"
+                                            maxSuggestionWidth="160px"
+                                            change="onInputLiveChangeSuggestion">
+                                                <suggestionItems>
+                                                    <core:ListItem key="{onSuggINCOTERMS>Item}" text="{onSuggINCOTERMS>Desc}" additionalText="{onSuggINCOTERMS>Item}" />
+                                                </suggestionItems>
+                                        </Input>
                                         <!-- <Input id="f1Incoterms" value="{topHeaderData>/INCOTERMS}" editable="{topHeaderDataEdit>/INCOTERMS}" valueStateText="Required" 
                                             change="onHeaderChange" liveChange="onHeaderChange"/> -->
                                     </f:fields>

@@ -38,26 +38,31 @@
                                 <Button id="vpoNewHdrTxtRemarks" 
                                     icon="sap-icon://add-document"
                                     press=".onNewHdrTxt('Remarks')"
+                                    text="{captionMsg>/NEW}"
                                     tooltip="{captionMsg>/NEW}"
                                     visible="true"/>
                                 <Button id="vpoEditHdrTxtRemarks" 
                                     icon="sap-icon://edit"
                                     press=".onEditHdrTxt('Remarks')"
+                                    text="{captionMsg>/EDIT}"
                                     tooltip="{captionMsg>/EDIT}"
                                     visible="true"/>
                                 <Button id="vpoDeleteHdrTxtRemarks" 
                                     icon="sap-icon://delete"
                                     press=".onDeleteEditHdrTxt('Remarks')"
+                                    text="{captionMsg>/DELETE}"
                                     tooltip="{captionMsg>/DELETE}"
                                     visible="true"/>
                                 <Button id="vpoSaveHdrTxtRemarks" 
                                     icon="sap-icon://save"
                                     press=".onSaveEditHdrTxt('Remarks')" 
+                                    text="{captionMsg>/SAVE}"
                                     tooltip="{captionMsg>/SAVE}"
                                     visible="false" />
                                 <Button id="vpoCancelHdrTxtRemarks" 
                                     icon="sap-icon://sys-cancel"
                                     press=".onCancelEditHdrTxt('Remarks')" 
+                                    text="{captionMsg>/CANCEL}"
                                     tooltip="{captionMsg>/CANCEL}"
                                     visible="false" />
                             </OverflowToolbar>
@@ -89,26 +94,31 @@
                                 <Button id="vpoNewHdrTxtPkgInst" 
                                     icon="sap-icon://add-document"
                                     press=".onNewHdrTxt('PkgInst')"
+                                    text="{captionMsg>/NEW}"
                                     tooltip="{captionMsg>/NEW}"
                                     visible="true"/>
                                 <Button id="vpoEditHdrTxtPkgInst" 
                                     icon="sap-icon://edit"
                                     press=".onEditHdrTxt('PkgInst')"
+                                    text="{captionMsg>/EDIT}"
                                     tooltip="{captionMsg>/EDIT}"
                                     visible="true"/>
                                 <Button id="vpoDeleteHdrTxtPkgInst" 
                                     icon="sap-icon://delete"
                                     press=".onDeleteEditHdrTxt('PkgInst')"
+                                    text="{captionMsg>/DELETE}"
                                     tooltip="{captionMsg>/DELETE}"
                                     visible="true"/>
                                 <Button id="vpoSaveHdrTxtPkgInst" 
                                     icon="sap-icon://save"
                                     press=".onSaveEditHdrTxt('PkgInst')" 
+                                    text="{captionMsg>/SAVE}"
                                     tooltip="{captionMsg>/SAVE}"
                                     visible="false" />
                                 <Button id="vpoCancelHdrTxtPkgInst" 
                                     icon="sap-icon://sys-cancel"
                                     press=".onCancelEditHdrTxt('PkgInst')" 
+                                    text="{captionMsg>/CANCEL}"
                                     tooltip="{captionMsg>/CANCEL}"
                                     visible="false" />
                             </OverflowToolbar>
@@ -123,10 +133,10 @@
                         <OverflowToolbar design="Transparent" >
                             <Text text="{ui>/poVendorVendName}" class="selHdrKeyFontStyle" />
                             <ToolbarSpacer/>
-                            <Button id ="vpoEditHdrTxtFabSpec" type="Ghost"  icon="sap-icon://edit" tooltip="{captionMsg>/EDIT}" press=".onEditFabSpecs"/>
+                            <Button id ="vpoEditHdrTxtFabSpec" type="Ghost"  icon="sap-icon://edit" tooltip="{captionMsg>/EDIT}" text="{captionMsg>/EDIT}" press=".onEditFabSpecs"/>
                             
-                            <Button id ="vpoSaveHdrTxtFabSpec" type="Ghost"  icon="sap-icon://save" visible="false" tooltip="{captionMsg>/SAVE}" press=".onSaveEditFabSpecs"/>
-                            <Button id ="vpoCancelHdrTxtFabSpec" type="Ghost"  icon="sap-icon://sys-cancel" visible="false" tooltip="{captionMsg>/CANCEL}" press=".onCancelEditFabSpecs"/>
+                            <Button id ="vpoSaveHdrTxtFabSpec" type="Ghost"  icon="sap-icon://save" visible="false" tooltip="{captionMsg>/SAVE}" text="{captionMsg>/SAVE}" press=".onSaveEditFabSpecs"/>
+                            <Button id ="vpoCancelHdrTxtFabSpec" type="Ghost"  icon="sap-icon://sys-cancel" visible="false" tooltip="{captionMsg>/CANCEL}" text="{captionMsg>/CANCEL}" press=".onCancelEditFabSpecs"/>
                         </OverflowToolbar>
 
                         <MessageStrip text="" showIcon="true" showCloseButton="true" class="sapUiMediumMarginBottom" type="Error" visible="false"/>

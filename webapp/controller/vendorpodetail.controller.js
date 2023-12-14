@@ -10,11 +10,15 @@ sap.ui.define([
     'sap/ui/core/routing/HashChanger',
     "../js/Utils",
     'sap/m/Token',
+    "../js/Common",
+    "../js/TableFilter",
+    "../js/TableValueHelp"
+
 ],
     /**
      * @param {typeof sap.ui.core.mvc.Controller} Controller
      */
-    function (Controller, Filter, JSONModel, MessageBox, MessageToast, jQuery, HashChanger, Utils, Token) {
+    function (Controller, Filter, JSONModel, MessageBox, MessageToast, jQuery, HashChanger, Utils, Token, Common, TableFilter, TableValueHelp) {
         "use strict";
 
         var that;
@@ -34,7 +38,7 @@ sap.ui.define([
 
             onInit: async function () {
                 that = this;
-                
+
                 //Initialize router
                 var _oComponent = this.getOwnerComponent();
                 this._router = _oComponent.getRouter();
@@ -58,12 +62,18 @@ sap.ui.define([
                 this._vendorCd;
                 this._newVendorCd;
                 this._newDlvDate;
+
+                //Table Filter
+                this._aColumns = {};
+                this._tableFilter = TableFilter;
+                this._colFilters = {};
+
+                //Table Valuehelp
+                this._tableValueHelp = TableValueHelp; 
+			    this._tblColumns = {};
                 
                 var oModel = this.getOwnerComponent().getModel("ZVB_3DERP_VPO_FILTERS_CDS");
                 this.getView().setModel(oModel);
-
-                //Captions
-                this.callCaptionsAPI();
 
                 //On Key Up delegate
                 var _oDelegateKeyUp = {
@@ -197,42 +207,19 @@ sap.ui.define([
             _routePatternMatched: async function (oEvent) {
                 var me = this;
                 
-                this.showLoadingDialog(_captionList.LOADING);
                 this._pono = oEvent.getParameter("arguments").PONO;
                 // this._condrec = oEvent.getParameter("arguments").CONDREC;
                 this._sbu = oEvent.getParameter("arguments").SBU;                
 
                 this.getView().getModel("ui").setProperty("/activePONo", this._pono);
                 this.getView().getModel("vpoProcessFlow").setProperty("/nodes", []);
-
-                // //Load header
-                await this.getHeaderData(); //get header data
-
-                await this.onLoadFabSpecsData();
-                this.loadReleaseStrategy();
-
-                _promiseResult = new Promise((resolve, reject)=>{
-                    resolve(me.getMain());
-                });
-                await _promiseResult;
                 
-                _promiseResult = new Promise((resolve, reject)=>{
-                    resolve(me.getCols());
-                });
-                await _promiseResult;
-                
-                this.hdrTextLoadCol();
-                _promiseResult = new Promise((resolve, reject)=>{
-                    resolve(me.pkngInstTblLoad());
-                });
-                await _promiseResult;
+                //Captions
+                await this.callCaptionsAPI();
+                this.getView().setModel(new JSONModel(this.getOwnerComponent().getModel("CAPTION_MSGS_MODEL").getData().text), "ddtext");
 
-                _promiseResult = new Promise((resolve, reject)=>{
-                    resolve(me.remarksTblLoad());
-                });
-                await _promiseResult;
-
-                this.getView().getModel("ui").setProperty("/dataMode", 'READ');
+                Common.openLoadingDialog(that);
+                await this.loadAllData();
 
                 var chkIfZfab = await this.getView().getModel("ui").getProperty("/ifZfab");
                 if(!chkIfZfab){
@@ -264,40 +251,29 @@ sap.ui.define([
                 // this.getView().getModel("FileModel").refresh();
                 var poItem = this.getView().getModel("ui").getProperty("/activePOItem"); 
                 await this.getProcessFlow(poItem);
-                this.closeLoadingDialog();
+                Common.closeLoadingDialog(that);
             },
 
             loadAllData: async function(){
                 var me = this;
+                await this.onSuggestionItems(); //Load Suggestion Items in Header
+                await this.getColumnProp();
                 // //Load header
-                this.getHeaderData(); //get header data
+                await this.getHeaderData(); //get header data
 
                 await this.onLoadFabSpecsData();
                 this.loadReleaseStrategy();
 
-                _promiseResult = new Promise((resolve, reject)=>{
-                    resolve(me.getMain());
-                });
-                await _promiseResult;
+                await this.getMain();
                 
-                
-                _promiseResult = new Promise((resolve, reject)=>{
-                    resolve(me.getCols());
-                });
-                await _promiseResult;
+                await this.getCols();
                 
                 var poItem = this.getView().getModel("ui").getProperty("/activePOItem"); 
                 this.getProcessFlow(poItem);
                 this.hdrTextLoadCol();
-                _promiseResult = new Promise((resolve, reject)=>{
-                    resolve(me.pkngInstTblLoad());
-                });
-                await _promiseResult;
+                await this.pkngInstTblLoad();
 
-                _promiseResult = new Promise((resolve, reject)=>{
-                    resolve(me.remarksTblLoad());
-                });
-                await _promiseResult;
+                await this.remarksTblLoad();
 
                 this.getView().getModel("ui").setProperty("/dataMode", 'READ');
 
@@ -315,6 +291,7 @@ sap.ui.define([
                 return true;
             },
             callCaptionsAPI: async function(){
+                var me = this;
                 var oJSONModel = new JSONModel();
                 var oDDTextParam = [];
                 var oDDTextResult = [];
@@ -426,6 +403,7 @@ sap.ui.define([
                 oDDTextParam.push({CODE: "CREATEDDT"});
                 oDDTextParam.push({CODE: "UPDATEDDT"});
                 oDDTextParam.push({CODE: "FULLSCREEN"});
+                oDDTextParam.push({CODE: "EXITFULLSCREEN"});
                 oDDTextParam.push({CODE: "EXPORTTOEXCEL"});
                 
                 oDDTextParam.push({CODE: "PROCFLOW"});
@@ -437,43 +415,105 @@ sap.ui.define([
                 oDDTextParam.push({CODE: "ARROWDOWN"});
                 oDDTextParam.push({CODE: "POPRINT"});
 
-                await oModel.create("/CaptionMsgSet", { CaptionMsgItems: oDDTextParam  }, {
-                    method: "POST",
-                    success: function(oData, oResponse) {
-                        oData.CaptionMsgItems.results.forEach(item=>{
-                            oDDTextResult[item.CODE] = item.TEXT;
-                        })
-                        _captionList = oDDTextResult;
-                        
-                        oJSONModel.setData(oDDTextResult);
-                        that.getView().setModel(oJSONModel, "captionMsg");
-                    },
-                    error: function(err) {
-                        sap.m.MessageBox.error(_captionList.INFO_ERROR);
-                    }
-                });
+                oDDTextParam.push({CODE: "GENERATEPO"});
+                oDDTextParam.push({CODE: "GMCDESC"});
+                oDDTextParam.push({CODE: "ADDTLDESC"});
+                oDDTextParam.push({CODE: "POADDTLDESC"});
+                oDDTextParam.push({CODE: "BATCH"});
+                oDDTextParam.push({CODE: "ORIGPOQTY"});
+                oDDTextParam.push({CODE: "SPLITPOQTY"});
+                oDDTextParam.push({CODE: "UOM"});
+                oDDTextParam.push({CODE: "DELDT"});
+                oDDTextParam.push({CODE: "NETPRICE"});
+                oDDTextParam.push({CODE: "PER"});
+                oDDTextParam.push({CODE: "DENOMINATOR"});
+                oDDTextParam.push({CODE: "NUMERATOR"});
+                oDDTextParam.push({CODE: "ORDERPRICEUOM"});
+                oDDTextParam.push({CODE: "TAXCD"});
+                oDDTextParam.push({CODE: "SUPPLYTYP"});
+                oDDTextParam.push({CODE: "ITEM"});
+                oDDTextParam.push({CODE: "UNLIMITED"});
+                oDDTextParam.push({CODE: "OVERDELTOL"});
+                oDDTextParam.push({CODE: "UNDERDELTOL"});
+                oDDTextParam.push({CODE: "PRNO"});
+                oDDTextParam.push({CODE: "PRITM"});
+                oDDTextParam.push({CODE: "GRBASEDIVIND"});
+                oDDTextParam.push({CODE: "INVRCPTIND"});
+                oDDTextParam.push({CODE: "REMARKS"});
+                oDDTextParam.push({CODE: "HEADERTEXT"});
+
+                oDDTextParam.push({CODE: "YES"});
+                oDDTextParam.push({CODE: "NO"});
+
+                oDDTextParam.push({CODE: "INFO_NEXT_DELVDATE"});
+                oDDTextParam.push({CODE: "CONTINUE"});
+                oDDTextParam.push({CODE: "INFO_DELVDATE_UPDATED"});
+                oDDTextParam.push({CODE: "INFO_CHECK_INVALID_ENTRIES"});
+                oDDTextParam.push({CODE: "INFO_INPUT_REQD_FIELDS"});
+                oDDTextParam.push({CODE: "CONF_DISCARD_CHANGE"});
+                oDDTextParam.push({CODE: "CONF_DELETE_RECORDS"});                
+                oDDTextParam.push({CODE: "INFO_SEL_RECORD_TO_DELETE"});
+                oDDTextParam.push({CODE: "INFO_INPUT_PACKINS"});
+                oDDTextParam.push({CODE: "INFO_PACKINS_SAVED"});
+                oDDTextParam.push({CODE: "INFO_INPUT_REMARKS"});
+                oDDTextParam.push({CODE: "INFO_REMARKS_SAVED"});
+                oDDTextParam.push({CODE: "INFO_DATA_DELETED"});
+                oDDTextParam.push({CODE: "ERR_INVALID_SPLITPOQTY"});
+                oDDTextParam.push({CODE: "INFO_DATA_SAVE"});
+                oDDTextParam.push({CODE: "INFO_NO_RECORD_TO_DELETE"});
+                oDDTextParam.push({CODE: "INFO_DATA_SAVE"});
+                oDDTextParam.push({CODE: "INFO_NO_DETAIL_DATA"});
+                oDDTextParam.push({CODE: "CONF_CANCEL_TRANS"});
+                oDDTextParam.push({CODE: "INFO_NO_RANGE_CODE"});
+                oDDTextParam.push({CODE: "INFO_ERROR"});
+                oDDTextParam.push({CODE: "ERR_GETTING_RESOURCES"});
+                oDDTextParam.push({CODE: "INFO_INPUT_HDR_REQD_FIELDS"});
+                oDDTextParam.push({CODE: "INFO_INPUT_DTL_REQD_FIELDS"});
+
+                oDDTextParam.push({CODE: "FLTRCRIT"});
+                oDDTextParam.push({CODE: "OK"});
+                oDDTextParam.push({CODE: "CANCEL"});
+                oDDTextParam.push({CODE: "CLRFLTRS"});
+                oDDTextParam.push({CODE: "REMOVEFLTR"});
+                oDDTextParam.push({CODE: "VALUELIST"});
+                oDDTextParam.push({CODE: "USERDEF"});
+                oDDTextParam.push({CODE: "SEARCH"});
+
+                oDDTextParam.push({CODE: "LOADING"});
+
+
+                await new Promise((resolve)=>{
+                    oModel.create("/CaptionMsgSet", { CaptionMsgItems: oDDTextParam  }, {
+                        method: "POST",
+                        success: function(oData, oResponse) {
+                            oData.CaptionMsgItems.results.forEach(item=>{
+                                oDDTextResult[item.CODE] = item.TEXT;
+                            })
+                            _captionList = oDDTextResult;
+                            
+                            oJSONModel.setData(oDDTextResult);
+                            me.getView().setModel(oJSONModel, "captionMsg");
+                            me.getOwnerComponent().getModel("CAPTION_MSGS_MODEL").setData({text: oDDTextResult});
+                            resolve();
+                        },
+                        error: function(err) {
+                            sap.m.MessageBox.error(_captionList.INFO_ERROR);
+                            resolve();
+                        }
+                    })
+                })
             },
-            showLoadingDialog(arg) {
-                if (!this._LoadingDialog) {
-                    this._LoadingDialog = sap.ui.xmlfragment("zuivendorpo.view.fragments.dialog.LoadingDialog", this);
-                    this.getView().addDependent(this._LoadingDialog);
-                }
-                // jQuery.sap.syncStyleClass("sapUiSizeCompact", this.getView(), this._LoadingDialog);
-                
-                this._LoadingDialog.setTitle(arg);
-                this._LoadingDialog.open();
-            },
-            closeLoadingDialog() {
-                this._LoadingDialog.close();
-            },
+
             getHeaderData: async function () {
                 var me = this;
                 var poNo = this._pono;
                 var oModel = this.getOwnerComponent().getModel();
-                var oJSONModel = new sap.ui.model.json.JSONModel();
-                var oJSONEdit = new sap.ui.model.json.JSONModel();
+                var oJSONModel = new JSONModel();
+                var oJSONEdit = new JSONModel();
+                var oJSONMandatory = new JSONModel();
                 var oView = this.getView();
                 var edditableFields = [];
+                var mandatoryFields = [];
 
                 //read Style header data
                 
@@ -490,6 +530,7 @@ sap.ui.define([
                             for (var oDatas in oData) {
                                 //get only editable fields
                                 edditableFields[oDatas] = false;
+                                mandatoryFields[oDatas] = false;
                             }
                             
                             me._ediVendor = oData.EDIVENDOR;
@@ -504,12 +545,13 @@ sap.ui.define([
                             }
                             
                             oJSONEdit.setData(edditableFields);
+                            oJSONMandatory.setData(mandatoryFields);
                             //  (oView.getModel("topHeaderData"))
                             
                             oView.setModel(oJSONModel, "topHeaderData");
                             oView.setModel(oJSONEdit, "topHeaderDataEdit");
-                            
-                            
+                            oView.setModel(oJSONMandatory, "topHeaderDataMandatory");
+
                             resolve();
                             // me.setChangeStatus(false);
                         },
@@ -530,15 +572,14 @@ sap.ui.define([
                 var oView = this.getView();
                 var oJSONModel = new JSONModel();
 
-                var docTyp = this.byId("f1DocTyp").getValue().split('-')[0].trim();
-                var purchOrg = this.byId("f1PurOrg").getValue().split('-')[0].trim();
-                var purchGrp = this.byId("f1PurGrp").getValue().split('-')[0].trim();
-                var company = this.byId("f1Company").getValue().split('-')[0].trim();
-                var purchPlant = this.byId("f1PurPlant").getValue().split('-')[0].trim();
-                var shipToPlant = this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
-                var incoTerms = this.byId("f1Incoterms").getValue();
-                var paymntTerms = this.byId("f1PaymentTerms").getValue();
-                var shipMode = this.byId("f1ShipMode").getValue().split('-')[0].trim();
+                var topHeaderData = this.getView().getModel("topHeaderData").getData();
+
+                var docTyp = topHeaderData.DOCTYPE;//this.byId("f1DocTyp").getValue().split('-')[0].trim();
+                var purchOrg = topHeaderData.PURCHORG;//this.byId("f1PurOrg").getValue().split('-')[0].trim();
+                var purchGrp = topHeaderData.PURCHGRP;//this.byId("f1PurGrp").getValue().split('-')[0].trim();
+                var company = topHeaderData.COMPANY;//this.byId("f1Company").getValue().split('-')[0].trim();
+                var purchPlant = topHeaderData.PURCHPLANT;//this.byId("f1PurPlant").getValue().split('-')[0].trim();
+                var shipMode = topHeaderData.SHIPMODE;//this.byId("f1ShipMode").getValue().split('-')[0].trim();
 
                 var topHeaderDataChange = this.getView().getModel("topHeaderData").getData()
 
@@ -641,63 +682,6 @@ sap.ui.define([
                     });
                 });
 
-                //Ship to Plant
-                await new Promise((resolve, reject) => {
-                    iCounter = 0; 
-                    filteroModel.read("/ZVB_3DERP_SHIPTOPLANT_SH", {
-                        success: function (oData, oResponse) {
-                            for(var item in oData.results){
-                                iCounter++;
-                                if(oData.results[item].ShipToPlant === shipToPlant){
-                                    topHeaderDataChange.ShipToPlantDesc = " - " + oData.results[item].DESCRIPTION;
-                                }
-                                if(iCounter === oData.results.length){
-                                    resolve();
-                                }
-                            }
-                        },
-                        error: function (err) { }
-                    });
-                });
-
-                //Incoterms
-                await new Promise((resolve, reject) => {
-                    iCounter = 0; 
-                    filteroModel.read("/ZVB_3DERP_INCOTERMS", {
-                        success: function (oData, oResponse) {
-                            for(var item in oData.results){
-                                iCounter++;
-                                if(oData.results[item].INCOTERMS === incoTerms){
-                                    topHeaderDataChange.IncotermsDesc = " - " + oData.results[item].INCOTERMSDET;
-                                }
-                                if(iCounter === oData.results.length){
-                                    resolve();
-                                }
-                            }
-                        },
-                        error: function (err) { }
-                    });
-                });
-
-                //Payment Terms
-                await new Promise((resolve, reject) => {
-                    iCounter = 0; 
-                    filteroModel.read("/ZVB_3DERP_VPO_PAYMNTTERMS_SH", {
-                        success: function (oData, oResponse) {
-                            for(var item in oData.results){
-                                iCounter++;
-                                if(oData.results[item].PAYMNTTERMS === paymntTerms){
-                                    topHeaderDataChange.PaymnttermsDesc = " - " + oData.results[item].DESCRIPTION;
-                                }
-                                if(iCounter === oData.results.length){
-                                    resolve();
-                                }
-                            }
-                        },
-                        error: function (err) { }
-                    });
-                });
-
                 //Ship Mode
                 await new Promise((resolve, reject) => {
                     iCounter = 0; 
@@ -723,6 +707,75 @@ sap.ui.define([
                 oView.setModel(oJSONModel, "topHeaderData");
 
             },
+
+            onSuggestionItems: async function(){
+                var me = this;
+                var vSBU = this._sbu;
+                var filteroModel = this.getOwnerComponent().getModel("ZVB_3DERP_VPO_FILTERS_CDS");
+
+                //Ship to Plant
+                await new Promise((resolve, reject) => {
+                    filteroModel.read("/ZVB_3DERP_SHIPTOPLANT_SH", {
+                        success: function (oData, oResponse) {
+                            var dataResult = [];
+                            oData.results.forEach(item=>{
+                                item.Item = item.ShipToPlant;
+								item.Desc = item.DESCRIPTION;
+                                item.SHIPTOPLANT = item.ShipToPlant;
+								dataResult.push(item);
+                            });
+                            resolve(me.getView().setModel(new JSONModel(dataResult), "onSuggSHIPTOPLANT"));
+                        },
+                        error: function (err) { }
+                    });
+                });
+
+                
+                //Payment Terms
+                await new Promise((resolve, reject) => {
+                    filteroModel.read("/ZVB_3DERP_VPO_PAYMNTTERMS_SH", {
+                        success: function (oData, oResponse) {
+                            var dataResult = [];
+                            oData.results.forEach(item=>{
+                                item.Item = item.PAYMNTTERMS;
+								item.Desc = item.DESCRIPTION;
+								dataResult.push(item);
+                            });
+                            resolve(me.getView().setModel(new JSONModel(dataResult), "onSuggPAYMNTTERMS"));
+                        },
+                        error: function (err) { }
+                    });
+                });
+
+                
+                //Incoterms
+                await new Promise((resolve, reject) => {
+                    filteroModel.read("/ZVB_3DERP_INCOTERMS", {
+                        success: function (oData, oResponse) {
+                            var dataResult = [];
+                            oData.results.forEach(item=>{
+                                item.Item = item.INCOTERMS;
+								item.Desc = item.INCOTERMSDET;
+                                item.DESCRIPTION = item.INCOTERMSDET;
+								dataResult.push(item);
+                            });
+                            resolve(me.getView().setModel(new JSONModel(dataResult), "onSuggINCOTERMS"));
+                        },
+                        error: function (err) { }
+                    });
+                });
+            },
+
+            getColumnProp: async function() {
+                var sPath = jQuery.sap.getModulePath("zuivendorpo", "/model/columns.json");
+    
+                var oModelColumns = new JSONModel();
+                await oModelColumns.loadData(sPath);
+    
+                this._tblColumns = oModelColumns.getData();
+                this._oModelColumns = oModelColumns.getData();
+            },
+
             getMain: async function(){
                 this._oDataBeforeChange = {}
                 var oModel = this.getOwnerComponent().getModel();
@@ -730,7 +783,7 @@ sap.ui.define([
                 var poNo = this._pono;
                 var condrec = this.getView().getModel("ui").getProperty("/activeCondRec");
                 let poItem = "";
-                return new Promise(async (resolve, reject) => {
+                await new Promise(async (resolve, reject) => {
                     _this.getView().setModel(new JSONModel({
                         results: []
                     }), "VPODtlsVPODet");
@@ -937,6 +990,10 @@ sap.ui.define([
                             me.getView().getModel("ui").setProperty("/condShortText", shortText);
 
                             me.getView().setModel(oJSONModel, "VPODtlsVPODet");
+
+                            //Table Filter
+						    TableFilter.applyColFilters("vpoDetailsTab", me);
+
                             resolve();
                         },
                         error: function (err) { 
@@ -947,47 +1004,22 @@ sap.ui.define([
             },
 
             getCols: async function() {
+                await this.getDynamicColumns("VPODTLS", "ZDV_3DERP_VPDTLS");
                 
-                var oModel = this.getOwnerComponent().getModel();
+                await this.getDynamicColumns('VPODELSCHED','ZVB_VPO_DELSCHED');
+                
+                await this.getDynamicColumns('VPODELINV','ZDV_3DERP_DELINV');
+                
+                await this.getDynamicColumns('VPOHISTORY','ZDV_3DERP_POHIST');
+            
+                await this.getDynamicColumns('VPOCOND','ZDV_3DERP_COND');
 
-                
-                _promiseResult = new Promise((resolve, reject)=>{
-                    resolve(this.getDynamicColumns("VPODTLS", "ZDV_3DERP_VPDTLS"));
-                });
-                await _promiseResult
-                
-                _promiseResult = new Promise((resolve, reject)=>{
-                    resolve(this.getDynamicColumns('VPODELSCHED','ZVB_VPO_DELSCHED'));
-                });
-                await _promiseResult
-                
-                _promiseResult = new Promise((resolve, reject)=>{
-                    resolve(this.getDynamicColumns('VPODELINV','ZDV_3DERP_DELINV'));
-                });
-                await _promiseResult
-                
-                _promiseResult = new Promise((resolve, reject)=>{
-                    resolve(this.getDynamicColumns('VPOHISTORY','ZDV_3DERP_POHIST'));
-                });
-                await _promiseResult
-                
-                _promiseResult = new Promise((resolve, reject)=>{
-                    resolve(this.getDynamicColumns('VPOCOND','ZDV_3DERP_COND'));
-                });
-                await _promiseResult
+                await this.getDynamicColumns('VPOHDRCOND','ZDV3DERP_HDRCOND');
 
-                _promiseResult = new Promise((resolve, reject)=>{
-                    resolve(this.getDynamicColumns('VPOHDRCOND','ZDV3DERP_HDRCOND'));
-                });
-                await _promiseResult
-
-                _promiseResult = new Promise((resolve, reject)=>{
-                    resolve(this.getDynamicColumns('VPOHDRDOWNLOADHIST','ZDV3DERP_POHIST'));
-                });
-                await _promiseResult
+                await this.getDynamicColumns('VPOHDRDOWNLOADHIST','ZDV3DERP_POHIST');
 
             },
-            getDynamicColumns(model, dataSource) {
+            getDynamicColumns: async function(model, dataSource) {
                 var me = this;
                 var modCode = model;
                 var tabName = dataSource;
@@ -1002,36 +1034,41 @@ sap.ui.define([
                     type: modCode,
                     tabname: tabName
                 });
-                return new Promise((resolve, reject) => {
+                await new Promise((resolve, reject) => {
                     oModel.read("/ColumnsSet", {
                         success: async function (oData, oResponse) {
                             if (oData.results.length > 0) {
                                 me._columnLoadError = false;
                                 if (modCode === 'VPODTLS') {
+                                    me._aColumns["vpoDetailsTab"] = oData.results;
                                     oJSONColumnsModel.setData(oData.results);
                                     me.getView().setModel(oJSONColumnsModel, "VPODTLSColumnsVPODet");
                                     me.setTableColumnsData(modCode);
                                     resolve();
                                 }
                                 if (modCode === 'VPODELSCHED') {
+                                    me._aColumns["vpoDelSchedTab"] = oData.results;
                                     oJSONColumnsModel.setData(oData.results);
                                     me.getView().setModel(oJSONColumnsModel, "VPODELSCHEDColumnsVPODet");
                                     me.setTableColumnsData(modCode);
                                     resolve();
                                 }
                                 if (modCode === 'VPODELINV') {
+                                    me._aColumns["vpoDelInvTab"] = oData.results;
                                     oJSONColumnsModel.setData(oData.results);
                                     me.getView().setModel(oJSONColumnsModel, "VPODELINVColumnsVPODet");
                                     me.setTableColumnsData(modCode);
                                     resolve();
                                 }
                                 if (modCode === 'VPOHISTORY') {
+                                    me._aColumns["vpoPoHistTab"] = oData.results;
                                     oJSONColumnsModel.setData(oData.results);
                                     me.getView().setModel(oJSONColumnsModel, "VPOHISTORYColumnsVPODet");
                                     me.setTableColumnsData(modCode);
                                     resolve();
                                 }
                                 if (modCode === 'VPOCOND') {
+                                    me._aColumns["vpoConditionsTab"] = oData.results;
                                     oJSONColumnsModel.setData(oData.results);
                                     me.getView().setModel(oJSONColumnsModel, "VPOCONDColumnsVPODet");
                                     me.setTableColumnsData(modCode);
@@ -1039,6 +1076,7 @@ sap.ui.define([
                                 }
                                 //Add PR to PO Column
                                 if (modCode === 'VPOADDPRTOPO') {
+                                    me._aColumns["vpoAddPRtoPOTbl"] = oData.results;
                                     oJSONColumnsModel.setData(oData.results);
                                     me.getView().setModel(oJSONColumnsModel, "VPOAddPRtoPOColumns");
                                     me.setTableColumnsData(modCode);
@@ -1046,6 +1084,7 @@ sap.ui.define([
                                 }
 
                                 if (modCode === 'VPOHDRCOND') {
+                                    me._aColumns["HdrConditonsTbl"] = oData.results;
                                     oJSONColumnsModel.setData(oData.results);
                                     me.getView().setModel(oJSONColumnsModel, "VPOHdrCondColumns");
                                     me.setTableColumnsData(modCode);
@@ -1053,6 +1092,7 @@ sap.ui.define([
                                 }
 
                                 if (modCode === 'VPOHDRDOWNLOADHIST') {
+                                    me._aColumns["HdrDownloadHistTbl"] = oData.results;
                                     oJSONColumnsModel.setData(oData.results);
                                     me.getView().setModel(oJSONColumnsModel, "VPOHdrDownloadHistColumns");
                                     me.setTableColumnsData(modCode);
@@ -1109,7 +1149,7 @@ sap.ui.define([
                         },
                         error: function (err) {
                             me._columnLoadError = true;
-                            me.closeLoadingDialog();
+                            Common.closeLoadingDialog(that);
                             resolve();
                         }
                     });
@@ -1252,11 +1292,9 @@ sap.ui.define([
                             wrapping: false, 
                             tooltip: "{" + sColumnId + "}",
                             press: function(oEvent) {
-                                // console.log(oEvent.oSource)
                                 const vRow = oEvent.oSource.getBindingInfo("text").binding.getContext().sPath;
                                 const vPRNo =  oEvent.oSource.mProperties.text;
                                 const vPRItem =  oTable.getModel().getProperty(vRow + "/PRITM");
-                                // console.log(vPRNo, vPRItem);
                                 var oData = {
                                     DOCTYPE: "PR",
                                     PRNO: vPRNo,
@@ -1272,7 +1310,7 @@ sap.ui.define([
 
                         return new sap.ui.table.Column({
                             id: model+"-"+sColumnId,
-                            label: sColumnLabel,
+                            label: new sap.m.Text({text: sColumnLabel}),
                             template: oControl,
                             width: sColumnWidth + "px",
                             hAlign: me.columnSize(sColumnId),
@@ -1290,7 +1328,6 @@ sap.ui.define([
                             wrapping: false, 
                             tooltip: "{" + sColumnId + "}",
                             press: function(oEvent) {
-                                // console.log(oEvent.oSource)
                                 const vRow = oEvent.oSource.getBindingInfo("text").binding.getContext().sPath;
                                 const vMatDocNo =  oEvent.oSource.mProperties.text;
                                 const vMatDocItem =  oTable.getModel().getProperty(vRow + "/ITEM");
@@ -1314,7 +1351,7 @@ sap.ui.define([
 
                         return new sap.ui.table.Column({
                             id: model+"-"+sColumnId,
-                            label: sColumnLabel,
+                            label: new sap.m.Text({text: sColumnLabel}),
                             template: oControl,
                             width: sColumnWidth + "px",
                             hAlign: me.columnSize(sColumnId),
@@ -1329,7 +1366,7 @@ sap.ui.define([
                     else if (sColumnType === "STRING" || sColumnType === "DATETIME"|| sColumnType === "BOOLEAN") {
                         return new sap.ui.table.Column({
                             id: model+"-"+sColumnId,
-                            label: sColumnLabel,
+                            label: new sap.m.Text({text: sColumnLabel}),
                             template: me.columnTemplate(sColumnId, sColumnType),
                             width: sColumnWidth + "px",
                             hAlign: me.columnSize(sColumnId),
@@ -1343,7 +1380,7 @@ sap.ui.define([
                     }else if (sColumnType === "NUMBER") {
                         return new sap.ui.table.Column({
                             id: model+"-"+sColumnId,
-                            label: sColumnLabel,
+                            label: new sap.m.Text({text: sColumnLabel}),
                             template: new sap.m.Text({ 
                                 text: {
                                     path: sColumnId,
@@ -1365,51 +1402,64 @@ sap.ui.define([
 
                 });
 
-                //sorting with Date Sort
+                //date/number sorting
                 oTable.attachSort(function(oEvent) {
-         
                     var sPath = oEvent.getParameter("column").getSortProperty();
                     var bDescending = false;
                     
+                    //remove sort icon of currently sorted column
+                    oTable.getColumns().forEach(col => {
+                        if (col.getSorted()) {
+                            col.setSorted(false);
+                        }
+                    })
+
                     oEvent.getParameter("column").setSorted(true); //sort icon initiator
-                    if (oEvent.getParameter("sortOrder") == "Descending") {
+
+                    if (oEvent.getParameter("sortOrder") === "Descending") {
                         bDescending = true;
                         oEvent.getParameter("column").setSortOrder("Descending") //sort icon Descending
-                    }else{
+                    }
+                    else {
                         oEvent.getParameter("column").setSortOrder("Ascending") //sort icon Ascending
                     }
 
                     var oSorter = new sap.ui.model.Sorter(sPath, bDescending ); //sorter(columnData, If Ascending(false) or Descending(True))
-                    
-                    var columnType = oEvent.getParameter("column").getTemplate().getBindingInfo("text") === undefined ? "" : oEvent.getParameter("column").getTemplate().getBindingInfo("text").columnType;
+                    var oColumn = columnsData.filter(fItem => fItem.ColumnName === oEvent.getParameter("column").getProperty("sortProperty"));
+                    var columnType = oColumn[0].DataType;
+
                     if (columnType === "DATETIME") {
                         oSorter.fnCompare = function(a, b) {
-                        
                             // parse to Date object
                             var aDate = new Date(a);
                             var bDate = new Date(b);
-                            
-                            if (bDate == null) {
-                                return -1;
-                            }
-                            if (aDate == null) {
-                                return 1;
-                            }
-                            if (aDate < bDate) {
-                                return -1;
-                            }
-                            if (aDate > bDate) {
-                                return 1;
-                            }
+
+                            if (bDate === null) { return -1; }
+                            if (aDate === null) { return 1; }
+                            if (aDate < bDate) { return -1; }
+                            if (aDate > bDate) { return 1; }
+
                             return 0;
                         };
-                    } 
+                    }
+                    else if (columnType === "NUMBER") {
+                        oSorter.fnCompare = function(a, b) {
+                            // parse to Date object
+                            var aNumber = +a;
+                            var bNumber = +b;
+
+                            if (bNumber === null) { return -1; }
+                            if (aNumber === null) { return 1; }
+                            if (aNumber < bNumber) { return -1; }
+                            if (aNumber > bNumber) { return 1; }
+
+                            return 0;
+                        };
+                    }
                     
                     oTable.getBinding('rows').sort(oSorter);
-                     // prevent internal sorting by table
+                    // prevent internal sorting by table
                     oEvent.preventDefault();
-         
-         
                 });
 
                 if(table === "HdrConditonsTbl"){
@@ -1425,6 +1475,7 @@ sap.ui.define([
                 }
                 //bind the data to the table
                 oTable.bindRows("/rows");
+                TableFilter.updateColumnMenu(table, this);
                 
             },
             columnTemplate: function(sColumnId, sColumnType){
@@ -1585,6 +1636,7 @@ sap.ui.define([
                         }
                         oJSONModel.setData(oData);
                         oView.setModel(oJSONModel, "relStratData");
+                        me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/relstrat", oData);
                         // me.setChangeStatus(false);
                     },
                     error: function (error) {
@@ -1597,7 +1649,7 @@ sap.ui.define([
                 await this.loadReleaseStrategy();
             },
 
-            remarksTblLoad(){
+            remarksTblLoad: async function(){
                 var me = this;
                 var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
                 var oParam = {};
@@ -1613,7 +1665,7 @@ sap.ui.define([
                     Object:     'EKKO',
                     N_Read_Text_Lines: [],
                 };
-                return new Promise((resolve, reject)=>{
+                await new Promise((resolve, reject)=>{
                     oModel.create("/READ_TEXTSet", oParam, { 
                         method: "POST",
                         success: function(oResult, oResponse) {
@@ -1638,7 +1690,7 @@ sap.ui.define([
                 })
                 
             },
-            pkngInstTblLoad(){
+            pkngInstTblLoad: async function(){
                 var me = this;
                 var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
                 var oParam = {};
@@ -1656,7 +1708,7 @@ sap.ui.define([
                 };
 
                 
-                return new Promise((resolve, reject)=>{
+                await new Promise((resolve, reject)=>{
                     oModel.create("/READ_TEXTSet", oParam, { 
                         method: "POST",
                         success: function(oResult, oResponse) {
@@ -1768,9 +1820,11 @@ sap.ui.define([
                 }];
 
                 oJSONColumnsModel.setData(remColumn);
+                this._aColumns["remarksTab"] = remColumn;
                 this.getView().setModel(oJSONColumnsModel, "VPORemarksCol");
 
                 oJSONColumnsModel2.setData(pkngInstColumn);
+                this._aColumns["packinsTab"] = pkngInstColumn;
                 this.getView().setModel(oJSONColumnsModel2, "VPOPkngInstsCol");
 
                 // var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_COMMON_SRV");
@@ -1822,7 +1876,7 @@ sap.ui.define([
                     if (sColumnType === "STRING" || sColumnType === "DATETIME") {
                         return new sap.ui.table.Column({
                             id: "VPORemarksCol"+"-"+sColumnId,
-                            label: sColumnLabel,
+                            label: new sap.m.Text({text: sColumnLabel}),
                             template: new sap.m.Text({ text: "{" + sColumnId + "}", wrapping: false, tooltip: "{" + sColumnId + "}" }), //default text
                             width: sColumnWidth + "px",
                             hAlign: "Left",
@@ -1836,7 +1890,7 @@ sap.ui.define([
                     }else if (sColumnType === "NUMBER") {
                         return new sap.ui.table.Column({
                             id: "VPORemarksCol"+"-"+sColumnId,
-                            label: sColumnLabel,
+                            label: new sap.m.Text({text: sColumnLabel}),
                             template: new sap.m.Text({ text: "{" + sColumnId + "}", wrapping: false, tooltip: "{" + sColumnId + "}" }), //default text
                             width: sColumnWidth + "px",
                             hAlign: "End",
@@ -1850,7 +1904,7 @@ sap.ui.define([
                     } else if (sColumnId === "DELETED" ) {
                         return new sap.ui.table.Column({
                             id: "VPORemarksCol"+"-"+sColumnId,
-                            label: sColumnLabel,
+                            label: new sap.m.Text({text: sColumnLabel}),
                             template: new sap.m.CheckBox({
                                 selected: "{" + sColumnId + "}",
                                 editable: false
@@ -1868,8 +1922,69 @@ sap.ui.define([
 
                 });
 
+                //date/number sorting
+                oTable.attachSort(function(oEvent) {
+                    var sPath = oEvent.getParameter("column").getSortProperty();
+                    var bDescending = false;
+                    
+                    //remove sort icon of currently sorted column
+                    oTable.getColumns().forEach(col => {
+                        if (col.getSorted()) {
+                            col.setSorted(false);
+                        }
+                    })
+
+                    oEvent.getParameter("column").setSorted(true); //sort icon initiator
+
+                    if (oEvent.getParameter("sortOrder") === "Descending") {
+                        bDescending = true;
+                        oEvent.getParameter("column").setSortOrder("Descending") //sort icon Descending
+                    }
+                    else {
+                        oEvent.getParameter("column").setSortOrder("Ascending") //sort icon Ascending
+                    }
+
+                    var oSorter = new sap.ui.model.Sorter(sPath, bDescending ); //sorter(columnData, If Ascending(false) or Descending(True))
+                    var oColumn = columnsData.filter(fItem => fItem.ColumnName === oEvent.getParameter("column").getProperty("sortProperty"));
+                    var columnType = oColumn[0].DataType;
+
+                    if (columnType === "DATETIME") {
+                        oSorter.fnCompare = function(a, b) {
+                            // parse to Date object
+                            var aDate = new Date(a);
+                            var bDate = new Date(b);
+
+                            if (bDate === null) { return -1; }
+                            if (aDate === null) { return 1; }
+                            if (aDate < bDate) { return -1; }
+                            if (aDate > bDate) { return 1; }
+
+                            return 0;
+                        };
+                    }
+                    else if (columnType === "NUMBER") {
+                        oSorter.fnCompare = function(a, b) {
+                            // parse to Date object
+                            var aNumber = +a;
+                            var bNumber = +b;
+
+                            if (bNumber === null) { return -1; }
+                            if (aNumber === null) { return 1; }
+                            if (aNumber < bNumber) { return -1; }
+                            if (aNumber > bNumber) { return 1; }
+
+                            return 0;
+                        };
+                    }
+                    
+                    oTable.getBinding('rows').sort(oSorter);
+                    // prevent internal sorting by table
+                    oEvent.preventDefault();
+                });
+
                 //bind the data to the table
                 oTable.bindRows("/rows");
+                TableFilter.updateColumnMenu("RemarksTbl", this);
             },
             pkngInstSetTblColData(){
                 var oColumnsModel;
@@ -1907,7 +2022,7 @@ sap.ui.define([
                     if (sColumnType === "STRING" || sColumnType === "DATETIME") {
                         return new sap.ui.table.Column({
                             id: "VPOPkngInstsCol"+"-"+sColumnId,
-                            label: sColumnLabel,
+                            label: new sap.m.Text({text: sColumnLabel}),
                             template: new sap.m.Text({ text: "{" + sColumnId + "}", wrapping: false, tooltip: "{" + sColumnId + "}" }), //default text
                             width: sColumnWidth + "px",
                             hAlign: "Left",
@@ -1921,7 +2036,7 @@ sap.ui.define([
                     }else if (sColumnType === "NUMBER") {
                         return new sap.ui.table.Column({
                             id: "VPOPkngInstsCol"+"-"+sColumnId,
-                            label: sColumnLabel,
+                            label: new sap.m.Text({text: sColumnLabel}),
                             template: new sap.m.Text({ text: "{" + sColumnId + "}", wrapping: false, tooltip: "{" + sColumnId + "}" }), //default text
                             width: sColumnWidth + "px",
                             hAlign: "End",
@@ -1935,7 +2050,7 @@ sap.ui.define([
                     } else if (sColumnId === "DELETED" ) {
                         return new sap.ui.table.Column({
                             id: "VPOPkngInstsCol"+"-"+sColumnId,
-                            label: sColumnLabel,
+                            label: new sap.m.Text({text: sColumnLabel}),
                             template: new sap.m.CheckBox({
                                 selected: "{" + sColumnId + "}",
                                 editable: false
@@ -1953,8 +2068,69 @@ sap.ui.define([
 
                 });
 
+                //date/number sorting
+                oTable.attachSort(function(oEvent) {
+                    var sPath = oEvent.getParameter("column").getSortProperty();
+                    var bDescending = false;
+                    
+                    //remove sort icon of currently sorted column
+                    oTable.getColumns().forEach(col => {
+                        if (col.getSorted()) {
+                            col.setSorted(false);
+                        }
+                    })
+
+                    oEvent.getParameter("column").setSorted(true); //sort icon initiator
+
+                    if (oEvent.getParameter("sortOrder") === "Descending") {
+                        bDescending = true;
+                        oEvent.getParameter("column").setSortOrder("Descending") //sort icon Descending
+                    }
+                    else {
+                        oEvent.getParameter("column").setSortOrder("Ascending") //sort icon Ascending
+                    }
+
+                    var oSorter = new sap.ui.model.Sorter(sPath, bDescending ); //sorter(columnData, If Ascending(false) or Descending(True))
+                    var oColumn = columnsData.filter(fItem => fItem.ColumnName === oEvent.getParameter("column").getProperty("sortProperty"));
+                    var columnType = oColumn[0].DataType;
+
+                    if (columnType === "DATETIME") {
+                        oSorter.fnCompare = function(a, b) {
+                            // parse to Date object
+                            var aDate = new Date(a);
+                            var bDate = new Date(b);
+
+                            if (bDate === null) { return -1; }
+                            if (aDate === null) { return 1; }
+                            if (aDate < bDate) { return -1; }
+                            if (aDate > bDate) { return 1; }
+
+                            return 0;
+                        };
+                    }
+                    else if (columnType === "NUMBER") {
+                        oSorter.fnCompare = function(a, b) {
+                            // parse to Date object
+                            var aNumber = +a;
+                            var bNumber = +b;
+
+                            if (bNumber === null) { return -1; }
+                            if (aNumber === null) { return 1; }
+                            if (aNumber < bNumber) { return -1; }
+                            if (aNumber > bNumber) { return 1; }
+
+                            return 0;
+                        };
+                    }
+                    
+                    oTable.getBinding('rows').sort(oSorter);
+                    // prevent internal sorting by table
+                    oEvent.preventDefault();
+                });
+
                 //bind the data to the table
                 oTable.bindRows("/rows");
+                TableFilter.updateColumnMenu("PackingInstTbl", this);
             },
             onNewHdrTxt: async function(type){
                 var me = this;
@@ -2072,10 +2248,7 @@ sap.ui.define([
                         oTable = this.byId("RemarksTbl");
                         oSelectedIndices = oTable.getBinding("rows").aIndices;
                         if(oSelectedIndices.length > 0){
-                            _promiseResult = new Promise((resolve, reject)=>{
-                                resolve(this.remarksTblLoad());
-                            })
-                            await _promiseResult;
+                            await this.remarksTblLoad();
 
                             this.byId("vpoNewHdrTxtRemarks").setVisible(false);
                             this.byId("vpoEditHdrTxtRemarks").setVisible(false);
@@ -2099,11 +2272,8 @@ sap.ui.define([
                         oTable = this.byId("PackingInstTbl");
                         oSelectedIndices = oTable.getBinding("rows").aIndices;
                         if(oSelectedIndices.length > 0){
-                            _promiseResult = new Promise((resolve, reject)=>{
-                                resolve(this.pkngInstTblLoad());
-                            })
-                            await _promiseResult;
-        
+                            await this.pkngInstTblLoad();
+
                             this.byId("vpoNewHdrTxtPkgInst").setVisible(false);
                             this.byId("vpoEditHdrTxtPkgInst").setVisible(false);
                             this.byId("vpoDeleteHdrTxtPkgInst").setVisible(false);
@@ -2144,7 +2314,7 @@ sap.ui.define([
                 var message;
 
                 if(type === 'Remarks'){
-                    this.showLoadingDialog(_captionList.LOADING)
+                    Common.openLoadingDialog(that);
                     oTable = this.byId("RemarksTbl");
                     oSelectedIndices = oTable.getBinding("rows").aIndices;
 
@@ -2189,7 +2359,7 @@ sap.ui.define([
                                     }
                                 },error: function(error){
                                     MessageBox.error(_captionList.INFO_ERROR);
-                                    me.closeLoadingDialog();
+                                    Common.closeLoadingDialog(that);
                                     //error message
                                     resolve()
                                 }
@@ -2198,28 +2368,25 @@ sap.ui.define([
                         await _promiseResult;
                     }
 
-                    _promiseResult = new Promise((resolve, reject)=>{
-                        me.byId("vpoNewHdrTxtRemarks").setVisible(true);
-                        me.byId("vpoEditHdrTxtRemarks").setVisible(true);
-                        me.byId("vpoDeleteHdrTxtRemarks").setVisible(true);
-                        me.byId("vpoSaveHdrTxtRemarks").setVisible(false);
-                        me.byId("vpoCancelHdrTxtRemarks").setVisible(false);
+                    this.byId("vpoNewHdrTxtRemarks").setVisible(true);
+                    this.byId("vpoEditHdrTxtRemarks").setVisible(true);
+                    this.byId("vpoDeleteHdrTxtRemarks").setVisible(true);
+                    this.byId("vpoSaveHdrTxtRemarks").setVisible(false);
+                    this.byId("vpoCancelHdrTxtRemarks").setVisible(false);
 
-                        me.enableOtherTabs("idIconTabBarInlineMode");
-                        me.enableOtherTabs("vpoDetailTab");
+                    this.enableOtherTabs("idIconTabBarInlineMode");
+                    this.enableOtherTabs("vpoDetailTab");
 
-                        me.byId("vpoNewHdrTxtPkgInst").setEnabled(true);
-                        me.byId("vpoEditHdrTxtPkgInst").setEnabled(true);
-                        me.byId("vpoDeleteHdrTxtPkgInst").setEnabled(true);
-                        
-                        resolve(me.loadAllData())
-                    });
-                    await _promiseResult;
+                    this.byId("vpoNewHdrTxtPkgInst").setEnabled(true);
+                    this.byId("vpoEditHdrTxtPkgInst").setEnabled(true);
+                    this.byId("vpoDeleteHdrTxtPkgInst").setEnabled(true);
                     
-                    this.closeLoadingDialog();
+                    await this.loadAllData();
+                    
+                    Common.closeLoadingDialog(that);
                 }
                 if(type === 'PkgInst'){
-                    this.showLoadingDialog(_captionList.LOADING)
+                    Common.openLoadingDialog(that);
                     oTable = this.byId("PackingInstTbl");
                     oSelectedIndices = oTable.getBinding("rows").aIndices;
 
@@ -2263,7 +2430,7 @@ sap.ui.define([
                                     }
                                 },error: function(error){
                                     MessageBox.error(_captionList.INFO_ERROR);
-                                    me.closeLoadingDialog();
+                                    Common.closeLoadingDialog(that);
                                     //error message
                                     resolve()
                                 }
@@ -2272,25 +2439,22 @@ sap.ui.define([
                         await _promiseResult;
                     }
 
-                    _promiseResult = new Promise((resolve, reject)=>{
-                        me.byId("vpoNewHdrTxtPkgInst").setVisible(true);
-                        me.byId("vpoEditHdrTxtPkgInst").setVisible(true);
-                        me.byId("vpoDeleteHdrTxtPkgInst").setVisible(true);
-                        me.byId("vpoSaveHdrTxtPkgInst").setVisible(false);
-                        me.byId("vpoCancelHdrTxtPkgInst").setVisible(false);
+                    this.byId("vpoNewHdrTxtPkgInst").setVisible(true);
+                    this.byId("vpoEditHdrTxtPkgInst").setVisible(true);
+                    this.byId("vpoDeleteHdrTxtPkgInst").setVisible(true);
+                    this.byId("vpoSaveHdrTxtPkgInst").setVisible(false);
+                    this.byId("vpoCancelHdrTxtPkgInst").setVisible(false);
 
-                        me.enableOtherTabs("idIconTabBarInlineMode");
-                        me.enableOtherTabs("vpoDetailTab");
+                    this.enableOtherTabs("idIconTabBarInlineMode");
+                    this.enableOtherTabs("vpoDetailTab");
 
-                        me.byId("vpoNewHdrTxtRemarks").setEnabled(true);
-                        me.byId("vpoEditHdrTxtRemarks").setEnabled(true);
-                        me.byId("vpoDeleteHdrTxtRemarks").setEnabled(true);
-                        
-                        resolve(me.loadAllData());
-                    });
-                    await _promiseResult;
+                    this.byId("vpoNewHdrTxtRemarks").setEnabled(true);
+                    this.byId("vpoEditHdrTxtRemarks").setEnabled(true);
+                    this.byId("vpoDeleteHdrTxtRemarks").setEnabled(true);
+                    
+                    await this.loadAllData();
 
-                    this.closeLoadingDialog();
+                    Common.closeLoadingDialog(that);
                 }
             },
             onDeleteEditHdrTxt: async function(type){
@@ -2369,7 +2533,7 @@ sap.ui.define([
                                     TextLine: ""
                                 })
                             }
-                            this.showLoadingDialog(_captionList.LOADING);
+                            Common.openLoadingDialog(that);
                             oParam = oParamInitParam;
                             oParam['N_ChangePOHdrTextParam'] = oParamDataPOHdr;
                             oParam['N_ChangePOReturn'] = [];
@@ -2387,7 +2551,7 @@ sap.ui.define([
                                         }
                                     },error: function(error){
                                         MessageBox.error(_captionList.INFO_ERROR);
-                                        me.closeLoadingDialog();
+                                        Common.closeLoadingDialog(that);
                                         //error message
                                         resolve()
                                     }
@@ -2395,11 +2559,8 @@ sap.ui.define([
                             });
                             await _promiseResult;
                             
-                            _promiseResult = new Promise((resolve, reject)=>{
-                                resolve(me.loadAllData())
-                            });
-                            await _promiseResult;
-                            this.closeLoadingDialog();
+                            await this.loadAllData();
+                            Common.closeLoadingDialog(that);
                         }else{
                             MessageBox.error(this.getView().getModel("captionMsg").getData()["INFO_NO_DATA_DELETE"]);
                         }
@@ -2507,7 +2668,7 @@ sap.ui.define([
                                 })
                             }
 
-                            this.showLoadingDialog(_captionList.LOADING);
+                            Common.openLoadingDialog(that);
                             oParam = oParamInitParam;
                             oParam['N_ChangePOHdrTextParam'] = oParamDataPOHdr;
                             oParam['N_ChangePOReturn'] = [];
@@ -2525,7 +2686,7 @@ sap.ui.define([
                                         }
                                     },error: function(error){
                                         MessageBox.error(_captionList.INFO_ERROR);
-                                        me.closeLoadingDialog();
+                                        Common.closeLoadingDialog(that);
                                         //error message
                                         resolve()
                                     }
@@ -2533,11 +2694,9 @@ sap.ui.define([
                             });
                             await _promiseResult;
                             
-                            _promiseResult = new Promise((resolve, reject)=>{
-                                resolve(me.loadAllData())
-                            });
-                            await _promiseResult;
-                            this.closeLoadingDialog();
+                            await this.loadAllData();
+
+                            Common.closeLoadingDialog(that);
                         }else{
                             MessageBox.error(this.getView().getModel("captionMsg").getData()["INFO_NO_DATA_DELETE"]);
                         }
@@ -2638,10 +2797,7 @@ sap.ui.define([
                     this.byId("vpoEditHdrTxtRemarks").setEnabled(true);
                     this.byId("vpoDeleteHdrTxtRemarks").setEnabled(true);
                 }
-                _promiseResult = new Promise((resolve, reject)=>{
-                    resolve(this.loadAllData());
-                });
-                await _promiseResult;
+                await this.loadAllData();
             },
 
             onLoadFabSpecsData: async function(){
@@ -2781,10 +2937,13 @@ sap.ui.define([
                 var otherReq2 = this.byId("f1OtherReq2").getValue();
                 var colFastCrWet = this.byId("f1ColFastCrWet").getValue();
 
-                var shipToPlant = this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
-                var incoTerms = this.byId("f1Incoterms").getValue().split('-')[0].trim();
-                var destination = this.byId("f1Destination").getValue();
-                var shipMode = this.byId("f1ShipMode").getValue().split('-')[0].trim();
+                var topHeaderData = this.getView().getModel("topHeaderData").getData();
+
+                var shipToPlant = topHeaderData.SHIPTOPLANT;//this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
+                var incoTerms = topHeaderData.INCOTERMS;//this.byId("f1Incoterms").getValue().split('-')[0].trim();
+                var destination = topHeaderData.DEST;//this.byId("f1Destination").getValue();
+                var shipMode = topHeaderData.SHIPMODE;//this.byId("f1ShipMode").getValue().split('-')[0].trim();
+                
                 var message = "";
 
                 oSelectedIndices.forEach(item => {
@@ -2792,7 +2951,7 @@ sap.ui.define([
                 })
                 oSelectedIndices = oTmpSelectedIndices;
                 oSelectedIndices.forEach((item, index) => {
-                    this.showLoadingDialog(_captionList.LOADING)
+                    Common.openLoadingDialog(that);
                     if(aData.at(item).ITEM === "00010"){
                         oParamInitParam = {
                             IPoNumber: me._pono,
@@ -2879,7 +3038,7 @@ sap.ui.define([
 
                 this.enableOtherTabs("idIconTabBarInlineMode");
                 this.enableOtherTabs("vpoDetailTab");
-                this.closeLoadingDialog();
+                Common.closeLoadingDialog(that);
             },
 
             onLoadHeaderConditions: async function(CONDREC){
@@ -2941,10 +3100,10 @@ sap.ui.define([
 
             onRefreshDownloadHist: async function(){
                 var poNo = this._pono;
-                this.showLoadingDialog(_captionList.LOADING)
+                Common.openLoadingDialog(that);
                 await this.onLoadHeaderDownloadHist(poNo)
                 await this.setTableColumnsData("VPOHDRDOWNLOADHIST");
-                this.closeLoadingDialog();
+                Common.closeLoadingDialog(that);
             },
 
             validatePOChange: async function(){
@@ -3038,10 +3197,11 @@ sap.ui.define([
                 })
                 await _promiseResult;
             },
-            updateZERPPOUnlock: async function(pono){
+            updateZERPPOUnlock: async function(){
                 var me = this;
+                var poNo = this._pono;
                 var oModel = this.getOwnerComponent().getModel();
-                var oEntitySet = "/VPOZPOUnlockSet(EBELN='7300001313')"
+                var oEntitySet = "/VPOZPOUnlockSet(EBELN='"+ poNo +"')"
 
                 _promiseResult = new Promise((resolve, reject)=>{
                     oModel.read(oEntitySet, {
@@ -3063,16 +3223,19 @@ sap.ui.define([
                 var me = this;
                 var oView = this.getView();
                 var edditableFields = [];
-                var oJSONEdit = new sap.ui.model.json.JSONModel();
+                var oJSONEdit = new JSONModel();
+                var oJSONMandatory = new JSONModel();
                 var oDataEDitModel = this.getView().getModel("topHeaderDataEdit"); 
+                var oDataMandatoryModel = this.getView().getModel("topHeaderDataMandatory"); 
                 var oDataEdit = oDataEDitModel.getProperty('/');
+                var oDataMandatory = oDataMandatoryModel.getProperty('/');
                 var bProceed = true
                 var isValid = true
 
                 var count = me.getView().getModel("VPODtlsVPODet").getProperty("/results").length;
                 var itemCount = 0;
                 var isValidObj = [];
-
+                
                 this.getView().getModel("VPODtlsVPODet").getProperty("/results").forEach(item => {
 
                     if(item.DELETED === true || item.CLOSED === true){
@@ -3129,13 +3292,20 @@ sap.ui.define([
 
                     if(me._validPOChange !== 1){
                         oDataEdit.SHIPTOPLANT = true;//ShipToPlant
+                        oDataMandatory.SHIPTOPLANT = true;//ShipToPlant
                     }else{
                         oDataEdit.SHIPTOPLANT = true;//ShipToPlant
                         oDataEdit.PAYMNTTERMS = true;//Payment Terms
                         oDataEdit.INCOTERMS = true;//IncoTerms
                         oDataEdit.DEST = true;//Destination
+
+                        oDataMandatory.SHIPTOPLANT = true;//ShipToPlant
+                        oDataMandatory.PAYMNTTERMS = true;//Payment Terms
+                        oDataMandatory.INCOTERMS = true;//IncoTerms
+                        oDataMandatory.DEST = true;//Destination
                     }
                     oJSONEdit.setData(oDataEdit);
+                    oJSONMandatory.setData(oDataMandatory);
                 
                     this.byId("vpoBtnEditHeader").setVisible(false);
                     this.byId("vpoBtnRefreshtHeader").setVisible(false);
@@ -3146,25 +3316,146 @@ sap.ui.define([
                     this.disableOtherTabs("vpoDetailTab");
                     this.byId("vpoHdrMenuBtn").setEnabled(false);
 
-
                     oView.setModel(oJSONEdit, "topHeaderDataEdit");
+                    oView.setModel(oJSONMandatory, "topHeaderDataMandatory");
+                    
+                    this.setReqField(true);
                 }
             },
+
+            setReqField: function(isEdit){
+                var oView = this.getView();
+                var formView = this.getView().byId("POHeaderDetailForm1"); //Form View
+                var formContainers = formView.getFormContainers(); // Form Container
+                var formElements = ""; //Form Elements
+                var formFields = ""; // Form Field
+                var formElementsIsVisible = false; //is Form Element Visible Boolean
+                var fieldMandatory = ""; // Field Mandatory variable
+                var fieldIsMandatory = false; // Is Field Mandatory Boolean
+                var oMandatoryModel = oView.getModel("topHeaderDataMandatory").getProperty("/");
+                var label = "";
+
+                //Form Validations
+                //Iterate Form Containers
+                for (var index in formContainers) {
+                    formElements = formContainers[index].getFormElements(); //get Form Elements
+
+                    //iterate Form Elements
+                    for (var elementIndex in formElements) {
+                        formElementsIsVisible = formElements[elementIndex].getProperty("visible"); //get the property Visible of Element
+                        if (formElementsIsVisible) {
+                            formFields = formElements[elementIndex].getFields(); //get FIelds in Form Element
+
+                            //Iterate Fields
+                            for (var formIndex in formFields) {
+                                fieldMandatory = formFields[formIndex].getBindingInfo("value") === undefined ? "" : formFields[formIndex].getBindingInfo("value").mandatory;
+                                fieldIsMandatory = oMandatoryModel[fieldMandatory] === undefined ? false : oMandatoryModel[fieldMandatory];
+                                if (fieldIsMandatory) {
+                                    if(isEdit){
+                                        label = formElements[elementIndex].getLabel().replace("*", "");
+                                        formElements[elementIndex].setLabel("*" + label);
+                                        formElements[elementIndex]._oLabel.addStyleClass("requiredField");
+                                    }else{
+                                        label = formElements[elementIndex].getLabel().replace("*", "");
+                                        formElements[elementIndex].setLabel(label);
+                                        formElements[elementIndex]._oLabel.removeStyleClass("requiredField");
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                }
+
+            },
+
+            formatValueHelp: function(sValue, sPath, sKey, sText, sFormat) {
+                if(this.getView().getModel(sPath) !== undefined){
+                    if(this.getView().getModel(sPath).getData().length > 0){
+                        var oValue = this.getView().getModel(sPath).getData().filter(v => v[sKey] === sValue);
+                        if (oValue && oValue.length > 0) {
+                            if (sFormat === "Value") {
+                                return oValue[0][sText];
+                            }
+                            else if (sFormat === "ValueKey") {
+                                return oValue[0][sText] + " (" + sValue + ")";
+                            }
+                            else if (sFormat === "KeyValue") {
+                                return sValue + " (" + oValue[0][sText] + ")";
+                            }
+                            else {
+                                return sValue;
+                            }
+                        }
+                        else return sValue;
+                    }else return sValue;
+                }
+                
+            },
+
+            handleFormValueHelp: function (oEvent) {
+                TableValueHelp.handleFormValueHelp(oEvent, this);
+            },
+
             onHeaderInputChange: async function(oEvent){
-                if(oEvent.getParameters().value === oEvent.getSource().getBindingInfo("value").binding.oValue){
-                    this._headerIsEdited = false;
+                // if(oEvent.getParameters().value === oEvent.getSource().getBindingInfo("value").binding.oValue){
+                //     this._headerIsEdited = false;
+                // }else{
+                //     this._headerIsEdited = true;
+                // }
+            },
+            onInputLiveChangeSuggestion:async function(oEvent){
+                var oSource = oEvent.getSource();
+                var isInvalid = !oSource.getSelectedKey() && oSource.getValue().trim();
+                var oMandatoryModel = this.getView().getModel("topHeaderDataMandatory").getProperty("/");
+
+                oSource.setValueState(isInvalid ? "Error" : "None");
+                oSource.setValueStateText("Invalid Entry");
+                if(oSource.getSuggestionItems().length > 0){
+                    oSource.getSuggestionItems().forEach(item => {
+                        if (item.getProperty("key") === oSource.getSelectedKey() || item.getProperty("key") === oSource.getValue().trim()) {
+                            isInvalid = false;
+                            oSource.setValueState(isInvalid ? "Error" : "None");
+                        }
+                    })
                 }else{
-                    this._headerIsEdited = true;
+                    isInvalid = true;
+                    oSource.setValueState(isInvalid ? "Error" : "None");
+                    oSource.setValueStateText("Invalid Entry");
+                }
+    
+                var fieldIsMandatory = oMandatoryModel[oEvent.getSource().getBindingInfo("value").mandatory] === undefined ? false : oMandatoryModel[oEvent.getSource().getBindingInfo("value").mandatory];
+                if (fieldIsMandatory) {
+                    if (oEvent.getParameters().value === "") {
+                        isInvalid = true;
+                        oSource.setValueState(isInvalid ? "Error" : "None");
+                        oEvent.getSource().setValueStateText("Required Field");
+                    }
+                }
+                if (isInvalid) {
+                    this._validationErrors.push(oEvent.getSource().getId());
+                }else {
+                    var sModel = oSource.getBindingInfo("value").parts[0].model;
+                    var sPath = oSource.getBindingInfo("value").parts[0].path;
+                    this.getView().getModel(sModel).setProperty(sPath, oSource.getSelectedKey());
+    
+                    this._validationErrors.forEach((item, index) => {
+                        if (item === oEvent.getSource().getId()) {
+                            this._validationErrors.splice(index, 1)
+                        }
+                    })
                 }
             },
+
             onSaveVPOHeader: async function(){
                 var me = this;
-                this.showLoadingDialog(_captionList.LOADING)
                 var oView = this.getView();
                 var edditableFields = [];
                 var oJSONEdit = new sap.ui.model.json.JSONModel();
                 var oDataEDitModel = this.getView().getModel("topHeaderDataEdit"); 
                 var oDataEdit = oDataEDitModel.getProperty('/');
+
+                var topHeaderData = this.getView().getModel("topHeaderData").getData();
 
                 var oParamInitParam = {}
                 var oParamDataPO = [];
@@ -3179,160 +3470,100 @@ sap.ui.define([
                 var oSelectedIndices = oTable.getBinding("rows").aIndices;
                 var aData = oTable.getModel().getData().rows;
 
-                var shipToPlant = this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
-                var incoTerms = this.byId("f1Incoterms").getValue().split('-')[0].trim();
-                var destination = this.byId("f1Destination").getValue();
-                var shipMode = this.byId("f1ShipMode").getValue().split('-')[0].trim();
-                var validPOItem
+                var shipToPlant = topHeaderData.SHIPTOPLANT;//this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
+                var incoTerms = topHeaderData.INCOTERMS;//this.byId("f1Incoterms").getValue().split('-')[0].trim();
+                var destination = topHeaderData.DEST;//this.byId("f1Destination").getValue();
+                var shipMode = topHeaderData.SHIPMODE;//this.byId("f1ShipMode").getValue().split('-')[0].trim();
+                var validPOItem;
 
-                oSelectedIndices.forEach(item => {
-                    oTmpSelectedIndices.push(oTable.getBinding("rows").aIndices[item])
-                })
-                oSelectedIndices = oTmpSelectedIndices;
+                var boolProceed = true;
 
-                oSelectedIndices.forEach((item, index) => {
-                    if (aData.at(item).DELETED === false) {
-                        validPOItem = item;
-                    }
-                });
-                oParamInitParam = {
-                    IPoNumber: me._pono,
-                    IDoDownload: "N",
-                    IChangeonlyHdrplants: "N",
-                }
-                oParamDataPO.push({
-                    Banfn: aData.at(validPOItem).PRNO, //PRNO
-                    Bnfpo: aData.at(validPOItem).PRITM, //PRITM
-                    Ebeln: this._pono,//pono
-                    Unsez: shipToPlant, //shipToPlant
-                    Inco1: incoTerms, // Incoterms
-                    Inco2: destination, //Destination
-                    Evers: shipMode, //ShipMode
-                    Ebelp: aData.at(validPOItem).ITEM,//poitem
-                    Txz01: aData.at(validPOItem).SHORTTEXT,//shorttext
-                    Menge: aData.at(validPOItem).POQTY,//QTY
-                    Meins: aData.at(validPOItem).UOM,//UOM
-                    Netpr: aData.at(validPOItem).NETPRICE,//net price
-                    Peinh: aData.at(validPOItem).PER,//PER
-                    Bprme: aData.at(validPOItem).ORDERPRICEUOM, //Order Price Unit
-                    Repos: aData.at(validPOItem).INVRCPTIND, //IR Indicator
-                    Webre: aData.at(validPOItem).GRBASEDIVIND, //GR Based Ind
-                    Eindt: sapDateFormat.format(new Date(aData.at(validPOItem).DELDT)) + "T00:00:00", //DlvDt
-                    Uebtk: aData.at(validPOItem).UNLIMITED,//Unlimited
-                    Uebto: aData.at(validPOItem).OVERDELTOL,//OverDel Tol.
-                    Untto: aData.at(validPOItem).UNDERDELTOL,//UnderDel Tol.
-                    Zzmakt: aData.at(validPOItem).POADDTLDESC, //PO Addtl Desc
-                    Elikz: aData.at(validPOItem).CLOSED, //Closed
-                    // Delete_Rec: aData.at(item).DELETED//Delete
-                    
-                });
-                oParamDataPOClose.push({
-                    Banfn: aData.at(validPOItem).PRNO, //PRNO
-                    Bnfpo: aData.at(validPOItem).PRITM, //PRITM
-                    Ebakz: "" 
-                })
-                if (oParamDataPO.length > 0) {
-                    oParam = oParamInitParam;
-                    oParam['N_ChangePOItemParam'] = oParamDataPO;
-                    oParam['N_ChangePOClosePRParam'] = oParamDataPOClose;
-                    oParam['N_ChangePOReturn'] = [];
-                    _promiseResult = new Promise((resolve, reject)=>{
-                        oModel.create("/ChangePOSet", oParam, {
-                            method: "POST",
-                            success: function(oData, oResponse){
-                                if(oData.N_ChangePOReturn.results.length > 0){
-                                    message = oData.N_ChangePOReturn.results[0].Msgv1;
-                                    if(me._ediVendor === "L" && me._zpoUnlock === 1){
-                                        me._updUnlock = 1;
-                                    }
-                                    MessageBox.information(message);
-                                    resolve()
-                                }else{
-                                    MessageBox.information(_captionList.INFO_NO_DTLS_TO_SAVE);
-                                    resolve()
-                                }
-                            },error: function(error){
-                                //error message
-                                MessageBox.error(error);
-                                resolve()
-                            }
-                        })
-                    });
-                    await _promiseResult;
+                this.vpoHeaderFormValidation; // form validation;
+
+                if(this._validationErrors.length > 0){
+                    MessageBox.error("Please Fill Required Fields!");
+                    boolProceed = false
                 }
 
-
-                for (var oDatas in oDataEdit) {
-                    //get only editable fields
-                    edditableFields[oDatas] = false;
-                }
-                oJSONEdit.setData(edditableFields);
-                this.byId("vpoBtnEditHeader").setVisible(true);
-                this.byId("vpoBtnRefreshtHeader").setVisible(true);
-                this.byId("vpoBtnSaveHeader").setVisible(false);
-                this.byId("vpoBtnCancelHeader").setVisible(false);
-
-                this.enableOtherTabs("idIconTabBarInlineMode");
-                this.enableOtherTabs("vpoDetailTab");
-                this.byId("vpoHdrMenuBtn").setEnabled(true);
-
-                oView.setModel(oJSONEdit, "topHeaderDataEdit");
-                this.loadAllData()
-                if(this._ediVendor === "L" && this._updUnlock === 1){
-                    //Update ZPOUnlock
-                }
-
-                this.getView().getModel("ui").setProperty("/dataMode", 'READ');
-                this.closeLoadingDialog();
-            },
-            onCancelVPOHeader: async function(){
-                var me = this;
-                var oView = this.getView();
-                var edditableFields = [];
-                var oJSONEdit = new sap.ui.model.json.JSONModel();
-                var actionSel;
-                
-                var oDataEDitModel = this.getView().getModel("topHeaderDataEdit"); 
-                var oDataEdit = oDataEDitModel.getProperty('/');
-                if (true){//this._headerIsEdited) {
-                    var bCompact = !!this.getView().$().closest(".sapUiSizeCompact").length;
-                    _promiseResult = new Promise((resolve, reject) => {
-                        MessageBox.information(
-                            this.getView().getModel("captionMsg").getData()["INFO_DISCARD_CHANGES"],
-                            {
-                                actions: [this.getView().getModel("captionMsg").getData()["YES"], this.getView().getModel("captionMsg").getData()["CANCEL"]],
-                                styleClass: bCompact ? "sapUiSizeCompact" : "",
-                                onClose: function(sAction) {
-                                    actionSel = sAction;
-                                    resolve(actionSel);
-                                }
-                            }
-                        );
+                if(boolProceed){
+                    Common.openLoadingDialog(that);
+                    oSelectedIndices.forEach(item => {
+                        oTmpSelectedIndices.push(oTable.getBinding("rows").aIndices[item])
                     })
-                    await _promiseResult;
+                    oSelectedIndices = oTmpSelectedIndices;
 
-                    if(actionSel === "Yes"){
-                        for (var oDatas in oDataEdit) {
-                            //get only editable fields
-                            edditableFields[oDatas] = false;
+                    oSelectedIndices.forEach((item, index) => {
+                        if (aData.at(item).DELETED === false) {
+                            validPOItem = item;
                         }
-                        oJSONEdit.setData(edditableFields);
-                        this.byId("vpoBtnEditHeader").setVisible(true);
-                        this.byId("vpoBtnRefreshtHeader").setVisible(true);
-                        this.byId("vpoBtnSaveHeader").setVisible(false);
-                        this.byId("vpoBtnCancelHeader").setVisible(false);
-
-                        this.enableOtherTabs("idIconTabBarInlineMode");
-                        this.enableOtherTabs("vpoDetailTab");
-                        this.byId("vpoHdrMenuBtn").setEnabled(true);
-                        this.loadAllData();
-                        oView.setModel(oJSONEdit, "topHeaderDataEdit");
-
-                    }else if(actionSel === "Cancel"){
-                        MessageBox.Action.CLOSE
+                    });
+                    oParamInitParam = {
+                        IPoNumber: me._pono,
+                        IDoDownload: "N",
+                        IChangeonlyHdrplants: "N",
+                    }
+                    oParamDataPO.push({
+                        Banfn: aData.at(validPOItem).PRNO, //PRNO
+                        Bnfpo: aData.at(validPOItem).PRITM, //PRITM
+                        Ebeln: this._pono,//pono
+                        Unsez: shipToPlant, //shipToPlant
+                        Inco1: incoTerms, // Incoterms
+                        Inco2: destination, //Destination
+                        Evers: shipMode, //ShipMode
+                        Ebelp: aData.at(validPOItem).ITEM,//poitem
+                        Txz01: aData.at(validPOItem).SHORTTEXT,//shorttext
+                        Menge: aData.at(validPOItem).POQTY,//QTY
+                        Meins: aData.at(validPOItem).UOM,//UOM
+                        Netpr: aData.at(validPOItem).NETPRICE,//net price
+                        Peinh: aData.at(validPOItem).PER,//PER
+                        Bprme: aData.at(validPOItem).ORDERPRICEUOM, //Order Price Unit
+                        Repos: aData.at(validPOItem).INVRCPTIND, //IR Indicator
+                        Webre: aData.at(validPOItem).GRBASEDIVIND, //GR Based Ind
+                        Eindt: sapDateFormat.format(new Date(aData.at(validPOItem).DELDT)) + "T00:00:00", //DlvDt
+                        Uebtk: aData.at(validPOItem).UNLIMITED,//Unlimited
+                        Uebto: aData.at(validPOItem).OVERDELTOL,//OverDel Tol.
+                        Untto: aData.at(validPOItem).UNDERDELTOL,//UnderDel Tol.
+                        Zzmakt: aData.at(validPOItem).POADDTLDESC, //PO Addtl Desc
+                        Elikz: aData.at(validPOItem).CLOSED, //Closed
+                        // Delete_Rec: aData.at(item).DELETED//Delete
+                        
+                    });
+                    oParamDataPOClose.push({
+                        Banfn: aData.at(validPOItem).PRNO, //PRNO
+                        Bnfpo: aData.at(validPOItem).PRITM, //PRITM
+                        Ebakz: "" 
+                    })
+                    if (oParamDataPO.length > 0) {
+                        oParam = oParamInitParam;
+                        oParam['N_ChangePOItemParam'] = oParamDataPO;
+                        oParam['N_ChangePOClosePRParam'] = oParamDataPOClose;
+                        oParam['N_ChangePOReturn'] = [];
+                        _promiseResult = new Promise((resolve, reject)=>{
+                            oModel.create("/ChangePOSet", oParam, {
+                                method: "POST",
+                                success: function(oData, oResponse){
+                                    if(oData.N_ChangePOReturn.results.length > 0){
+                                        message = oData.N_ChangePOReturn.results[0].Msgv1;
+                                        if(me._ediVendor === "L" && me._zpoUnlock === 1){
+                                            me._updUnlock = 1;
+                                        }
+                                        MessageBox.information(message);
+                                        resolve()
+                                    }else{
+                                        MessageBox.information(_captionList.INFO_NO_DTLS_TO_SAVE);
+                                        resolve()
+                                    }
+                                },error: function(error){
+                                    //error message
+                                    MessageBox.error(error);
+                                    resolve()
+                                }
+                            })
+                        });
+                        await _promiseResult;
                     }
 
-                }else{
+
                     for (var oDatas in oDataEdit) {
                         //get only editable fields
                         edditableFields[oDatas] = false;
@@ -3346,10 +3577,124 @@ sap.ui.define([
                     this.enableOtherTabs("idIconTabBarInlineMode");
                     this.enableOtherTabs("vpoDetailTab");
                     this.byId("vpoHdrMenuBtn").setEnabled(true);
-                    this.loadAllData();
-                    oView.setModel(oJSONEdit, "topHeaderDataEdit");
-                }
 
+                    oView.setModel(oJSONEdit, "topHeaderDataEdit");
+                    this.setReqField(false);
+                    await this.loadAllData()
+                    if(this._ediVendor === "L" && this._updUnlock === 1){
+                        //Update ZPOUnlock
+                    }
+
+                    this.getView().getModel("ui").setProperty("/dataMode", 'READ');
+                    
+                    Common.closeLoadingDialog(that);
+                }
+            },
+
+            vpoHeaderFormValidation: function(){
+                var me = this;
+
+                var oView = this.getView();
+                var formView = this.getView().byId("POHeaderDetailForm1"); //Form View
+                var formContainers = formView.getFormContainers(); // Form Container
+                var formElements = ""; //Form Elements
+                var formFields = ""; // Form Field
+                var formElementsIsVisible = false; //is Form Element Visible Boolean
+                var fieldIsEditable = false; // is Field Editable Boolean
+                var fieldMandatory = ""; // Field Mandatory variable
+                var fieldIsMandatory = false; // Is Field Mandatory Boolean
+                var oMandatoryModel = oView.getModel("topHeaderDataMandatory").getProperty("/");
+                //Form Validations
+                //Iterate Form Containers
+                for (var index in formContainers) {
+                    formElements = formContainers[index].getFormElements(); //get Form Elements
+
+                    //iterate Form Elements
+                    for (var elementIndex in formElements) {
+                        formElementsIsVisible = formElements[elementIndex].getProperty("visible"); //get the property Visible of Element
+                        if (formElementsIsVisible) {
+                            formFields = formElements[elementIndex].getFields(); //get FIelds in Form Element
+
+                            //Iterate Fields
+                            for (var formIndex in formFields) {
+                                fieldMandatory = formFields[formIndex].getBindingInfo("value") === undefined ? "" : formFields[formIndex].getBindingInfo("value").mandatory;
+
+                                fieldIsMandatory = oMandatoryModel[fieldMandatory] === undefined ? false : oMandatoryModel[fieldMandatory];
+
+                                if (fieldIsMandatory) {
+                                    fieldIsEditable = formFields[formIndex].getProperty("editable"); //get the property Editable of Fields
+                                    if (fieldIsEditable) {
+                                        if (formFields[formIndex].getValue() === "" || formFields[formIndex].getValue() === null || formFields[formIndex].getValue() === undefined) {
+                                            formFields[formIndex].setValueState("Error");
+                                            formFields[formIndex].setValueStateText("Required Field!");
+                                            me._validationErrors.push(formFields[formIndex].getId())
+                                        } 
+                                        // else {
+                                        // 	formFields[formIndex].setValueState("None");
+                                        // 	me._validationErrors.forEach((item, index) => {
+                                        // 		if (item === formFields[formIndex].getId()) {
+                                        // 			me._validationErrors.splice(index, 1)
+                                        // 		}
+                                        // 	})
+                                        // }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                }
+            },
+
+            onCancelVPOHeader: async function(){
+                var me = this;
+                var oView = this.getView();
+                var edditableFields = [];
+                var oJSONEdit = new JSONModel();
+                var actionSel;
+                
+                var oDataEDitModel = this.getView().getModel("topHeaderDataEdit"); 
+                var oDataEdit = oDataEDitModel.getProperty('/');
+                var bCompact = !!this.getView().$().closest(".sapUiSizeCompact").length;
+                _promiseResult = new Promise((resolve, reject) => {
+                    MessageBox.information(
+                        this.getView().getModel("captionMsg").getData()["INFO_DISCARD_CHANGES"],
+                        {
+                            actions: [this.getView().getModel("captionMsg").getData()["YES"], this.getView().getModel("captionMsg").getData()["CANCEL"]],
+                            styleClass: bCompact ? "sapUiSizeCompact" : "",
+                            onClose: function(sAction) {
+                                actionSel = sAction;
+                                resolve(actionSel);
+                            }
+                        }
+                    );
+                })
+                await _promiseResult;
+
+                if(actionSel === "Yes"){
+                    Common.openLoadingDialog(this);
+                    for (var oDatas in oDataEdit) {
+                        //get only editable fields
+                        edditableFields[oDatas] = false;
+                    }
+                    oJSONEdit.setData(edditableFields);
+
+                    this.byId("vpoBtnEditHeader").setVisible(true);
+                    this.byId("vpoBtnRefreshtHeader").setVisible(true);
+                    this.byId("vpoBtnSaveHeader").setVisible(false);
+                    this.byId("vpoBtnCancelHeader").setVisible(false);
+
+                    this.enableOtherTabs("idIconTabBarInlineMode");
+                    this.enableOtherTabs("vpoDetailTab");
+                    this.byId("vpoHdrMenuBtn").setEnabled(true);
+                    this.setReqField(false);
+                    await this.loadAllData();
+                    oView.setModel(oJSONEdit, "topHeaderDataEdit");
+                    Common.closeLoadingDialog(this);
+
+                }else if(actionSel === "Cancel"){
+                    MessageBox.Action.CLOSE
+                }
             },
 
             onChangeVendorVPOHeader: async function(){
@@ -3441,7 +3786,7 @@ sap.ui.define([
             },
             onSaveVendorVPOHeader: async function(oEvent){
                 var me = this;
-                this.showLoadingDialog(_captionList.LOADING)
+                Common.openLoadingDialog(that);
                 var poNo = this._pono
                 var oModel = this.getOwnerComponent().getModel();
                 var rfcModel = this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
@@ -3523,7 +3868,7 @@ sap.ui.define([
                                 rfcModel.create("/Get_PO_Change_VendorSet", changeVendorParam, {
                                     method: "POST",
                                     success: function(oData, oResponse) {
-                                        if(oData.iv_msgtyp === "E"){
+                                        if(oData.ifv_msgtyp === "E"){
                                             if(oData.iv_msgv1 !== "")
                                                 message = oData.iv_msgtyp + " - No PO Created. "+ oData.iv_msgv1 +". ";
                                             MessageBox.error(message);
@@ -3548,7 +3893,7 @@ sap.ui.define([
 
                     }
                 }
-                this.closeLoadingDialog();
+                Common.closeLoadingDialog(that);
             },
             onCancelVendorDialog: async function(){
                 this.changeVendorDialog.destroy(true);
@@ -3646,14 +3991,15 @@ sap.ui.define([
             onSaveChangeVPODelvDate: async function(){
                 var me = this;
                 
-                this.showLoadingDialog(_captionList.LOADING)
-                var oView = this.getView();
+                Common.openLoadingDialog(that);
 
                 var oParamInitParam = {}
-                var oParamDataPO = [];
-                var oParamDataPOClose = [];
+                // var oParamDataPO = [];
+                var oParamDataPOSched =[]
+                // var oParamDataPOClose = [];
                 var oParam = {};
-                var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
+                var oModel = this.getOwnerComponent().getModel();
+                var rfcModel = this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
                 var bProceed = true;
 
                 var message;
@@ -3663,7 +4009,17 @@ sap.ui.define([
                 var oSelectedIndices = oTable.getBinding("rows").aIndices;
                 var aData = oTable.getModel().getData().rows;
 
-                var validPOItem
+                var topHeaderData = this.getView().getModel("topHeaderData").getData();
+                
+                // var shipToPlant = topHeaderData.SHIPTOPLANT;//this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
+                // var incoTerms = topHeaderData.INCOTERMS;//this.byId("f1Incoterms").getValue().split('-')[0].trim();
+                // var destination = topHeaderData.DEST;//this.byId("f1Destination").getValue();
+                // var shipMode = topHeaderData.SHIPMODE;//this.byId("f1ShipMode").getValue().split('-')[0].trim();
+                // var validPOItem;
+
+                var poNo = this.getView().getModel("ui").getProperty("/activePONo");
+
+                var delSchedSet = [];
 
                 if(this._newDlvDate === undefined || this._newDlvDate === "" || this._newDlvDate === null){
                     MessageBox.error(_captionList.INFO_DLVDT_EMPTY)
@@ -3676,51 +4032,110 @@ sap.ui.define([
                 oSelectedIndices = oTmpSelectedIndices;
                 
                 if(bProceed){
+                    //get po Delivery Schedule Data
+                    await new Promise((resolve, reject)=>{
+                        oModel.read('/VPODelSchedSet', { 
+                            urlParameters: {
+                                "$filter": "PONO eq '" + poNo + "'"
+                            },
+                            success: function (data, response) {
+                                if (data.results.length > 0) {
+                                    data.results.forEach(item => {
+                                        item.DELDT = dateFormat.format(item.DELDT);
+                                        item.ETD = dateFormat.format(item.ETD);
+                                        item.ETDPORT = dateFormat.format(item.ETDPORT);
+                                        item.ETAFTY = dateFormat.format(item.ETAFTY);
+                                        item.EXFTY = dateFormat.format(item.EXFTY);
+                                        item.CREATEDDT = dateFormat.format(item.CREATEDDT);
+                                        item.UPDATEDDT = dateFormat.format(item.UPDATEDDT);
+                                        // item.DELETED = item.DELETED === "" ? false : true;
+                                    })
+
+                                    delSchedSet = data.results;
+                                    delSchedSet.sort((a,b) => (a.ITEM > b.ITEM) ? 1 : ((b.ITEM > a.ITEM) ? -1 : 0));
+                                }
+                                resolve();
+                            },
+                            error: function (err) {
+                                resolve();
+                            }
+                        });
+                    });
+
+
                     oSelectedIndices.forEach((item, index) => {
                         if (aData.at(item).DELETED === false) {
-                            validPOItem = item;
-
-                            oParamInitParam = {
-                                IPoNumber: me._pono,
-                                IDoDownload: "N",
-                                IChangeonlyHdrplants: "N",
+                            
+                            // var delSchedResult = delSchedSet.find(itemSched => itemSched.DELETED === false && new Date(itemSched.DELDT).toString() === new Date(aData.at(item).DELDT).toString())
+                            
+                            for(var x = 0; x < delSchedSet.length; x++){
+                                if(delSchedSet[x].DELETED === false){
+                                    if(aData.at(item).ITEM === delSchedSet[x].ITEM && new Date(delSchedSet[x].DELDT).toString() === new Date(aData.at(item).DELDT).toString()){
+                                        oParamInitParam = {
+                                            IPoNumber: poNo,
+                                            IDoDownload: "N",
+                                            IChangeonlyHdrplants: "N",
+                                        }
+                                        oParamDataPOSched.push({
+                                            PoNumber: poNo,
+                                            PoItem: delSchedSet[x].ITEM,
+                                            SchedLine: delSchedSet[x].SEQNO,
+                                            Quantity: delSchedSet[x].SCHEDQTY,
+                                            DelivDate: sapDateFormat.format(new Date(this._newDlvDate)) + "T00:00:00", //DlvDt
+                                            PreqNo: delSchedSet[x].PRNO,
+                                            PreqItem: delSchedSet[x].PRITM
+                                        })
+                                    }
+                                }
                             }
-                            oParamDataPO.push({
-                                Banfn: aData.at(validPOItem).PRNO, //PRNO
-                                Bnfpo: aData.at(validPOItem).PRITM, //PRITM
-                                Ebeln: this._pono,//pono
-                                Ebelp: aData.at(validPOItem).ITEM,//poitem
-                                Txz01: aData.at(validPOItem).SHORTTEXT,//shorttext
-                                Menge: aData.at(validPOItem).QTY,//QTY
-                                Meins: aData.at(validPOItem).UOM,//UOM
-                                Netpr: aData.at(validPOItem).NETPRICE,//net price
-                                Peinh: aData.at(validPOItem).PER,//PER
-                                Bprme: aData.at(validPOItem).ORDERPRICEUOM, //Order Price Unit
-                                Repos: aData.at(validPOItem).INVRCPTIND, //IR Indicator
-                                Webre: aData.at(validPOItem).GRBASEDIVIND, //GR Based Ind
-                                Eindt: sapDateFormat.format(new Date(this._newDlvDate)) + "T00:00:00", //DlvDt
-                                Uebtk: aData.at(validPOItem).UNLIMITED,//Unlimited
-                                Uebto: aData.at(validPOItem).OVERDELTOL,//OverDel Tol.
-                                Untto: aData.at(validPOItem).UNDERDELTOL,//UnderDel Tol.
-                                Zzmakt: aData.at(validPOItem).POADDTLDESC, //PO Addtl Desc
-                                Elikz: aData.at(validPOItem).CLOSED, //Closed
-                                // Delete_Rec: aData.at(item).DELETED//Delete
-                            });
-                            oParamDataPOClose.push({
-                                Banfn: aData.at(validPOItem).PRNO, //PRNO
-                                Bnfpo: aData.at(validPOItem).PRITM, //PRITM
-                                Ebakz: "" 
-                            });
+
+                            // console.log(delSchedResult)
+                            // validPOItem = item;
+
+                            // oParamInitParam = {
+                            //     IPoNumber: poNo,
+                            //     IDoDownload: "N",
+                            //     IChangeonlyHdrplants: "N",
+                            // }
+                            // oParamDataPO.push({
+                            //     Banfn: aData.at(validPOItem).PRNO, //PRNO
+                            //     Bnfpo: aData.at(validPOItem).PRITM, //PRITM
+                            //     Ebeln: this._pono,//pono
+                            //     Unsez: shipToPlant, //shipToPlant
+                            //     Inco1: incoTerms, // Incoterms
+                            //     Inco2: destination, //Destination
+                            //     Evers: shipMode, //ShipMode
+                            //     Ebelp: aData.at(validPOItem).ITEM,//poitem
+                            //     Txz01: aData.at(validPOItem).SHORTTEXT,//shorttext
+                            //     Menge: aData.at(validPOItem).POQTY,//POQTY
+                            //     Meins: aData.at(validPOItem).UOM,//UOM
+                            //     Netpr: aData.at(validPOItem).NETPRICE,//net price
+                            //     Peinh: aData.at(validPOItem).PER,//PER
+                            //     Bprme: aData.at(validPOItem).ORDERPRICEUOM, //Order Price Unit
+                            //     Repos: aData.at(validPOItem).INVRCPTIND, //IR Indicator
+                            //     Webre: aData.at(validPOItem).GRBASEDIVIND, //GR Based Ind
+                            //     Eindt: sapDateFormat.format(new Date(this._newDlvDate)) + "T00:00:00", //DlvDt
+                            //     Uebtk: aData.at(validPOItem).UNLIMITED,//Unlimited
+                            //     Uebto: aData.at(validPOItem).OVERDELTOL,//OverDel Tol.
+                            //     Untto: aData.at(validPOItem).UNDERDELTOL,//UnderDel Tol.
+                            //     Zzmakt: aData.at(validPOItem).POADDTLDESC, //PO Addtl Desc
+                            //     Elikz: aData.at(validPOItem).CLOSED, //Closed
+                            //     // Delete_Rec: aData.at(item).DELETED//Delete
+                            // });
+                            // oParamDataPOClose.push({
+                            //     Banfn: aData.at(validPOItem).PRNO, //PRNO
+                            //     Bnfpo: aData.at(validPOItem).PRITM, //PRITM
+                            //     Ebakz: "" 
+                            // });
                         }
                     });
 
-                    if (oParamDataPO.length > 0) {
+                    if (oParamDataPOSched.length > 0) {
                         oParam = oParamInitParam;
-                        oParam['N_ChangePOItemParam'] = oParamDataPO;
-                        oParam['N_ChangePOClosePRParam'] = oParamDataPOClose;
+                        oParam['N_ChangePOItemSchedParam'] = oParamDataPOSched;
                         oParam['N_ChangePOReturn'] = [];
                         _promiseResult = new Promise((resolve, reject)=>{
-                            oModel.create("/ChangePOSet", oParam, {
+                            rfcModel.create("/ChangePOSet", oParam, {
                                 method: "POST",
                                 success: function(oData, oResponse){
                                     if(oData.N_ChangePOReturn.results.length > 0){
@@ -3750,7 +4165,7 @@ sap.ui.define([
                 this.loadAllData()
 
                 this.getView().getModel("ui").setProperty("/dataMode", 'READ');
-                this.closeLoadingDialog();
+                Common.closeLoadingDialog(that);
             },
             onDatePickVPODelvDateChange: async function(oEvent){
                 this._newDlvDate = oEvent.getParameter("value");
@@ -3764,6 +4179,13 @@ sap.ui.define([
                 var me = this;
                 var actionSel;
                 var poNo = this._pono;
+
+                var topHeaderData = this.getView().getModel("topHeaderData").getData();
+
+                var shipToPlant = topHeaderData.SHIPTOPLANT;//this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
+                var incoTerms = topHeaderData.INCOTERMS;//this.byId("f1Incoterms").getValue().split('-')[0].trim();
+                var destination = topHeaderData.DEST;//this.byId("f1Destination").getValue();
+                var shipMode = topHeaderData.SHIPMODE;//this.byId("f1ShipMode").getValue().split('-')[0].trim();
 
                 var bProceed = true
                 var isValid = true
@@ -3843,7 +4265,7 @@ sap.ui.define([
                     })
                     await _promiseResult;
                     if(actionSel === _captionList.DELETE){
-                        this.showLoadingDialog(_captionList.LOADING)
+                        Common.openLoadingDialog(that);
                         var oParamInitParam = {}
                         var oParamDataPO = [];
                         var oParamDataPOClose = [];
@@ -3917,6 +4339,10 @@ sap.ui.define([
                                         Banfn: aData.at(validPOItem).PRNO, //PRNO
                                         Bnfpo: aData.at(validPOItem).PRITM, //PRITM
                                         Ebeln: this._pono,//pono
+                                        Unsez: shipToPlant, //shipToPlant
+                                        Inco1: incoTerms, // Incoterms
+                                        Inco2: destination, //Destination
+                                        Evers: shipMode, //ShipMode
                                         Ebelp: aData.at(validPOItem).ITEM,//poitem
                                         Txz01: aData.at(validPOItem).SHORTTEXT,//shorttext
                                         Menge: aData.at(validPOItem).POQTY,//QTY
@@ -3932,7 +4358,7 @@ sap.ui.define([
                                         Untto: aData.at(validPOItem).UNDERDELTOL,//UnderDel Tol.
                                         Zzmakt: aData.at(validPOItem).POADDTLDESC, //PO Addtl Desc
                                         Elikz: aData.at(validPOItem).CLOSED, //Closed
-                                        DeleteRec: false//Delete
+                                        DeleteRec: true//Delete
                                         // Delete_Rec: aData.at(item).DELETED//Delete
                                     });
                                     oParamDataPOClose.push({
@@ -3982,7 +4408,7 @@ sap.ui.define([
                             MessageBox.error(_captionList.INFO_PO_NOT_VALID_TO_DELETE)
                         }
                         
-                        this.closeLoadingDialog();
+                        Common.closeLoadingDialog(that);
                     }
                 }else{
                    MessageBox.error(_captionList.INFO_PO_NOT_VALID_TO_EDIT)
@@ -4078,7 +4504,7 @@ sap.ui.define([
 
                         if(bProceed){
                             
-                            this.showLoadingDialog(_captionList.LOADING)
+                            Common.openLoadingDialog(that);
                             this.getView().getModel("ui").setProperty("/dataMode", 'CANCEL_PO');
                             oSelectedIndices.forEach(item => {
                                 oTmpSelectedIndices.push(oTable.getBinding("rows").aIndices[item])
@@ -4114,7 +4540,7 @@ sap.ui.define([
                                         Untto: aData.at(validPOItem).UNDERDELTOL,//UnderDel Tol.
                                         Zzmakt: aData.at(validPOItem).POADDTLDESC, //PO Addtl Desc
                                         Elikz: aData.at(validPOItem).CLOSED, //Closed
-                                        DeleteRec: true//Delete
+                                        DeleteRec: false//Delete
                                         // Delete_Rec: aData.at(item).DELETED//Delete
                                     });
                                     oParamDataPOClose.push({
@@ -4160,7 +4586,7 @@ sap.ui.define([
                             }
                             this.loadAllData()
                             this.getView().getModel("ui").setProperty("/dataMode", 'READ');
-                            this.closeLoadingDialog();
+                            Common.closeLoadingDialog(that);
                         }else{
                             MessageBox.error(_captionList.INFO_PO_NOT_VALID_TO_CANCEL)
                         }
@@ -4171,22 +4597,75 @@ sap.ui.define([
             },
             onSplitVPO: async function(){
                 var me = this;
+                var oModel = this.getOwnerComponent().getModel();
                 var bProceed = true
+                
+                Common.openProcessingDialog(this);
 
                 _promiseResult = new Promise((resolve, reject)=>{
                     resolve(me.validatePOChange());
                 })
-                await _promiseResult;
+                await _promiseResult;           
 
-                if(this._validPOChange != 1){
-                    bProceed = false
+                if (this._validPOChange != 1){
+                    bProceed = false;
+                    Common.closeProcessingDialog(this);
                 }
 
-                if(bProceed){
-                    MessageToast.show("Split PO Function");
-                }else{
+                if (bProceed) {
+                    bProceed = await this.getResource(this);
+
+                    if (!bProceed) {
+                        MessageBox.error(_captionList.ERR_GETTING_RESOURCES);
+                        Common.closeProcessingDialog(this);
+                        return;
+                    }
+
+                    //lock PO
+
+                    
+                    this.getOwnerComponent().getModel("UI_MODEL").setProperty("/sbu", this._sbu);
+                    this.getOwnerComponent().getModel("UI_MODEL").setProperty("/pono", this._pono);
+
+                    var oHeaderData = me.getView().getModel("topHeaderData").getData();
+                    var aDetailData = this.byId("vpoDetailsTab").getModel().getData().rows.filter(fItem => fItem.DELETED === false && fItem.DELCOMPLETE === false);
+                    
+                    aDetailData.forEach(item => {
+                        item.SPLITPOQTY = "",
+                        item.INFOREC = ""
+                    });
+
+                    me.getOwnerComponent().getModel("SPLITPO_MODEL").setData({
+                        header: oHeaderData,
+                        detail: aDetailData
+                    })
+
+                    Common.closeProcessingDialog(this);
+
+                    var oRouter = sap.ui.core.UIComponent.getRouterFor(me);
+                    oRouter.navTo("RouteSplitPO");
+                } 
+                else {
                     MessageBox.error(_captionList.INFO_PO_NOT_VALID_TO_EDIT)
                 }
+            },
+
+            onPOPrint: function(){
+                var poNo = this._pono;
+                var aPOItem = [];
+                aPOItem.push({
+                    "PONo": poNo
+                });
+
+                var oCrossAppNavigator = sap.ushell.Container.getService("CrossApplicationNavigation");
+                var hashUrl = (oCrossAppNavigator && oCrossAppNavigator.hrefForExternal({
+                        target: {
+                            semanticObject: "ZSO_POPRINT_PRVW",
+                            action: "display"
+                                },
+                            params : aPOItem[0]
+                        }));
+                oCrossAppNavigator.toExternal({target: {shellHash: hashUrl}});
             },
 
             onUpdatePricePODtls: async function(){
@@ -4219,15 +4698,18 @@ sap.ui.define([
                 var aDataToEdit = [];
                 var iCounter = 0;
                 var bProceed = true;
-                var shipToPlant = this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
-                var incoTerms = this.byId("f1Incoterms").getValue().split('-')[0].trim();
-                var destination = this.byId("f1Destination").getValue();
-                var shipMode = this.byId("f1ShipMode").getValue().split('-')[0].trim();
+
+                var topHeaderData = this.getView().getModel("topHeaderData").getData();
+
+                var shipToPlant = topHeaderData.SHIPTOPLANT;//this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
+                var incoTerms = topHeaderData.INCOTERMS;//this.byId("f1Incoterms").getValue().split('-')[0].trim();
+                var destination = topHeaderData.DEST;//this.byId("f1Destination").getValue();
+                var shipMode = topHeaderData.SHIPMODE;//this.byId("f1ShipMode").getValue().split('-')[0].trim();
 
                 var message = "";
 
                 if (aSelIndices.length > 0) {
-                    this.showLoadingDialog(_captionList.LOADING);
+                    Common.openLoadingDialog(that);
                     aSelIndices.forEach(item => {
                         oTmpSelectedIndices.push(oTable.getBinding("rows").aIndices[item])
                     });
@@ -4331,7 +4813,7 @@ sap.ui.define([
                             });
                         }   
                     })
-                    this.closeLoadingDialog();
+                    Common.closeLoadingDialog(that);
                 }
             },
 
@@ -4593,6 +5075,9 @@ sap.ui.define([
                                                 me.byId("vpoBtnSaveDetails").setVisible(true);
                                                 me.byId("vpoBtnCancelDetails").setVisible(true);
 
+                                                me.byId("vpoBtnUpdatePrice").setVisible(false);
+                                                me.byId("vpoBtnDelCompleteDetails").setVisible(false);
+
                                                 me.disableOtherTabsChild("idIconTabBarInlineMode");
                                                 me.disableOtherTabsChild("vpoHeaderTxtIconTab");
                                                 me.byId("vpoDelSchedIconTab").setEnabled(false);
@@ -4677,8 +5162,7 @@ sap.ui.define([
                                                     // id: "ipt" + ci.name,
                                                     value: "{path: '" + ci.ColumnName + "', mandatory: '"+ ci.Mandatory +"'}",
                                                     displayFormat:"short",
-                                                    change:"handleChange",
-                                                
+                                                    change: this.onInputLiveChange.bind(this),
                                                     liveChange: this.onInputLiveChange.bind(this)
                                                 }));
                                             }else if (sColumnType === "NUMBER"){
@@ -4723,8 +5207,7 @@ sap.ui.define([
                                                     // id: "ipt" + ci.name,
                                                     value: "{path: '" + ci.ColumnName + "', mandatory: '"+ ci.Mandatory +"'}",
                                                     displayFormat:"short",
-                                                    change:"handleChange",
-                                                
+                                                    change: this.onInputLiveChange.bind(this),
                                                     liveChange: this.onInputLiveChange.bind(this)
                                                 }));
                                             }else if (sColumnType === "NUMBER"){
@@ -4769,8 +5252,7 @@ sap.ui.define([
                                                     // id: "ipt" + ci.name,
                                                     value: "{path: '" + ci.ColumnName + "', mandatory: '"+ ci.Mandatory +"'}",
                                                     displayFormat:"short",
-                                                    change:"handleChange",
-                                                
+                                                    change: this.onInputLiveChange.bind(this),
                                                     liveChange: this.onInputLiveChange.bind(this)
                                                 }));
                                             }else if (sColumnType === "NUMBER"){
@@ -4841,8 +5323,7 @@ sap.ui.define([
                                                     // id: "ipt" + ci.name,
                                                     value: "{path: '" + ci.ColumnName + "', mandatory: '"+ ci.Mandatory +"'}",
                                                     displayFormat:"short",
-                                                    change:"handleChange",
-                                                
+                                                    change: this.onInputLiveChange.bind(this),
                                                     liveChange: this.onInputLiveChange.bind(this)
                                                 }));
                                             }else if (sColumnType === "NUMBER"){
@@ -4887,8 +5368,7 @@ sap.ui.define([
                                                     // id: "ipt" + ci.name,
                                                     value: "{path: '" + ci.ColumnName + "', mandatory: '"+ ci.Mandatory +"'}",
                                                     displayFormat:"short",
-                                                    change:"handleChange",
-                                                
+                                                    change: this.onInputLiveChange.bind(this),
                                                     liveChange: this.onInputLiveChange.bind(this)
                                                 }));
                                             }else if (sColumnType === "NUMBER"){
@@ -4933,8 +5413,7 @@ sap.ui.define([
                                                     // id: "ipt" + ci.name,
                                                     value: "{path: '" + ci.ColumnName + "', mandatory: '"+ ci.Mandatory +"'}",
                                                     displayFormat:"short",
-                                                    change:"handleChange",
-                                                
+                                                    change: this.onInputLiveChange.bind(this),
                                                     liveChange: this.onInputLiveChange.bind(this)
                                                 }));
                                             }else if (sColumnType === "NUMBER"){
@@ -4978,8 +5457,7 @@ sap.ui.define([
                                             // id: "ipt" + ci.name,
                                             value: "{path: '" + ci.ColumnName + "', mandatory: '"+ ci.Mandatory +"'}",
                                             displayFormat:"short",
-                                            change:"handleChange",
-                                        
+                                            change: this.onInputLiveChange.bind(this),
                                             liveChange: this.onInputLiveChange.bind(this)
                                         }));
                                     }else if (sColumnType === "NUMBER"){
@@ -5052,10 +5530,13 @@ sap.ui.define([
                 var oParam = {};
                 var rfcModel = this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
                 var bProceed = true;
-                var shipToPlant = this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
-                var incoTerms = this.byId("f1Incoterms").getValue().split('-')[0].trim();
-                var destination = this.byId("f1Destination").getValue();
-                var shipMode = this.byId("f1ShipMode").getValue().split('-')[0].trim();
+                
+                var topHeaderData = this.getView().getModel("topHeaderData").getData();
+
+                var shipToPlant = topHeaderData.SHIPTOPLANT;//this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
+                var incoTerms = topHeaderData.INCOTERMS;//this.byId("f1Incoterms").getValue().split('-')[0].trim();
+                var destination = topHeaderData.DEST;//this.byId("f1Destination").getValue();
+                var shipMode = topHeaderData.SHIPMODE;//this.byId("f1ShipMode").getValue().split('-')[0].trim();
             
                 if (this._validationErrors.length != 0){
                     MessageBox.error(_captionList.INFO_REQUIRED_FIELD);
@@ -5064,7 +5545,7 @@ sap.ui.define([
 
                 var message;
                 if(bProceed){
-                    this.showLoadingDialog(_captionList.LOADING)
+                    Common.openLoadingDialog(that);
                     oSelectedIndices.forEach(item => {
                         oTmpSelectedIndices.push(oTable.getBinding("rows").aIndices[item])
                     })
@@ -5108,6 +5589,7 @@ sap.ui.define([
                             Ebakz: "" 
                         });
                     });
+
                     await me.getPOTOlerance(aData, oSelectedIndices);
                     if (oParamDataPO.length > 0) {
                         oParam = oParamInitParam;
@@ -5141,7 +5623,6 @@ sap.ui.define([
                                                                                 "EDI": "X",
                                                                                 "DOWNLOAD": ""
                                                                             }
-                                                                            console.log(oParam);
                                                                             var oEntitySet = "/VPODownloadedSet(EBELN='" + me._pono + "')";
                                                                             oModel.update(oEntitySet, oParam, {
                                                                                 method: "PUT",
@@ -5181,9 +5662,6 @@ sap.ui.define([
                                                     });
                                                 });
 
-                                                //console.log(me.getView().getModel("relStratData").getData().RELSTRAT);
-                                                //console.log(me.getView().getModel("currentRelStratData"));
-
                                             }
                                         }
                                         // message = oData.N_ChangePOReturn.results[0].Msgv1;
@@ -5213,6 +5691,9 @@ sap.ui.define([
                         me.byId("vpoBtnSaveDetails").setVisible(false)
                         me.byId("vpoBtnCancelDetails").setVisible(false)
 
+                        me.byId("vpoBtnUpdatePrice").setVisible(true);
+                        me.byId("vpoBtnDelCompleteDetails").setVisible(true);
+
                         me.enableOtherTabsChild("idIconTabBarInlineMode");
                         me.enableOtherTabsChild("vpoHeaderTxtIconTab");
                         me.byId("vpoDelSchedIconTab").setEnabled(true);
@@ -5237,7 +5718,7 @@ sap.ui.define([
                     // if (this.getView().getModel("ui").getData().dataMode === 'NEW') this.setFilterAfterCreate();
 
                     this.getView().getModel("ui").setProperty("/dataMode", 'READ');
-                    this.closeLoadingDialog();
+                    Common.closeLoadingDialog(that);
                 }
 
             },
@@ -5270,10 +5751,13 @@ sap.ui.define([
                 var oParamDataPO = [];
                 var oParamDataPOClose = [];
                 var oParam = {};
-                var shipToPlant = this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
-                var incoTerms = this.byId("f1Incoterms").getValue().split('-')[0].trim();
-                var destination = this.byId("f1Destination").getValue();
-                var shipMode = this.byId("f1ShipMode").getValue().split('-')[0].trim();
+
+                var topHeaderData = this.getView().getModel("topHeaderData").getData();
+
+                var shipToPlant = topHeaderData.SHIPTOPLANT;//this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
+                var incoTerms = topHeaderData.INCOTERMS;//this.byId("f1Incoterms").getValue().split('-')[0].trim();
+                var destination = topHeaderData.DEST;//this.byId("f1Destination").getValue();
+                var shipMode = topHeaderData.SHIPMODE;//this.byId("f1ShipMode").getValue().split('-')[0].trim();
                 var message = "";
 
                 if (aSelIndices.length > 0) {
@@ -5365,12 +5849,10 @@ sap.ui.define([
                                                         });
                                                     });
                                                     
-                                                    me.showLoadingDialog(_captionList.LOADING);
+                                                    Common.openLoadingDialog(that);
                                                     await _promiseResult;
                                                     await me.loadAllData();
-                                                    me.closeLoadingDialog();
-                                                }else{
-                                                    console.log("test")
+                                                    Common.closeLoadingDialog(that);
                                                 }
                                             }
                                         }else{
@@ -5415,11 +5897,10 @@ sap.ui.define([
                 var oSelectedIndices = oTable.getBinding("rows").aIndices;
                 var oTmpSelectedIndices = [];
 
-                var aData = this._oDataBeforeChange.results != undefined? this._oDataBeforeChange.results : this.getView().getModel("VPODelSchedVPODet").getData().results;
+                var aData = this.getView().getModel("VPODelSchedVPODet").getData().results;
                 var aDataToEdit = [];
                 var iCounter = 0;
                 var bProceed = true;
-                var oParamPODATA = [];
 
                 if (aSelIndices.length > 0) {
                     aSelIndices.forEach(item => {
@@ -5437,7 +5918,7 @@ sap.ui.define([
                             },
                             success: async function (data, response) {
                                 data.results.forEach(async dataItem => {
-                                    if(aData.at(item).ITEM == dataItem.ITEM){
+                                    if(aData.at(item).ITEM === dataItem.ITEM && aData.at(item).SEQNO === dataItem.SEQNO){
                                         iCounter++;
                                         if (aData.at(item).DELETED === false ) {
                                             bProceed = true;
@@ -5448,8 +5929,8 @@ sap.ui.define([
 
                                         if(bProceed){
                                             if (aSelIndices.length === iCounter) {
-                                                me._oDataBeforeChange = me.getView().getModel("VPODelSchedVPODet").getProperty("/results");
                                                 me.getView().getModel("VPODelSchedVPODet").setProperty("/results", aDataToEdit);
+                                                
                                                 me.setTableColumnsData("VPODELSCHED");
                                                 // me.byId("vpoSearchFieldDetails").setVisible(false);
                                                 me.byId("vpoBtnLineSplit").setVisible(false);
@@ -5497,7 +5978,7 @@ sap.ui.define([
                             },
                             success: async function (data, response) {
                                 data.results.forEach(async dataItem => {
-                                    if(aData.at(item).ITEM == dataItem.ITEM){
+                                    if(aData.at(item).ITEM === dataItem.ITEM && aData.at(item).SEQNO === dataItem.SEQNO){
                                         iCounter++;
                                         if (aData.at(item).DELETED === false ) {
                                             bProceed = true;
@@ -5508,7 +5989,6 @@ sap.ui.define([
 
                                         if(bProceed){
                                             if (oSelectedIndices.length === iCounter) {
-                                                me._oDataBeforeChange = me.getView().getModel("VPODelSchedVPODet").getProperty("/results");
                                                 me.getView().getModel("VPODelSchedVPODet").setProperty("/results", aDataToEdit);
                                                 me.setTableColumnsData("VPODELSCHED");
                                                 // me.byId("vpoSearchFieldDetails").setVisible(false);
@@ -5544,6 +6024,160 @@ sap.ui.define([
                     });
                 }
             },
+            
+            onLineSplitPODelSched: async function(){
+                var me = this;
+
+                // _promiseResult = new Promise((resolve, reject)=>{
+                //     resolve(me.validatePOChange());
+                // })
+                // await _promiseResult;
+
+                // if(this._validPOChange != 1){
+                //     MessageBox.error(_captionList.INFO_PO_NOT_VALID_TO_EDIT)
+                //     return;
+                // }
+
+                var oModel = this.getOwnerComponent().getModel();
+                var oTable = this.byId("vpoDelSchedTab");
+                var aSelIndices = oTable.getSelectedIndices();
+                var aData = oTable.getModel().getData().rows;
+                var oParamInitParam = {}
+                var oParamDataPOSched = [];
+                var oParam = {};
+                var oTmpSelectedIndices = [];
+                var rfcModel = this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
+
+                var message = "";
+                var poNo = this._pono;
+
+                var seqNoList = [];
+                var seqNoCount = 0;
+                var delSchedSet = [];
+
+                await new Promise((resolve, reject)=>{
+                    oModel.read('/VPODelSchedSet', { 
+                        urlParameters: {
+                            "$filter": "PONO eq '" + poNo + "'"
+                        },
+                        success: function (data, response) {
+                            if (data.results.length > 0) {
+                                delSchedSet = data.results;
+                                delSchedSet.sort((a,b) => (a.ITEM > b.ITEM) ? 1 : ((b.ITEM > a.ITEM) ? -1 : 0));
+                            }
+                            resolve();
+                        },
+                        error: function (err) {
+                            resolve();
+                        }
+                    });
+                });
+                if (aSelIndices.length > 0) {
+                    aSelIndices.forEach(item => {
+                        oTmpSelectedIndices.push(oTable.getBinding("rows").aIndices[item])
+                    });
+            
+                    aSelIndices = oTmpSelectedIndices;
+                    aSelIndices.forEach(async(item, index) => {
+                        for(var x = 0; x < delSchedSet.length; x++){
+                            if(delSchedSet[x].ITEM === aData.at(item).ITEM && delSchedSet[x].SEQNO === aData.at(item).SEQNO){
+                                var wItemSeqNo = {};
+                                if(seqNoList[0] === undefined){
+                                    wItemSeqNo = {
+                                        ITEM: aData.at(item).ITEM,
+                                        SEQNO: [delSchedSet[x].SEQNO]
+                                    }
+                                    seqNoList.push(wItemSeqNo);
+                                    seqNoList[0].SEQNO.sort(function(a, b){return b - a});
+                                }else{
+                                    for(var y = 0; y < seqNoList.length; y++){
+                                        if(seqNoList[y].ITEM === delSchedSet[x].ITEM){
+
+                                            if (!seqNoList[y].SEQNO.includes(delSchedSet[x].SEQNO)) {
+                                                // ✅ only runs if value not in array
+                                                seqNoList[y].SEQNO.push(delSchedSet[x].SEQNO);
+                                            }
+                                        }else{
+                                            wItemSeqNo = {
+                                                ITEM: aData.at(item).ITEM,
+                                                SEQNO: [delSchedSet[x].SEQNO]
+                                            }
+                                            seqNoList.push(wItemSeqNo);
+                                        }
+                                        seqNoList[y].SEQNO.sort(function(a, b){return b - a});
+                                    }
+                                }
+                            }
+                        }
+                    })
+
+                    aSelIndices.forEach(async(item, index) => {
+                        for(var x = 0; x < seqNoList.length; x++){
+                            if(aData.at(item).ITEM === seqNoList[x].ITEM){
+
+                                seqNoCount = isNaN(seqNoList[x].SEQNO[0]) ? 0 : seqNoList[x].SEQNO[0];
+                                seqNoCount = String(parseInt(seqNoCount) + 1);
+
+                                while (seqNoCount.length < 4) seqNoCount = "0" + seqNoCount;
+
+                                if (!seqNoList[x].SEQNO.includes(seqNoCount)) {
+                                    // ✅ only runs if value not in array
+                                    seqNoList[x].SEQNO.push(seqNoCount);
+                                }
+                                seqNoList[x].SEQNO.sort(function(a, b){return b - a});
+
+                                oParamInitParam = {
+                                    IPoNumber: me._pono,
+                                    IDoDownload: "N",
+                                    IChangeonlyHdrplants: "N",
+                                }
+                                oParamDataPOSched.push({
+                                    PoNumber: me._pono,
+                                    PoItem: aData.at(item).ITEM,
+                                    SchedLine: seqNoCount,
+                                    Quantity: aData.at(item).SCHEDQTY,
+                                    DelivDate: sapDateFormat.format(new Date(aData.at(item).DELDT)) + "T00:00:00",
+                                    PreqNo: aData.at(item).PRNO,
+                                    PreqItem: aData.at(item).PRITM,
+                                    
+                                });
+
+                            }
+                        }
+                    });
+                    if (oParamDataPOSched.length > 0) {
+                        oParam = oParamInitParam;
+                        oParam['N_ChangePOItemSchedParam'] = oParamDataPOSched;
+                        oParam['N_ChangePOReturn'] = [];
+                    }
+                    Common.openLoadingDialog(that);
+                    await new Promise((resolve, reject)=>{
+                        rfcModel.create("/ChangePOSet", oParam, {
+                            method: "POST",
+                            success: async function(oData, oResponse){
+                                if(oData.N_ChangePOReturn.results[0].Msgtyp === 'E'){
+                                    message = oData.N_ChangePOReturn.results[0].Msgv1;
+                                    MessageBox.error(message);
+                                    resolve()
+                                }else{
+                                    message = oData.N_ChangePOReturn.results[0].Msgv1;
+                                    MessageBox.information(message);
+                                    await new Promise((resolve, reject)=>{
+                                        resolve(me.loadAllData())
+                                    });
+                                    resolve()
+                                }   
+                            },error: function(error){
+                                MessageBox.error(error);
+                                reject();
+                            }
+                        })
+                    });
+                    Common.closeLoadingDialog(that);
+            
+                }
+            },
+
             onCancelEditPODelSched: async function(){
                 var me = this;
                 if (!this._DiscardChangesDialog) {
@@ -5573,7 +6207,7 @@ sap.ui.define([
 
                 var message = "";
                 if(bProceed){
-                    this.showLoadingDialog(_captionList.LOADING);
+                    Common.openLoadingDialog(that);
                     oSelectedIndices.forEach(item => {
                         oTmpSelectedIndices.push(oTable.getBinding("rows").aIndices[item])
                     });
@@ -5665,7 +6299,7 @@ sap.ui.define([
                     });
                     await _promiseResult;
                     this.getView().getModel("ui").setProperty("/dataMode", 'READ');
-                    this.closeLoadingDialog();
+                    Common.closeLoadingDialog(that);
                 }
             },
             onDeletePODelSched: async function(){
@@ -5673,7 +6307,7 @@ sap.ui.define([
                 var bProceed = true;
 
                 var oTable = this.byId("vpoDelSchedTab");
-                var oSelectedIndices = oTable.getBinding("rows").aIndices;
+                var oSelectedIndices = oTable.getSelectedIndices();;
                 var oTmpSelectedIndices = [];
                 var aData = oTable.getModel().getData().rows;
                 var oParamInitParam = {}
@@ -5725,7 +6359,7 @@ sap.ui.define([
                     await _promiseResult;
 
                     if(actionSel === "Delete"){
-                        me.showLoadingDialog(_captionList.LOADING);
+                        Common.openLoadingDialog(that);
                         oSelectedIndices.forEach(item => {
                             oTmpSelectedIndices.push(oTable.getBinding("rows").aIndices[item])
                         });
@@ -5814,7 +6448,7 @@ sap.ui.define([
                         });
                         await _promiseResult;
                         
-                        me.closeLoadingDialog();
+                        Common.closeLoadingDialog(that);
                     }else if(actionSel === "Cancel"){
                         MessageBox.Action.CLOSE
                     }
@@ -5990,10 +6624,13 @@ sap.ui.define([
                 var rfcModel = this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
                 var oModel = this.getOwnerComponent().getModel();
                 var bProceed = true;
-                var shipToPlant = this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
-                var incoTerms = this.byId("f1Incoterms").getValue().split('-')[0].trim();
-                var destination = this.byId("f1Destination").getValue();
-                var shipMode = this.byId("f1ShipMode").getValue().split('-')[0].trim();
+
+                var topHeaderData = this.getView().getModel("topHeaderData").getData();
+
+                var shipToPlant = topHeaderData.SHIPTOPLANT;//this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
+                var incoTerms = topHeaderData.INCOTERMS;//this.byId("f1Incoterms").getValue().split('-')[0].trim();
+                var destination = topHeaderData.DEST;//this.byId("f1Destination").getValue();
+                var shipMode = topHeaderData.SHIPMODE;//this.byId("f1ShipMode").getValue().split('-')[0].trim();
 
                 if (this._validationErrors.length != 0){
                     MessageBox.error(_captionList.INFO_REQUIRED_FIELD);
@@ -6003,7 +6640,7 @@ sap.ui.define([
                 var message;
 
                 if(bProceed){
-                    this.showLoadingDialog(_captionList.LOADING);
+                    Common.openLoadingDialog(that);
                     oSelectedIndices.forEach(item => {
                         oTmpSelectedIndices.push(oTable.getBinding("rows").aIndices[item])
                     })
@@ -6123,7 +6760,7 @@ sap.ui.define([
                     });
                     await _promiseResult;
                     this.getView().getModel("ui").setProperty("/dataMode", 'READ');
-                    this.closeLoadingDialog();
+                    Common.closeLoadingDialog(that);
                 }
             },
             onCancelEditDelInv: async function(){
@@ -6382,9 +7019,11 @@ sap.ui.define([
 
                                     for (var i = 0; i < poDetailsData.length; i++) {
                                         if (poDetailsData[i].PRNO === dataRow.at(selRowItem).PRNO && poDetailsData[i].PRITM === dataRow.at(selRowItem).PRITM) {
-                                            poDetailsData[i].UNLIMITED = VPOGetGMCPOTolSetResult.results[0].UNLIMITED
-                                            poDetailsData[i].OVERDELTOL = VPOGetGMCPOTolSetResult.results[0].OVERDELTOL
-                                            poDetailsData[i].UNDERDELTOL = VPOGetGMCPOTolSetResult.results[0].UNDERDELTOL
+                                            if(VPOGetGMCPOTolSetResult.result !== undefined){
+                                                poDetailsData[i].UNLIMITED = VPOGetGMCPOTolSetResult.results[0].UNLIMITED
+                                                poDetailsData[i].OVERDELTOL = VPOGetGMCPOTolSetResult.results[0].OVERDELTOL
+                                                poDetailsData[i].UNDERDELTOL = VPOGetGMCPOTolSetResult.results[0].UNDERDELTOL
+                                            }
                                         }
                                     }        
                                 }
@@ -6480,7 +7119,7 @@ sap.ui.define([
             onCloseDiscardChangesDialog: async function(){
                 var me = this;
                 this._DiscardChangesDialog.close();
-                this.showLoadingDialog(_captionList.LOADING);
+                Common.openLoadingDialog(that);
                 // this.byId("vpoSearchFieldDetails").setVisible(true);
                 this.byId("vpoBtnAddPRtoPO").setVisible(true);
                 this.byId("vpoBtnItemChanges").setVisible(true);
@@ -6521,7 +7160,7 @@ sap.ui.define([
                     resolve(me.loadAllData());
                 });
                 await _promiseResult;
-                this.closeLoadingDialog();
+                Common.closeLoadingDialog(that);
                 this._validationErrors = [];
                 this._DiscardChangesDialog.close();
                 this.getView().getModel("ui").setProperty("/dataMode", 'READ');
@@ -6582,7 +7221,7 @@ sap.ui.define([
                 //     }
                 // });
                 if(bProceed){
-                    this.showLoadingDialog(_captionList.LOADING)
+                    Common.openLoadingDialog(that);
                     var oTable = this.byId("vpoDetailsTab");
                     var oSelectedIndices = oTable.getSelectedIndices();
                     var oTmpSelectedIndices = [];
@@ -6594,10 +7233,13 @@ sap.ui.define([
                     var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
 
                     var message;
-                    var shipToPlant = this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
-                    var incoTerms = this.byId("f1Incoterms").getValue().split('-')[0].trim();
-                    var destination = this.byId("f1Destination").getValue();
-                    var shipMode = this.byId("f1ShipMode").getValue().split('-')[0].trim();
+
+                    var topHeaderData = this.getView().getModel("topHeaderData").getData();
+
+                    var shipToPlant = topHeaderData.SHIPTOPLANT;//this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
+                    var incoTerms = topHeaderData.INCOTERMS;//this.byId("f1Incoterms").getValue().split('-')[0].trim();
+                    var destination = topHeaderData.DEST;//this.byId("f1Destination").getValue();
+                    var shipMode = topHeaderData.SHIPMODE;//this.byId("f1ShipMode").getValue().split('-')[0].trim();
 
                     if(oSelectedIndices.length > 0){
                         oSelectedIndices.forEach(item => {
@@ -6685,7 +7327,7 @@ sap.ui.define([
                         MessageBox.error(this.getView().getModel("captionMsg").getData()["INFO_NO_DATA_DELETE"]);
                     }
 
-                    this.closeLoadingDialog();
+                    Common.closeLoadingDialog(that);
 
                 }
             },
@@ -6815,17 +7457,29 @@ sap.ui.define([
                 var oParamInitParam = {};
                 var oParamDataPO = [];
                 var oParam;
+                var oParamClosePR = [];
 
                 var rfcModel = this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
                 var oModel = this.getOwnerComponent().getModel();
 
+                var topHeaderData = this.getView().getModel("topHeaderData").getData();
+
+                var shipToPlant = topHeaderData.SHIPTOPLANT;//this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
+                var incoTerms = topHeaderData.INCOTERMS;//this.byId("f1Incoterms").getValue().split('-')[0].trim();
+                var destination = topHeaderData.DEST;//this.byId("f1Destination").getValue();
+                var shipMode = topHeaderData.SHIPMODE;//this.byId("f1ShipMode").getValue().split('-')[0].trim();
                 var message;
                 var bProceed = true
 
                 var poItemArr = [];
                 var poItemLastCnt = 0;
 
-                this.showLoadingDialog(_captionList.LOADING)
+                var infoRecMainParam = {};
+                var inforRecReturn = [];
+                var oParamInfoRec = [];
+                var inforRecMessage = "";
+
+                Common.openLoadingDialog(that);
                 
                 _promiseResult = new Promise((resolve, reject)=>{
                     oModel.read("/mainSet(PONO='" + poNo + "')", {
@@ -6885,93 +7539,211 @@ sap.ui.define([
                         oTmpSelectedIndices.push(oTable.getBinding("rows").aIndices[item])
                     });
                     aSelIndices = oTmpSelectedIndices;
-                    aSelIndices.forEach((item, index) => {
-                        oParamInitParam = {
-                            IPoNumber: poNo,
-                            IDoDownload: "",
-                            IChangeonlyHdrplants: "",
-                        };
-                        oParamDataPO.push({
-                            Bedat     : sapDateFormat.format(new Date(headerPOArr[0].PODT)) + "T00:00:00", //PODocDt
-                            Bsart     : headerPOArr[0].DOCTYPE, //PODocTyp
-                            Banfn     : aData.at(item).PRNO, //PR
-                            Bnfpo     : aData.at(item).PRITM, //PRITM
-                            // Ekorg     : aData.at(item).PURCHORG,
-                            // Lifnr     : aData.at(item).VENDORCD,
-                            // Ekgrp     : aData.at(item).PURCHGRP,
-                            // Inco1     : inco1,
-                            // Inco2     : inco2,
-                            // Waers     : currency,
-                            // Zterm     : paymentTerms,
-                            Ebeln     : poNo, //PONO
-                            Ebelp     : poItemLastCnt, //POITM
-                            Bukrs     : headerPOArr[0].COMPANY,//COCD
-                            Werks     : headerPOArr[0].PURCHPLANT,//PLANTCD
-                            Unsez     : headerPOArr[0].SHIPTOPLANT,//
-                            Matnr     : aData.at(item).MATNO, //MatNo
-                            Charg     : aData.at(item).IONO,
-                            Txz01     : aData.at(item).SHORTTEXT,//ShortText
-                            Menge     : aData.at(item).QTY,//OrdQTY
-                            Meins     : aData.at(item).UOM,//UOM
-                            // Netpr     : resultExtendPop[0][x].NETPR,//NET ORD PRICE/
-                            // Peinh     : resultExtendPop[0][x].PEINH,//NET UOM/
-                            // Bprme     : resultExtendPop[0][x].BPRME,//ORD UOM/
-                            // Repos     : resultExtendPop[0][x].REPOS,//INV RCPT/
-                            // Webre     : resultExtendPop[0][x].WEBRE,//GR IND /
-                            // Eindt     : sapDateFormat.format(new Date(delDt)) + "T00:00:00", //Delivery Date /
-                            // Evers     : resultExtendPop[0][x].EVERS,//SHIPPINGINST /
-                            // Uebto     : resultExtendPop[0][x].UEBTO,//OVERTOL /
-                            // Untto     : resultExtendPop[0][x].UNTTO,//UNDERTOL /
-                            // Uebtk     : resultExtendPop[0][x].UEBTK,//UNLIMITED /
-                            // Elikz     : resultExtendPop[0][x].ELIKZ,//DLVCOMPLETE /
-                            // DeleteRec : resultExtendPop[0][x].LOEKZ //DELETE /
-                        });
 
-                        poItemLastCnt = String(parseInt(poItemLastCnt) + 10);
+                    aSelIndices.forEach(async (item, index) => {
 
-                        if(poItemLastCnt != "" || poItemLastCnt != null){
-                            while(poItemLastCnt.length < 5) poItemLastCnt = "0" + poItemLastCnt.toString();
+                        if(headerPOArr[0].VENDOR === undefined || headerPOArr[0].VENDOR === "" || headerPOArr[0].VENDOR === null){
+                            oParamInfoRec = [];
+                            inforRecReturn = [];
+                            var mengeComputed = 0;
+                            oParamInfoRec.push({
+                                Vendor: "",//headerPOArr[0].VENDOR,
+                                Material: aData.at(item).MATNO,
+                                PurchOrg: headerPOArr[0].PURCHORG,
+                                Plant: headerPOArr[0].PURCHPLANT,
+                                PurGroup: headerPOArr[0].PURCHGRP
+                            });
+                            infoRecMainParam["N_GetInfoRecMatParam"] = oParamInfoRec;
+
+                            await new Promise((resolve, reject)=>{
+                                rfcModel.create("/GetInfoRecordSet", infoRecMainParam, {
+                                    method: "POST",
+                                    success: function(oData, oResponse) {
+                                        inforRecReturn.push(oData.N_GetInfoRecReturn)
+                                        resolve();
+                                    },
+                                    error: function(err){
+                                        reject();
+                                    }
+                                });
+                            });
+
+                            if(inforRecReturn.Ret_Type === "E"){
+                                inforRecMessage = inforRecReturn.Ret_Message + "\n"
+                            }else{
+                                if(aData.at(item).UOM !== inforRecReturn.OrderPR_Un){
+                                    mengeComputed = (aData.at(item).QTY/inforRecReturn.Conv_Num1) * (inforRecReturn.Conv_Den1 *inforRecReturn.Price_Unit)
+                                }else{
+                                    mengeComputed = aData.at(item).QTY;
+                                }
+    
+                                oParamInitParam = {
+                                    IPoNumber: poNo,
+                                    IDoDownload: "",
+                                    IChangeonlyHdrplants: "",
+                                };
+                                oParamDataPO.push({
+                                    Bedat     : sapDateFormat.format(new Date(headerPOArr[0].PODT)) + "T00:00:00", //PODocDt
+                                    Bsart     : headerPOArr[0].DOCTYPE, //PODocTyp
+                                    Banfn     : aData.at(item).PRNO, //PR
+                                    Bnfpo     : aData.at(item).PRITM, //PRITM
+                                    // Ekorg     : aData.at(item).PURCHORG,
+                                    // Lifnr     : aData.at(item).VENDORCD,
+                                    // Ekgrp     : aData.at(item).PURCHGRP,
+                                    // Inco1     : inco1,
+                                    // Inco2     : inco2,
+                                    // Waers     : currency,
+                                    // Zterm     : paymentTerms,
+                                    Ebeln     : poNo, //PONO
+                                    Ebelp     : poItemLastCnt, //POITM
+                                    Unsez     : shipToPlant, //shipToPlant
+                                    Inco1     : incoTerms, // Incoterms
+                                    Inco2     : destination, //Destination
+                                    Evers     : shipMode, //ShipMode
+                                    Bukrs     : headerPOArr[0].COMPANY,//COCD
+                                    Werks     : headerPOArr[0].PURCHPLANT,//PLANTCD
+                                    Unsez     : headerPOArr[0].SHIPTOPLANT,//
+                                    Matnr     : aData.at(item).MATNO, //MatNo
+                                    Charg     : aData.at(item).IONO,
+                                    Txz01     : aData.at(item).SHORTTEXT,//ShortText
+                                    Menge     : mengeComputed, //aData.at(item).QTY,//OrdQTY
+                                    Meins     : aData.at(item).UOM,//UOM
+                                    Netpr     : aData.at(item).NETPRICE,//net price
+                                    Repos     : true, //aData.at(item).INVRCPTIND, //IR Indicator
+                                    Webre     : true, //aData.at(item).GRBASEDIVIND, //GR Based Ind
+                                    Eindt     : sapDateFormat.format(new Date(aData.at(item).DELDT)) + "T00:00:00", //DlvDt
+                                    // Netpr     : resultExtendPop[0][x].NETPR,//NET ORD PRICE/
+                                    // Peinh     : resultExtendPop[0][x].PEINH,//NET UOM/
+                                    // Bprme     : resultExtendPop[0][x].BPRME,//ORD UOM/
+                                    // Repos     : resultExtendPop[0][x].REPOS,//INV RCPT/
+                                    // Webre     : resultExtendPop[0][x].WEBRE,//GR IND /
+                                    // Eindt     : sapDateFormat.format(new Date(delDt)) + "T00:00:00", //Delivery Date /
+                                    // Evers     : resultExtendPop[0][x].EVERS,//SHIPPINGINST /
+                                    // Uebto     : resultExtendPop[0][x].UEBTO,//OVERTOL /
+                                    // Untto     : resultExtendPop[0][x].UNTTO,//UNDERTOL /
+                                    // Uebtk     : resultExtendPop[0][x].UEBTK,//UNLIMITED /
+                                    // Elikz     : resultExtendPop[0][x].ELIKZ,//DLVCOMPLETE /
+                                    // DeleteRec : resultExtendPop[0][x].LOEKZ //DELETE /
+                                });
+                                oParamClosePR.push({
+                                    Banfn: aData.at(item).PRNO, //PRNO
+                                    Bnfpo: aData.at(item).PRITM //PRITM
+                                })
+    
+                                poItemLastCnt = String(parseInt(poItemLastCnt) + 10);
+    
+                                if(poItemLastCnt != "" || poItemLastCnt != null){
+                                    while(poItemLastCnt.length < 5) poItemLastCnt = "0" + poItemLastCnt.toString();
+                                }
+                            }
                             
+                            
+                        }else{
+                            oParamInitParam = {
+                                IPoNumber: poNo,
+                                IDoDownload: "",
+                                IChangeonlyHdrplants: "",
+                            };
+                            oParamDataPO.push({
+                                Bedat     : sapDateFormat.format(new Date(headerPOArr[0].PODT)) + "T00:00:00", //PODocDt
+                                Bsart     : headerPOArr[0].DOCTYPE, //PODocTyp
+                                Banfn     : aData.at(item).PRNO, //PR
+                                Bnfpo     : aData.at(item).PRITM, //PRITM
+                                // Ekorg     : aData.at(item).PURCHORG,
+                                // Lifnr     : aData.at(item).VENDORCD,
+                                // Ekgrp     : aData.at(item).PURCHGRP,
+                                // Inco1     : inco1,
+                                // Inco2     : inco2,
+                                // Waers     : currency,
+                                // Zterm     : paymentTerms,
+                                Ebeln     : poNo, //PONO
+                                Ebelp     : poItemLastCnt, //POITM
+                                Unsez     : shipToPlant, //shipToPlant
+                                Inco1     : incoTerms, // Incoterms
+                                Inco2     : destination, //Destination
+                                Evers     : shipMode, //ShipMode
+                                Bukrs     : headerPOArr[0].COMPANY,//COCD
+                                Werks     : headerPOArr[0].PURCHPLANT,//PLANTCD
+                                Unsez     : headerPOArr[0].SHIPTOPLANT,//
+                                Matnr     : aData.at(item).MATNO, //MatNo
+                                Charg     : aData.at(item).IONO,
+                                Txz01     : aData.at(item).SHORTTEXT,//ShortText
+                                Menge     : aData.at(item).QTY,//OrdQTY
+                                Meins     : aData.at(item).UOM,//UOM
+                                Netpr     : aData.at(item).NETPRICE,//net price
+                                Repos     : true, //aData.at(item).INVRCPTIND, //IR Indicator
+                                Webre     : true, //aData.at(item).GRBASEDIVIND, //GR Based Ind
+                                Eindt     : sapDateFormat.format(new Date(aData.at(item).DELDT)) + "T00:00:00", //DlvDt
+                                // Netpr     : resultExtendPop[0][x].NETPR,//NET ORD PRICE/
+                                // Peinh     : resultExtendPop[0][x].PEINH,//NET UOM/
+                                // Bprme     : resultExtendPop[0][x].BPRME,//ORD UOM/
+                                // Repos     : resultExtendPop[0][x].REPOS,//INV RCPT/
+                                // Webre     : resultExtendPop[0][x].WEBRE,//GR IND /
+                                // Eindt     : sapDateFormat.format(new Date(delDt)) + "T00:00:00", //Delivery Date /
+                                // Evers     : resultExtendPop[0][x].EVERS,//SHIPPINGINST /
+                                // Uebto     : resultExtendPop[0][x].UEBTO,//OVERTOL /
+                                // Untto     : resultExtendPop[0][x].UNTTO,//UNDERTOL /
+                                // Uebtk     : resultExtendPop[0][x].UEBTK,//UNLIMITED /
+                                // Elikz     : resultExtendPop[0][x].ELIKZ,//DLVCOMPLETE /
+                                // DeleteRec : resultExtendPop[0][x].LOEKZ //DELETE /
+                            });
+                            oParamClosePR.push({
+                                Banfn: aData.at(item).PRNO, //PRNO
+                                Bnfpo: aData.at(item).PRITM //PRITM
+                            })
+
+                            poItemLastCnt = String(parseInt(poItemLastCnt) + 10);
+
+                            if(poItemLastCnt != "" || poItemLastCnt != null){
+                                while(poItemLastCnt.length < 5) poItemLastCnt = "0" + poItemLastCnt.toString();
+                                
+                            }
                         }
-                        
                     });
 
-                    oParam = oParamInitParam;
-                    oParam['N_ChangePOItemParam'] = oParamDataPO;
-                    oParam['N_ChangePOReturn'] = [];
-                    _promiseResult = new Promise((resolve, reject)=>{
-                        rfcModel.create("/ChangePOSet", oParam, {
-                            method: "POST",
-                            success: async function(oData, oResponse){
-                                if(oData.N_ChangePOReturn.results.length > 0){
-                                    if(oData.N_ChangePOReturn.results[0].Msgtyp === "E"){
-                                        message = oData.N_ChangePOReturn.results[0].Msgv1;
-                                        MessageBox.error(message);
-                                        resolve()
+                    if(oParamDataPO.length > 0){
+                        oParam = oParamInitParam;
+                        oParam['N_ChangePOItemParam'] = oParamDataPO;
+                        oParam['N_ChangePOReturn'] = [];
+                        oParam['N_ChangePOClosePRParam'] = oParamClosePR;
+                        _promiseResult = new Promise((resolve, reject)=>{
+                            rfcModel.create("/ChangePOSet", oParam, {
+                                method: "POST",
+                                success: async function(oData, oResponse){
+                                    if(oData.N_ChangePOReturn.results.length > 0){
+                                        if(oData.N_ChangePOReturn.results[0].Msgtyp === "E"){
+                                            message = oData.N_ChangePOReturn.results[0].Msgv1;
+                                            MessageBox.error(message);
+                                            resolve()
+                                        }else{
+                                            message = oData.N_ChangePOReturn.results[0].Msgv1;
+                                            MessageBox.information(message);
+                                            me.addPRToPODialog.destroy(true);
+                                            await new Promise((resolve, reject)=>{
+                                                resolve(me.loadAllData())
+                                            });
+                                            resolve()
+                                        }
                                     }else{
-                                        message = oData.N_ChangePOReturn.results[0].Msgv1;
-                                        MessageBox.information(message);
-                                        me.addPRToPODialog.destroy(true);
-                                        await new Promise((resolve, reject)=>{
-                                            resolve(me.loadAllData())
-                                        });
+                                        MessageBox.error(_captionList.INFO_NO_DATA_MODIFIED);
                                         resolve()
                                     }
-                                }else{
+                                },error: function(error){
+                                    //error message
                                     MessageBox.error(_captionList.INFO_NO_DATA_MODIFIED);
                                     resolve()
                                 }
-                            },error: function(error){
-                                //error message
-                                MessageBox.error(_captionList.INFO_NO_DATA_MODIFIED);
-                                resolve()
-                            }
-                        })
-                    });
-                    await _promiseResult;
+                            })
+                        });
+                        await _promiseResult;
+                    }
+
+                    if(inforRecMessage !== ""){
+                        MessageBox.error(inforRecMessage);
+                    }
                 }
                     
-                this.closeLoadingDialog();
+                Common.closeLoadingDialog(that);
                 
             },
             onCancelAddPRtoPO: async function(){
@@ -6979,14 +7751,14 @@ sap.ui.define([
             },
 
             onRefresh: async function(){
-                this.showLoadingDialog(_captionList.LOADING);
+                Common.openLoadingDialog(that);
                 _promiseResult = new Promise((resolve, reject)=> {
                     resolve(this.loadAllData());
                 });
                 await _promiseResult;
                 var poItem = this.getView().getModel("ui").getProperty("/activePOItem"); 
                 this.getProcessFlow(poItem);
-                this.closeLoadingDialog(that);
+                Common.closeLoadingDialog(that);
             },
 
             onCellClick: async function(oEvent) {
@@ -7317,130 +8089,12 @@ sap.ui.define([
 
             onExportToExcel: Utils.onExport,
 
-            onTableResize: async function (oEvent){
+            onTableResize: function (oEvent){
                 var event = oEvent.getSource();
                 var oSplitter = this.byId("splitDet");
                 var oFirstPane = oSplitter.getRootPaneContainer().getPanes().at(0);
                 var oSecondPane = oSplitter.getRootPaneContainer().getPanes().at(1);
-                if(this._tableFullScreenRender !== ""){
-                    if(event.getParent().getParent().getId().includes("mainTab")){
-                        this.byId('vpoDetailTab').setVisible(true)
-                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
-                            size: "46%",
-                            resizable: true
-                        });
-                        oFirstPane.setLayoutData(oLayoutData);
-                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
-                    }
-                    else if(event.getParent().getParent().getId().includes("vpoDetailsTab")){
-                        this.byId('idIconTabBarInlineMode').setVisible(true)
-                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
-                            size: "50%",
-                            resizable: true
-                        });
-                        oSecondPane.setLayoutData(oLayoutData);
-                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
-                        this.byId("vpoDetailTab").addStyleClass("vpoDetSection")
-                        this.byId("vpoDetailTab").removeStyleClass("addDesignSection2")
-
-                        this.byId("vpoDetailsIconTab").setEnabled(true);
-                        this.byId("vpoDelSchedIconTab").setEnabled(true);
-                        this.byId("vpoDelInvIconTab").setEnabled(true);
-                        this.byId("vpoPoHistIconTab").setEnabled(true);
-                        this.byId("vpoConditionsIconTab").setEnabled(true);
-                        this.byId("vpoProcFlowIconTab").setEnabled(true);
-                    }
-                    else if(event.getParent().getParent().getId().includes("vpoDelSchedTab")){
-                        this.byId('idIconTabBarInlineMode').setVisible(true)
-                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
-                            size: "50%",
-                            resizable: true
-                        });
-                        oSecondPane.setLayoutData(oLayoutData);
-                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
-                        this.byId("vpoDetailTab").addStyleClass("vpoDetSection")
-                        this.byId("vpoDetailTab").removeStyleClass("addDesignSection2")
-
-                        this.byId("vpoDetailsIconTab").setEnabled(true);
-                        this.byId("vpoDelSchedIconTab").setEnabled(true);
-                        this.byId("vpoDelInvIconTab").setEnabled(true);
-                        this.byId("vpoPoHistIconTab").setEnabled(true);
-                        this.byId("vpoConditionsIconTab").setEnabled(true);
-                        this.byId("vpoProcFlowIconTab").setEnabled(true);
-                    }
-                    else if(event.getParent().getParent().getId().includes("vpoDelInvTab")){
-                        this.byId('idIconTabBarInlineMode').setVisible(true)
-                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
-                            size: "50%",
-                            resizable: true
-                        });
-                        oSecondPane.setLayoutData(oLayoutData);
-                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
-                        this.byId("vpoDetailTab").addStyleClass("vpoDetSection")
-                        this.byId("vpoDetailTab").removeStyleClass("addDesignSection2")
-
-                        this.byId("vpoDetailsIconTab").setEnabled(true);
-                        this.byId("vpoDelSchedIconTab").setEnabled(true);
-                        this.byId("vpoDelInvIconTab").setEnabled(true);
-                        this.byId("vpoPoHistIconTab").setEnabled(true);
-                        this.byId("vpoConditionsIconTab").setEnabled(true);
-                        this.byId("vpoProcFlowIconTab").setEnabled(true);
-                    }
-                    else if(event.getParent().getParent().getId().includes("vpoPoHistTab")){
-                        this.byId('idIconTabBarInlineMode').setVisible(true)
-                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
-                            size: "50%",
-                            resizable: true
-                        });
-                        oSecondPane.setLayoutData(oLayoutData);
-                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
-                        this.byId("vpoDetailTab").addStyleClass("vpoDetSection")
-                        this.byId("vpoDetailTab").removeStyleClass("addDesignSection2")
-
-                        this.byId("vpoDetailsIconTab").setEnabled(true);
-                        this.byId("vpoDelSchedIconTab").setEnabled(true);
-                        this.byId("vpoDelInvIconTab").setEnabled(true);
-                        this.byId("vpoPoHistIconTab").setEnabled(true);
-                        this.byId("vpoConditionsIconTab").setEnabled(true);
-                        this.byId("vpoProcFlowIconTab").setEnabled(true);
-                    }
-                    else if(event.getParent().getParent().getId().includes("vpoConditionsTab")){
-                        this.byId('idIconTabBarInlineMode').setVisible(true)
-                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
-                            size: "50%",
-                            resizable: true
-                        });
-                        oSecondPane.setLayoutData(oLayoutData);
-                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
-                        this.byId("vpoDetailTab").addStyleClass("vpoDetSection")
-                        this.byId("vpoDetailTab").removeStyleClass("addDesignSection2")
-
-                        this.byId("vpoDetailsIconTab").setEnabled(true);
-                        this.byId("vpoDelSchedIconTab").setEnabled(true);
-                        this.byId("vpoDelInvIconTab").setEnabled(true);
-                        this.byId("vpoPoHistIconTab").setEnabled(true);
-                        this.byId("vpoConditionsIconTab").setEnabled(true);
-                        this.byId("vpoProcFlowIconTab").setEnabled(true);
-                    }
-                    else if(event.getParent().getParent().getId().includes("vpoProcFlowIconTab")){
-                        this.byId('idIconTabBarInlineMode').setVisible(true)
-                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
-                            size: "50%",
-                            resizable: true
-                        });
-                        oSecondPane.setLayoutData(oLayoutData);
-                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
-                        this.byId("vpoDetailTab").addStyleClass("vpoDetSection")
-                        this.byId("vpoDetailTab").removeStyleClass("addDesignSection2")
-
-                        this.byId("vpoDetailsIconTab").setEnabled(true);
-                        this.byId("vpoDelSchedIconTab").setEnabled(true);
-                        this.byId("vpoDelInvIconTab").setEnabled(true);
-                        this.byId("vpoPoHistIconTab").setEnabled(true);
-                        this.byId("vpoConditionsIconTab").setEnabled(true);
-                    }
-                    this._tableFullScreenRender = ""
-                }else{
+                if(this._tableFullScreenRender === ""){
                     if(event.getParent().getParent().getId().includes("mainTab")){
                         this.byId('vpoDetailTab').setVisible(false)
                         var oLayoutData = new sap.ui.layout.SplitterLayoutData({
@@ -7448,6 +8102,10 @@ sap.ui.define([
                             resizable: false
                         });
                         oFirstPane.setLayoutData(oLayoutData);
+
+                        this.byId('vpoBtnFullScreenDetails').setVisible(false)
+                        this.byId('vpoBtnExitFullScreenDetails').setVisible(true)
+
                         this.byId("_IDGenVBox1").addStyleClass("onAddvboxHeight")
                     }
                     else if(event.getParent().getParent().getId().includes("vpoDetailsTab")){
@@ -7460,6 +8118,9 @@ sap.ui.define([
                         this.byId("_IDGenVBox1").addStyleClass("onAddvboxHeight")
                         this.byId("vpoDetailTab").removeStyleClass("vpoDetSection")
                         this.byId("vpoDetailTab").addStyleClass("addDesignSection2")
+
+                        this.byId('vpoBtnFullScreenDetails').setVisible(false)
+                        this.byId('vpoBtnExitFullScreenDetails').setVisible(true)
 
                         // this.byId("vpoDetailsIconTab").setEnabled(false);
                         this.byId("vpoDelSchedIconTab").setEnabled(false);
@@ -7479,6 +8140,9 @@ sap.ui.define([
                         this.byId("vpoDetailTab").removeStyleClass("vpoDetSection")
                         this.byId("vpoDetailTab").addStyleClass("addDesignSection2")
 
+                        this.byId('vpoBtnFullScreenDelSched').setVisible(false)
+                        this.byId('vpoBtnExitFullScreenDelSched').setVisible(true)
+
                         this.byId("vpoDetailsIconTab").setEnabled(false);
                         // this.byId("vpoDelSchedIconTab").setEnabled(false);
                         this.byId("vpoDelInvIconTab").setEnabled(false);
@@ -7496,6 +8160,9 @@ sap.ui.define([
                         this.byId("_IDGenVBox1").addStyleClass("onAddvboxHeight")
                         this.byId("vpoDetailTab").removeStyleClass("vpoDetSection")
                         this.byId("vpoDetailTab").addStyleClass("addDesignSection2")
+
+                        this.byId('vpoBtnFullScreenDelInv').setVisible(false)
+                        this.byId('vpoBtnExitFullScreenDelInv').setVisible(true)
 
                         this.byId("vpoDetailsIconTab").setEnabled(false);
                         this.byId("vpoDelSchedIconTab").setEnabled(false);
@@ -7515,6 +8182,9 @@ sap.ui.define([
                         this.byId("vpoDetailTab").removeStyleClass("vpoDetSection")
                         this.byId("vpoDetailTab").addStyleClass("addDesignSection2")
 
+                        this.byId('vpoBtnFullScreenPOHistory').setVisible(false)
+                        this.byId('vpoBtnExitFullScreenPOHistory').setVisible(true)
+
                         this.byId("vpoDetailsIconTab").setEnabled(false);
                         this.byId("vpoDelSchedIconTab").setEnabled(false);
                         this.byId("vpoDelInvIconTab").setEnabled(false);
@@ -7532,6 +8202,9 @@ sap.ui.define([
                         this.byId("_IDGenVBox1").addStyleClass("onAddvboxHeight")
                         this.byId("vpoDetailTab").removeStyleClass("vpoDetSection")
                         this.byId("vpoDetailTab").addStyleClass("addDesignSection2")
+
+                        this.byId('vpoBtnFullScreenConditions').setVisible(false)
+                        this.byId('vpoBtnExitFullScreenConditions').setVisible(true)
 
                         this.byId("vpoDetailsIconTab").setEnabled(false);
                         this.byId("vpoDelSchedIconTab").setEnabled(false);
@@ -7551,6 +8224,9 @@ sap.ui.define([
                         this.byId("vpoDetailTab").removeStyleClass("vpoDetSection")
                         this.byId("vpoDetailTab").addStyleClass("addDesignSection2")
 
+                        this.byId('vpoBtnFullScreenProcFlow').setVisible(false)
+                        this.byId('vpoBtnExitFullScreenProcFlow').setVisible(true)
+
                         this.byId("vpoDetailsIconTab").setEnabled(false);
                         this.byId("vpoDelSchedIconTab").setEnabled(false);
                         this.byId("vpoDelInvIconTab").setEnabled(false);
@@ -7558,6 +8234,154 @@ sap.ui.define([
                         this.byId("vpoConditionsIconTab").setEnabled(false);
                     }
                     this._tableFullScreenRender = "Value"
+                }
+            },
+
+            onExitTableResize: function(oEvent){
+                var event = oEvent.getSource();
+                var oSplitter = this.byId("splitDet");
+                var oFirstPane = oSplitter.getRootPaneContainer().getPanes().at(0);
+                var oSecondPane = oSplitter.getRootPaneContainer().getPanes().at(1);
+                if(this._tableFullScreenRender !== ""){
+                    if(event.getParent().getParent().getId().includes("mainTab")){
+                        this.byId('vpoDetailTab').setVisible(true)
+                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
+                            size: "46%",
+                            resizable: true
+                        });
+                        oFirstPane.setLayoutData(oLayoutData);
+
+                        this.byId('vpoBtnFullScreenDetails').setVisible(true)
+                        this.byId('vpoBtnExitFullScreenDetails').setVisible(false)
+
+                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
+                    }
+                    else if(event.getParent().getParent().getId().includes("vpoDetailsTab")){
+                        this.byId('idIconTabBarInlineMode').setVisible(true)
+                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
+                            size: "50%",
+                            resizable: true
+                        });
+                        oSecondPane.setLayoutData(oLayoutData);
+                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
+                        this.byId("vpoDetailTab").addStyleClass("vpoDetSection")
+                        this.byId("vpoDetailTab").removeStyleClass("addDesignSection2")
+
+                        this.byId('vpoBtnFullScreenDetails').setVisible(true)
+                        this.byId('vpoBtnExitFullScreenDetails').setVisible(false)
+
+                        this.byId("vpoDetailsIconTab").setEnabled(true);
+                        this.byId("vpoDelSchedIconTab").setEnabled(true);
+                        this.byId("vpoDelInvIconTab").setEnabled(true);
+                        this.byId("vpoPoHistIconTab").setEnabled(true);
+                        this.byId("vpoConditionsIconTab").setEnabled(true);
+                        this.byId("vpoProcFlowIconTab").setEnabled(true);
+                    }
+                    else if(event.getParent().getParent().getId().includes("vpoDelSchedTab")){
+                        this.byId('idIconTabBarInlineMode').setVisible(true)
+                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
+                            size: "50%",
+                            resizable: true
+                        });
+                        oSecondPane.setLayoutData(oLayoutData);
+                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
+                        this.byId("vpoDetailTab").addStyleClass("vpoDetSection")
+                        this.byId("vpoDetailTab").removeStyleClass("addDesignSection2")
+
+                        this.byId('vpoBtnFullScreenDelSched').setVisible(true)
+                        this.byId('vpoBtnExitFullScreenDelSched').setVisible(false)
+
+                        this.byId("vpoDetailsIconTab").setEnabled(true);
+                        this.byId("vpoDelSchedIconTab").setEnabled(true);
+                        this.byId("vpoDelInvIconTab").setEnabled(true);
+                        this.byId("vpoPoHistIconTab").setEnabled(true);
+                        this.byId("vpoConditionsIconTab").setEnabled(true);
+                        this.byId("vpoProcFlowIconTab").setEnabled(true);
+                    }
+                    else if(event.getParent().getParent().getId().includes("vpoDelInvTab")){
+                        this.byId('idIconTabBarInlineMode').setVisible(true)
+                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
+                            size: "50%",
+                            resizable: true
+                        });
+                        oSecondPane.setLayoutData(oLayoutData);
+                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
+                        this.byId("vpoDetailTab").addStyleClass("vpoDetSection")
+                        this.byId("vpoDetailTab").removeStyleClass("addDesignSection2")
+
+                        this.byId('vpoBtnFullScreenDelInv').setVisible(true)
+                        this.byId('vpoBtnExitFullScreenDelInv').setVisible(false)
+
+                        this.byId("vpoDetailsIconTab").setEnabled(true);
+                        this.byId("vpoDelSchedIconTab").setEnabled(true);
+                        this.byId("vpoDelInvIconTab").setEnabled(true);
+                        this.byId("vpoPoHistIconTab").setEnabled(true);
+                        this.byId("vpoConditionsIconTab").setEnabled(true);
+                        this.byId("vpoProcFlowIconTab").setEnabled(true);
+                    }
+                    else if(event.getParent().getParent().getId().includes("vpoPoHistTab")){
+                        this.byId('idIconTabBarInlineMode').setVisible(true)
+                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
+                            size: "50%",
+                            resizable: true
+                        });
+                        oSecondPane.setLayoutData(oLayoutData);
+                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
+                        this.byId("vpoDetailTab").addStyleClass("vpoDetSection")
+                        this.byId("vpoDetailTab").removeStyleClass("addDesignSection2")
+
+                        this.byId('vpoBtnFullScreenPOHistory').setVisible(true)
+                        this.byId('vpoBtnExitFullScreenPOHistory').setVisible(false)
+
+                        this.byId("vpoDetailsIconTab").setEnabled(true);
+                        this.byId("vpoDelSchedIconTab").setEnabled(true);
+                        this.byId("vpoDelInvIconTab").setEnabled(true);
+                        this.byId("vpoPoHistIconTab").setEnabled(true);
+                        this.byId("vpoConditionsIconTab").setEnabled(true);
+                        this.byId("vpoProcFlowIconTab").setEnabled(true);
+                    }
+                    else if(event.getParent().getParent().getId().includes("vpoConditionsTab")){
+                        this.byId('idIconTabBarInlineMode').setVisible(true)
+                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
+                            size: "50%",
+                            resizable: true
+                        });
+                        oSecondPane.setLayoutData(oLayoutData);
+                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
+                        this.byId("vpoDetailTab").addStyleClass("vpoDetSection")
+                        this.byId("vpoDetailTab").removeStyleClass("addDesignSection2")
+
+                        this.byId('vpoBtnFullScreenConditions').setVisible(true)
+                        this.byId('vpoBtnExitFullScreenConditions').setVisible(false)
+
+                        this.byId("vpoDetailsIconTab").setEnabled(true);
+                        this.byId("vpoDelSchedIconTab").setEnabled(true);
+                        this.byId("vpoDelInvIconTab").setEnabled(true);
+                        this.byId("vpoPoHistIconTab").setEnabled(true);
+                        this.byId("vpoConditionsIconTab").setEnabled(true);
+                        this.byId("vpoProcFlowIconTab").setEnabled(true);
+                    }
+                    else if(event.getParent().getParent().getId().includes("vpoProcFlowIconTab")){
+                        this.byId('idIconTabBarInlineMode').setVisible(true)
+                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
+                            size: "50%",
+                            resizable: true
+                        });
+                        oSecondPane.setLayoutData(oLayoutData);
+                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
+                        this.byId("vpoDetailTab").addStyleClass("vpoDetSection")
+                        this.byId("vpoDetailTab").removeStyleClass("addDesignSection2")
+
+                        this.byId('vpoBtnFullScreenProcFlow').setVisible(true)
+                        this.byId('vpoBtnExitFullScreenProcFlow').setVisible(false)
+
+                        this.byId("vpoDetailsIconTab").setEnabled(true);
+                        this.byId("vpoDelSchedIconTab").setEnabled(true);
+                        this.byId("vpoDelInvIconTab").setEnabled(true);
+                        this.byId("vpoPoHistIconTab").setEnabled(true);
+                        this.byId("vpoConditionsIconTab").setEnabled(true);
+                    }
+                    this._tableFullScreenRender = ""
                 }
             },
 
@@ -7633,30 +8457,31 @@ sap.ui.define([
                         //Layout Error
                         sap.m.MessageBox.error(_captionList.INFO_NO_LAYOUT);
                     }
-                });                
+                });
             },
 
             disableOtherTabs: function (tabName) {
                 var oIconTabBar = this.byId(tabName);
+                this.byId("idChangesIconTabBar").setEnabled(false);
                 oIconTabBar.getItems().filter(item => item.getProperty("key") !== oIconTabBar.getSelectedKey())
                     .forEach(item => item.setProperty("enabled", false));
-
             },
             disableOtherTabsChild: function (tabName) {
                 var oIconTabBar = this.byId(tabName);
+                this.byId("idChangesIconTabBar").setEnabled(false);
                 oIconTabBar.getItems().filter(item => item.getProperty("key"))
                 .forEach(item => item.setProperty("enabled", false));
-
             },
             enableOtherTabs: function (tabName) {
                 var oIconTabBar = this.byId(tabName);
+                this.byId("idChangesIconTabBar").setEnabled(false);
                 oIconTabBar.getItems().forEach(item => item.setProperty("enabled", true));
             },
             enableOtherTabsChild: function (tabName) {
                 var oIconTabBar = this.byId(tabName);
+                this.byId("idChangesIconTabBar").setEnabled(false);
                 oIconTabBar.getItems().filter(item => item.getProperty("key"))
                 .forEach(item => item.setProperty("enabled", true));
-
             },
 
             getProcessFlow: function(poItem) {
@@ -7843,13 +8668,16 @@ sap.ui.define([
                     })) || ""; // generate the Hash to display style 
                 }
                 else if (oData.DOCTYPE === "PR") {
-                    var hash = (oCrossAppNavigator && oCrossAppNavigator.hrefForExternal({
-                        target: {
-                            semanticObject: "ZSO_3DERP_PUR_PR",
-                            action: "display&/PRDetail/" + vSBU + "/" + oData.PRNO + "/" + oData.PRITEM
-                        }
-                    })) || ""; 
+                    var hash = "ZSO_3DERP_PUR_PR-display&/PRDetail/" + vSBU + "/" + oData.PRNO + "/" + oData.PRITEM;
                 }
+                // else if (oData.DOCTYPE === "PR") {
+                //     var hash = (oCrossAppNavigator && oCrossAppNavigator.hrefForExternal({
+                //         target: {
+                //             semanticObject: "ZSO_3DERP_PUR_PR",
+                //             action: "display&/PRDetail/" + vSBU + "/" + oData.PRNO + "/" + oData.PRITEM
+                //         }
+                //     })) || ""; 
+                // }
 
                 oCrossAppNavigator.toExternal({
                     target: {
@@ -7918,7 +8746,6 @@ sap.ui.define([
                     }   
     
                     this._inputSource.setValueState("None");
-                    // console.log(this._inputSource.getTokens())
                 }
                 else if (oEvent.sId === "cancel") {
     
@@ -7945,10 +8772,140 @@ sap.ui.define([
                         }
                     })
                 }
-    
-                console.log(oSource.getTokens())
             },
 
-            
+            getResource: async (me) => {   
+                var oModel = me.getOwnerComponent().getModel();
+
+                var oParam = {
+                    SBU: me._sbu,
+                    PONO: me._pono,
+                    N_PurchOrg: [],
+                    N_PurchGrp: [],
+                    N_PayTerms: [],
+                    N_IncoTerms: [],
+                    N_ShipMode: [],
+                    N_UOM: [],
+                    N_DocTypeInfo: [],
+                    N_CustGrp: [],
+                    N_Vendor: [],
+                    N_InfoRecChk: [],
+                    N_Company: [],
+                    N_Currency: [],
+                    N_PODocType: [],
+                    N_PurchPlant: [],
+                    N_ShipToPlant: [],
+                    N_SupplyType: [],
+                    N_Plant: []
+                }
+    
+                var oPromise = new Promise((resolve, reject) => {
+                    oModel.create("/VPOSplitPOResourceSet", oParam, {
+                        method: "POST",
+                        success: function(oData, oResponse) {
+                            me.getView().setModel(new JSONModel(oData.N_PurchOrg.results), "purchorg");
+                            me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/purchorg", oData.N_PurchOrg.results);
+
+                            me.getView().setModel(new JSONModel(oData.N_PurchGrp.results), "purchgrp");
+                            me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/purchgrp", oData.N_PurchGrp.results);
+
+                            me.getView().setModel(new JSONModel(oData.N_PayTerms.results), "payterms");
+                            me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/payterms", oData.N_PayTerms.results);
+
+                            me.getView().setModel(new JSONModel(oData.N_IncoTerms.results), "incoterms");
+                            me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/incoterms", oData.N_IncoTerms.results); 
+
+                            me.getView().setModel(new JSONModel(oData.N_ShipMode.results), "shipmode");
+                            me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/shipmode", oData.N_ShipMode.results);
+
+                            me.getView().setModel(new JSONModel(oData.N_UOM.results), "uom");
+                            me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/uom", oData.N_UOM.results);
+
+                            me.getView().setModel(new JSONModel(oData.N_DocTypeInfo.results), "podoctypeinfo");
+                            me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/podoctypeinfo", oData.N_DocTypeInfo.results);
+
+                            me.getView().setModel(new JSONModel(oData.N_CustGrp.results), "custgrp");
+                            me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/custgrp", oData.N_CustGrp.results);
+
+                            me.getView().setModel(new JSONModel(oData.N_Vendor.results), "vendor");
+                            me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/vendor", oData.N_Vendor.results);
+
+                            me.getView().setModel(new JSONModel(oData.N_InfoRecChk.results), "inforecchk");
+                            me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/inforecchk", oData.N_InfoRecChk.results);
+
+                            me.getView().setModel(new JSONModel(oData.N_Company.results), "company");
+                            me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/company", oData.N_Company.results);
+    
+                            me.getView().setModel(new JSONModel(oData.N_Currency.results), "currency");
+                            me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/currency", oData.N_Currency.results);
+    
+                            me.getView().setModel(new JSONModel(oData.N_SupplyType.results), "supplytype");
+                            me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/supplytype", oData.N_SupplyType.results);
+
+                            me.getView().setModel(new JSONModel(oData.N_PODocType.results), "podoctype");
+                            me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/podoctype", oData.N_PODocType.results);
+
+                            me.getView().setModel(new JSONModel(oData.N_PurchPlant.results), "purchplant");
+                            me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/purchplant", oData.N_PurchPlant.results);
+
+                            me.getView().setModel(new JSONModel(oData.N_ShipToPlant.results), "shiptoplant");
+                            me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/shiptoplant", oData.N_ShipToPlant.results);
+
+                            me.getView().setModel(new JSONModel(oData.N_Plant.results), "plant");
+                            me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/plant", oData.N_Plant.results);
+
+                            resolve(true);
+                        },
+                        error: function (err) {
+                            resolve(false);
+                        }
+                    });
+                })
+                
+                return await oPromise;
+            },
+
+            //******************************************* */
+            // Column Filtering
+            //******************************************* */
+
+            onColFilterClear: function(oEvent) {
+                TableFilter.onColFilterClear(oEvent, this);
+            },
+
+            onColFilterCancel: function(oEvent) {
+                TableFilter.onColFilterCancel(oEvent, this);
+            },
+
+            onColFilterConfirm: function(oEvent) {
+                TableFilter.onColFilterConfirm(oEvent, this);
+            },
+
+            onFilterItemPress: function(oEvent) {
+                TableFilter.onFilterItemPress(oEvent, this);
+            },
+
+            onFilterValuesSelectionChange: function(oEvent) {
+                TableFilter.onFilterValuesSelectionChange(oEvent, this);
+            },
+
+            onSearchFilterValue: function(oEvent) {
+                TableFilter.onSearchFilterValue(oEvent, this);
+            },
+
+            onCustomColFilterChange: function(oEvent) {
+                TableFilter.onCustomColFilterChange(oEvent, this);
+            },
+
+            onSetUseColFilter: function(oEvent) {
+                TableFilter.onSetUseColFilter(oEvent, this);
+            },
+
+            onRemoveColFilter: function(oEvent) {
+                TableFilter.onRemoveColFilter(oEvent, this);
+            },
+
+            pad: Common.pad
+
         });
     });

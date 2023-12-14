@@ -6,11 +6,16 @@ sap.ui.define([
     "sap/m/MessageBox",
     "../js/Utils",
     "sap/ui/core/routing/HashChanger",
+    'sap/m/SearchField',
+    'sap/ui/model/type/String',
+    "sap/m/Token",
+    "../js/TableFilter",
+    "../js/Common",
 ],
     /**
      * @param {typeof sap.ui.core.mvc.Controller} Controller
      */
-    function (Controller, JSONModel, Filter, FilterOperator, MessageBox, Utils, HashChanger) {
+    function (Controller, JSONModel, Filter, FilterOperator, MessageBox, Utils, HashChanger, SearchField, typeString, Token, TableFilter, Common) {
         "use strict";
 
         var that;
@@ -21,8 +26,9 @@ sap.ui.define([
         return Controller.extend("zuivendorpo.controller.main", {
             onInit: async function () {
                 that = this;
+                this.callCaptionsAPI();
                 this._oModel = this.getOwnerComponent().getModel();
-                
+
                 if (sap.ui.getCore().byId("backBtn") !== undefined) {
                     this._fBackButton = sap.ui.getCore().byId("backBtn").mEventRegistry.press[0].fFunction;
 
@@ -38,7 +44,6 @@ sap.ui.define([
                     }, oView);
                 }
 
-                this.callCaptionsAPI();
                 this._counts = {
                     unreleasedpo: 0,
                     openlineitems: 0,
@@ -50,7 +55,8 @@ sap.ui.define([
                     activeCondRec:'',
                     condMatNo: '',
                     condShortText: '',
-                    activeDocTyp: ''
+                    activeDocTyp: '',
+                    poCount: 0
                 }), "ui");
 
                 var _oDelegateKeyUp = {
@@ -68,6 +74,12 @@ sap.ui.define([
 
                 this._sbuChange = false;
                 this._tblChange = false;
+                
+                //table Filter
+                this._aColumns = {};
+                this._tableFilter = TableFilter;
+                this._colFilters = {};
+
                 var oJSONDataModel = new JSONModel(); 
                 oJSONDataModel.setData(this._counts);
                 this.getView().setModel(oJSONDataModel, "counts");
@@ -77,7 +89,6 @@ sap.ui.define([
                 var oModel = this.getOwnerComponent().getModel("ZVB_3DERP_VPO_FILTERS_CDS");
                 oModel.read("/ZVB_3DERP_SBU_SH", {
                     success: function (oData, oResponse) {
-                        // console.log(oData)
                         if (oData.results.length === 1) {
                             // that.getView().getModel("ui").setProperty("/sbu", oData.results[0].SBU);
                             // that.getColumns("AUTO_INIT");
@@ -92,7 +103,6 @@ sap.ui.define([
                     main: "mainSet"
                 };
 
-                this._aColumns = {};
                 this._columnLoadError = false;
                 var _oComponent = this.getOwnerComponent();
                 this._router = _oComponent.getRouter();
@@ -113,6 +123,8 @@ sap.ui.define([
                 //store PO Item for PO History arrow up and arrow down function
                 this._poHistPOItemStore = []; //Store PO Items. 
                 this._poHistPOItemCount = 0; //Store Count every time user click arrow button in PO History
+
+                this._isDBClickApplied = false;
 
                 var nodeLanes = 
                 {
@@ -152,6 +164,14 @@ sap.ui.define([
 
                     this.byId("_IDGenMenuButton3").setVisible(false);
                 }
+
+                this._oMultiInputDOCTYPE = this.getView().byId("multiInputDOCTYPE");
+                this._oMultiInputDOCTYPE.addValidator(this._onMultiInputValidate.bind(this));
+
+                this._oMultiInputPRNO = this.getView().byId("multiInputPRNO");
+                this._oMultiInputPRNO.addValidator(this._onMultiInputValidate.bind(this));
+                
+                this.getPRNOSH([]);
             },
 
             _routePatternMatched: function (oEvent) {
@@ -177,7 +197,7 @@ sap.ui.define([
             },
             onSearch: async function(){
                 var me = this;
-                this.showLoadingDialog(this.getView().getModel("captionMsg").getData()["LOADING"]);
+                Common.openLoadingDialog(that);
                 _promiseResult = new Promise((resolve, reject)=>{
                     resolve(this.getMain());
                 });
@@ -187,17 +207,360 @@ sap.ui.define([
                 _promiseResult = new Promise((resolve, reject)=>{
                     resolve(me.getCols());
                 });
+                
+                this.getDocTypSH([]);
                 await _promiseResult;
-                this.closeLoadingDialog();
+                Common.closeLoadingDialog(that);
 
             },
+
+            getDocTypSH: function(aList){
+                var me = this;
+                var oJSONModel = new JSONModel();
+                var iCounter = 0;
+                var itemResult = [];
+                var vSBU = this.getView().getModel("ui").getData().sbu;
+                var oModel = this.getOwnerComponent().getModel("ZVB_3DERP_VPO_FILTERS_CDS");
+                //ZVB_3DERP_DOCTYPE_SH
+                oModel.read("/ZVB_3DERP_DOCTYPE_SH", {
+                    success: function (oData, oResponse) {
+                        if(oData.results.length > 0){
+                            for(var x = 0; x < oData.results.length; x++ ){
+                                if(oData.results[x].SBU === vSBU){
+                                    itemResult.push(oData.results[x]);
+                                }
+                            }
+
+                            itemResult = {results: itemResult} 
+                            var aDataFiltered = [];
+                            aDataFiltered = itemResult.results;
+            
+                            var aData = new JSONModel({
+                                results: aDataFiltered
+                            });
+                            me.getView().setModel(aData, "docTypSHSource");
+                            
+                        }else{
+                                
+                            var aData = new JSONModel({results: []});
+                            me.getView().setModel(aData, "docTypSHSource");
+                        }
+                        
+                    },
+                    error: function (err) { 
+                    }
+                });
+            },
+
+            getPRNOSH: function(aList){
+                var me = this;
+                var oJSONModel = new JSONModel();
+                var iCounter = 0;
+                var itemResult = [];
+                var vSBU = this.getView().getModel("ui").getData().sbu;
+                var oModel = this.getOwnerComponent().getModel("ZVB_3DERP_VPO_FILTERS_CDS");
+                // ZVB_3DERP_PRNO_SH
+                oModel.read("/ZVB_3DERP_PRNO_SH", {
+                    success: function (oData, oResponse) {
+                        if(oData.results.length > 0){
+                            var aDataFiltered = [];
+                            if (aList.length > 0) {
+                                aList.forEach(item => {
+                                    aDataFiltered.push(...oData.results.filter(x => x.DocType === item));
+                                })
+                            } else {
+                                aDataFiltered = oData.results;
+                            }
+                            var aData = new JSONModel({
+                                results: aDataFiltered
+                            });
+                            me.getView().setModel(aData, "prNoSHSource");
+                        }else{
+                            
+                            var aData = new JSONModel({results: []});
+                            me.getView().setModel(aData, "prNoSHSource");
+                        }
+                    },
+                    error: function (err) { 
+                    }
+                });
+            },
+            onCustomSmartFilterValueHelp: function(oEvent){
+                var oSource = oEvent.getSource();
+                var sModel = oSource.mBindingInfos.suggestionRows.model;
+                var oCustomSmartFilterModel;
+                var oSmartField = {};
+
+                if(sModel == "prNoSHSource"){
+                    oSmartField = {
+                        idLabel: "PR Number",
+                        idName: "PRNumber"
+                    }
+
+                    this.oColModel = new JSONModel({
+                        "cols": [
+                            {
+                                "label": "PR Number",
+                                "template": "PRNumber",
+                                "width": "20rem",
+                                "sortProperty": "PRNumber"
+                            }
+                        ]
+                    });
+
+                    oCustomSmartFilterModel = new JSONModel({
+                        "title": "PR Number",
+                        "key": "PRNumber"
+                    })
+                }else if(sModel == "docTypSHSource"){
+                    oSmartField = {
+                        idLabel: "Document Type",
+                        idName: "DocType"
+                    }
+
+                    this.oColModel = new JSONModel({
+                        "cols": [
+                            {
+                                "label": "Document Type",
+                                "template": "DocType",
+                                "width": "20rem",
+                                "sortProperty": "DocType"
+                            },
+                            {
+                                "label": "Description",
+                                "template": "Description",
+                                "sortProperty": "Description"
+                            },
+                        ]
+                    });
+
+                    oCustomSmartFilterModel = new JSONModel({
+                        "title": "Document Type",
+                        "key": "DocType"
+                    })
+                }
+
+                var aCols = this.oColModel.getData().cols;
+                this._oBasicSearchField = new SearchField({
+                    showSearchButton: false
+                });
+
+                this._oCustomSmartFilterValueHelpDialog = sap.ui.xmlfragment("zuivendorpo.view.fragments.valuehelp.SmartFilterValueHelpDialog", this);
+                this.getView().addDependent(this._oCustomSmartFilterValueHelpDialog);
+
+                this._oCustomSmartFilterValueHelpDialog.setModel(oCustomSmartFilterModel);
+    
+                this._oCustomSmartFilterValueHelpDialog.setRangeKeyFields([{
+                    label: oSmartField.idLabel,
+                    key: oSmartField.idName,
+                    type: "string",
+                    typeInstance: new typeString({}, {
+                        maxLength: 4
+                    })
+                }]);
+
+                this._oCustomSmartFilterValueHelpDialog.getTableAsync().then(function (oTable) {
+                    oTable.setModel(this.getView().getModel(sModel));
+                    oTable.setModel(this.oColModel, "columns");
+                    if (oTable.bindRows) {
+                        oTable.bindAggregation("rows", "/results");
+                    }
+    
+                    if (oTable.bindItems) {
+                        oTable.bindAggregation("items", "/results", function () {
+                            return new ColumnListItem({
+                                cells: aCols.map(function (column) {
+                                    return new Label({ text: "{" + column.template + "}" });
+                                })
+                            });
+                        });
+                    }
+    
+                    this._oCustomSmartFilterValueHelpDialog.update();
+                }.bind(this));
+
+                if (sModel == "prNoSHSource") this._oCustomSmartFilterValueHelpDialog.setTokens(this._oMultiInputPRNO.getTokens());
+                if (sModel == "docTypSHSource") this._oCustomSmartFilterValueHelpDialog.setTokens(this._oMultiInputDOCTYPE.getTokens());
+                this._oCustomSmartFilterValueHelpDialog.open();
+            },
+
+            onCustomSmartFilterValueHelpOkPress: function (oEvent) {
+                var me = this;
+                var aTokens = oEvent.getParameter("tokens");
+                var oSource = oEvent.getSource();
+                var sKey = Object.values(oSource.oModels)[0].oData.key;
+                //var oObject = oArgs.suggestionObject.getBindingContext(oSmartField.model).getObject(),
+
+                aTokens.forEach(item => {
+                    item.mProperties.text = item.mProperties.key;
+                })
+
+                if (sKey == "PRNumber") this._oMultiInputPRNO.setTokens(aTokens);
+                else if(sKey == "DocType"){
+                    this._oMultiInputDOCTYPE.setTokens(aTokens);
+
+                    var aToken = this._oMultiInputDOCTYPE.getTokens();
+                    var aList = [];
+
+                    aToken.forEach(item => {
+                        aList.push(item.mProperties.key);
+                    });
+                    
+                    if (aList.length > 0)
+                        me.getPRNOSH(aList);
+                    else
+                        me.getPRNOSH([]);
+                }
+                this._oCustomSmartFilterValueHelpDialog.close();
+            },
+
+            onCustomSmartFilterValueHelpCancelPress: function () {
+                this._oCustomSmartFilterValueHelpDialog.close();
+            },
+    
+            onCustomSmartFilterValueHelpAfterClose: function () {
+                this._oCustomSmartFilterValueHelpDialog.destroy();
+            },
+
+            onFilterBarSearch: function (oEvent) {
+                var me = this;
+                var sSearchQuery = this._oBasicSearchField.getValue(),
+                    aSelectionSet = oEvent.getParameter("selectionSet");
+                
+                var aFilters = aSelectionSet.reduce(function (aResult, oControl) {
+
+                    var sKey = me._oCustomSmartFilterValueHelpDialog.getModel().oData.key;
+                    if (oControl.getValue()) {
+                        aResult.push(new Filter({
+                            path: sKey, //oControl.getName(),
+                            operator: FilterOperator.Contains,
+                            value1: oControl.getValue()
+                        }));
+                    }
+
+                    return aResult;
+                }, []);
+    
+                this._filterTable(new Filter({
+                    filters: aFilters,
+                    and: true
+                }));
+            },
+
+            _filterTable: function (oFilter) {
+                var oValueHelpDialog = this._oCustomSmartFilterValueHelpDialog;
+    
+                oValueHelpDialog.getTableAsync().then(function (oTable) {
+                    if (oTable.bindRows) {
+                        oTable.getBinding("rows").filter(oFilter);
+                    }
+    
+                    if (oTable.bindItems) {
+                        oTable.getBinding("items").filter(oFilter);
+                    }
+    
+                    oValueHelpDialog.update();
+                });
+            },
+
+            _onMultiInputValidate: function(oArgs) {
+                var oSmartField = {};
+
+                if (oArgs.suggestionObject.sId.includes("multiInputPRNO")) {
+                    oSmartField.model = "prNoSHSource";
+                    oSmartField.id = "PRNumber";
+                    oSmartField.desc = "DESCRIPTION";
+                }else if (oArgs.suggestionObject.sId.includes("multiInputDOCTYPE")) {
+                    oSmartField.model = "docTypSHSource";
+                    oSmartField.id = "DocType";
+                    oSmartField.desc = "Description";
+                }
+
+                var aToken;
+
+                if (oSmartField.model == "prNoSHSource") aToken = this._oMultiInputPRNO.getTokens();
+                else if (oSmartField.model == "docTypSHSource") aToken = this._oMultiInputDOCTYPE.getTokens();
+
+                if (oArgs.suggestionObject) {
+                    var oObject = oArgs.suggestionObject.getBindingContext(oSmartField.model).getObject(),
+                        oToken = new Token();
+
+                    oToken.setKey(oObject[oSmartField.id]);
+                    //oToken.setText(oObject[oSmartField.desc] + " (" + oObject[oSmartField.id] + ")");
+                    oToken.setText(oObject[oSmartField.id]);
+                    aToken.push(oToken)
+
+                    if (oSmartField.model == "prNoSHSource") {
+                        this._oMultiInputPRNO.setTokens(aToken);
+                        this._oMultiInputPRNO.setValueState("None");
+                    }else if (oSmartField.model == "docTypSHSource") {
+                        this._oMultiInputDOCTYPE.setTokens(aToken);
+                        this._oMultiInputDOCTYPE.setValueState("None");
+                    }
+                }
+                else if (oArgs.text !== "") {
+                    if (oSmartField.model == "prNoSHSource") {
+                        this._oMultiInputPRNO.setValueState("Error");
+                    }else if (oSmartField.model == "docTypSHSource") {
+                        this._oMultiInputDOCTYPE.setValueState("Error");
+                    }
+                }
+                return null;
+            },
+
+            onCustomSmartFilterValueHelpChange: function(oEvent) {
+                var me = this;
+                var oSource = oEvent.getSource();
+                if (oSource.sId.includes("multiInputPRNO")) {
+                    if (oEvent.getParameter("value") === "") this._oMultiInputPRNO.setValueState("None");
+                }else if (oSource.sId.includes("multiInputDOCTYPE")){
+                    if (oEvent.getParameter("value") === "") this._oMultiInputDOCTYPE.setValueState("None");
+
+                    var aToken = this._oMultiInputDOCTYPE.getTokens();
+                    var aList = [];
+
+                    aToken.forEach(item => {
+                        aList.push(item.mProperties.key);
+                    });
+
+                    if (aList.length > 0)
+                        me.getPRNOSH(aList);
+                    else
+                        me.getPRNOSH([]);
+                }
+            },
+
+            onCustomSmartFilterValueHelpTokenUpdate: function(oEvent) {
+                var oSource = oEvent.getSource();
+                var oParameter = oEvent.getParameters();
+                var me = this;
+
+                if (oParameter.type == "removed") {
+                    if (oSource.sId.includes("multiInputPRNO")) { } 
+                }else if (oSource.sId.includes("multiInputDOCTYPE")) { 
+                    var aToken = this._oMultiInputDOCTYPE.getTokens();
+                    var aList = [];
+
+                    aToken.forEach(item => {
+                        if (oParameter.removedTokens.filter(x => x.mProperties.key == item.mProperties.key).length == 0) {
+                            aList.push(item.mProperties.key);
+                        }
+                    });
+
+                    if (aList.length > 0)
+                        me.getPRNOSH(aList);
+                    else
+                        me.getPRNOSH([]);
+                }
+            },
+
             //Same as OnSearch
             onRefresh: async function(){
                 var me = this;
                 if(this.getView().getModel("ui").getData().dataMode === 'NODATA'){
                     return;
                 }
-                this.showLoadingDialog(this.getView().getModel("captionMsg").getData()["LOADING"]);
+                Common.openLoadingDialog(that);
                 _promiseResult = new Promise((resolve, reject)=>{
                     resolve(this.getMain());
                 });
@@ -209,7 +572,7 @@ sap.ui.define([
                 await _promiseResult;
 
                 this.getProcessFlow();
-                this.closeLoadingDialog();                
+                Common.closeLoadingDialog(that);             
             },
             onSearchHeader: async function(oEvent){
                 if(this.getView().getModel("ui").getData().dataMode === 'NODATA'){
@@ -230,7 +593,7 @@ sap.ui.define([
                     oColumnsModel = this.getView().getModel("VENDORPOColumns");
                     oColumnsData = oColumnsModel.getProperty('/');
                     if(sQuery && sQuery !== undefined) {
-                        this.showLoadingDialog(this.getView().getModel("captionMsg").getData()["LOADING"]);
+                        Common.openLoadingDialog(that);
                         oTableSrc.getColumns().forEach((col, idx) => {
                             var sDataType = oColumnsData.filter(item => item.ColumnName === col.sId.split("-")[1])[0].ColumnName
         
@@ -266,10 +629,10 @@ sap.ui.define([
                             resolve();
                         })
                         await _promiseResult;;
-                        this.closeLoadingDialog();
+                        Common.closeLoadingDialog(that);
                     }
                     if(sQuery === "" && sQuery !== undefined){
-                        this.showLoadingDialog(this.getView().getModel("captionMsg").getData()["LOADING"]);
+                        Common.openLoadingDialog(that);
                         _promiseResult = new Promise((resolve, reject)=>{
                             resolve(this.getMain());
                         });
@@ -280,7 +643,7 @@ sap.ui.define([
                             resolve(this.getCols());
                         });
                         await _promiseResult;
-                        this.closeLoadingDialog();
+                        Common.closeLoadingDialog(that);
                     }
                 }
     
@@ -291,13 +654,72 @@ sap.ui.define([
                 var poNo;
                 var condrec;
                 var docType;
-                var aFilters = this.getView().byId("smartFilterBar").getFilters();
+                // var aFilters = this.getView().byId("smartFilterBar").getFilters();
                 var oResults = []
                 var oCounter = 0;
 
                 var vSBU = this.getView().getModel("ui").getData().sbu;
 
-                
+                var oSmartFilter = this.getView().byId("smartFilterBar").getFilters();
+                var aFilters = [],
+                    aFilter = [],
+                    aCustomFilter = [],
+                    aSmartFilter = [];
+
+                if (oSmartFilter.length > 0)  {
+                    // aFilters = oSmartFilter[0].aFilters;
+                    oSmartFilter[0].aFilters.forEach(item => {
+                        if (item.aFilters === undefined) {
+                            aFilter.push(new Filter(item.sPath, item.sOperator, item.oValue1));
+                        }
+                        else {
+                            aFilters.push(item);
+                        }
+                    })
+
+                    if (aFilter.length > 0) { aFilters.push(new Filter(aFilter, false)); }
+                }
+
+                if (this.getView().byId("smartFilterBar")) {
+                    var oCtrl = this.getView().byId("smartFilterBar").determineControlByName("DOCTYPE");
+
+                    if (oCtrl) {
+                        var aCustomFilter = [];
+
+                        if (oCtrl.getTokens().length === 1) {
+                            oCtrl.getTokens().map(function(oToken) {
+                                aFilters.push(new Filter("DOCTYPE", FilterOperator.EQ, oToken.getKey()))
+                            })
+                        }
+                        else if (oCtrl.getTokens().length > 1) {
+                            oCtrl.getTokens().map(function(oToken) {
+                                aCustomFilter.push(new Filter("DOCTYPE", FilterOperator.EQ, oToken.getKey()))
+                            })
+
+                            aFilters.push(new Filter(aCustomFilter));
+                        }
+                    }
+
+                    oCtrl = this.getView().byId("smartFilterBar").determineControlByName("PRNO");
+
+                    if (oCtrl) {
+                        var aCustomFilter = [];
+
+                        if (oCtrl.getTokens().length === 1) {
+                            oCtrl.getTokens().map(function(oToken) {
+                                aFilters.push(new Filter("PRNO", FilterOperator.EQ, oToken.getKey()))
+                            })
+                        }
+                        else if (oCtrl.getTokens().length > 1) {
+                            oCtrl.getTokens().map(function(oToken) {
+                                aCustomFilter.push(new Filter("PRNO", FilterOperator.EQ, oToken.getKey()))
+                            })
+
+                            aFilters.push(new Filter(aCustomFilter));
+                        }
+                    }
+                }
+
                 if (aFilters.length > 0) {
                     aFilters[0].aFilters.forEach(item => {
                         if (item.sPath === 'VENDOR') {
@@ -308,9 +730,11 @@ sap.ui.define([
                     })
                 }
 
+                aSmartFilter.push(new Filter(aFilters, true));
+
                 return new Promise((resolve, reject) => {
                     oModel.read('/mainSet', {
-                        filters: aFilters,
+                        filters: aSmartFilter,
                         success: function (data, response) {
                             if (data.results.length > 0) {
                                 data.results.forEach(item =>{
@@ -320,8 +744,21 @@ sap.ui.define([
                                     }
 
                                     if(oCounter === data.results.length){
-                                        oResults = {"results": oResults}
-                                        
+                                        const filteredObj = oResults.reduce((acc, current) => {
+                                            // Use the PONO value as the key for filtering.
+                                            const key = current.PONO;
+                                            
+                                            // If the key doesn't exist in the accumulator (acc), add the current object.
+                                            if (!acc[key]) {
+                                                acc[key] = current;
+                                            }
+                                            
+                                            return acc;
+                                        }, {});
+                                        const resultArray = Object.values(filteredObj);
+
+                                        oResults = {"results": resultArray}
+
                                         oResults.results.sort(function(a,b) {
                                             return new Date(b.PODT) - new Date(a.PODT);
                                         });
@@ -351,9 +788,13 @@ sap.ui.define([
                                         var oJSONModel = new sap.ui.model.json.JSONModel();
                                         oJSONModel.setData(oResults);
                                         me.getView().setModel(oJSONModel, "VPOHdr");
+
+                                        TableFilter.applyColFilters("mainTab", me);
                                         me.getView().getModel("ui").setProperty("/activePONo", poNo);
                                         me.getView().getModel("ui").setProperty("/activeCondRec", condrec);
                                         me.getView().getModel("ui").setProperty("/activeDocTyp", docType)
+                                        
+                                        me.getView().getModel("ui").setProperty("/poCount", oResults.results.length);
                                         resolve(me.getCounts());
                                         resolve(me.getPODetails2(poNo));
                                         resolve(me.getDelSchedule2(poNo));
@@ -395,7 +836,7 @@ sap.ui.define([
                                 }), "VPOCond");
                                 resolve();
                             }
-                            me.closeLoadingDialog();
+                            Common.closeLoadingDialog(that);
                             resolve();
                         },
                         error: function (err) { 
@@ -430,7 +871,7 @@ sap.ui.define([
                 var tblChange = this._tblChange;
                 var oJSONModel = new sap.ui.model.json.JSONModel();
                 var objectData = [];
-                return new Promise((resolve, reject)=>{
+                await new Promise((resolve, reject)=>{
                     oModel.read('/VPOHistSet', { 
                         urlParameters: {
                             "$filter": "PONO eq '" + PONO + "' and ITEM2 eq '"+ POITEM +"'"
@@ -464,7 +905,7 @@ sap.ui.define([
                 var tblChange = this._tblChange;
                 var oJSONModel = new sap.ui.model.json.JSONModel();
                 var objectData = [];
-                return new Promise((resolve, reject)=>{
+                await new Promise((resolve, reject)=>{
                     oModel.read('/VPODelInvSet', { 
                         urlParameters: {
                             "$filter": "PONO eq '" + PONO + "'"
@@ -495,7 +936,7 @@ sap.ui.define([
                 var me = this;
                 var tblChange = this._tblChange;
                 var oJSONModel = new sap.ui.model.json.JSONModel();
-                return new Promise((resolve, reject)=>{
+                await new Promise((resolve, reject)=>{
                     oModel.read('/VPOConditionsSet', { 
                         urlParameters: {
                             "$filter": "KNUMV eq '" + CONDREC + "' and KPOSN eq '"+ POITEM +"'"
@@ -525,7 +966,7 @@ sap.ui.define([
                 var tblChange = this._tblChange;
                 var oJSONModel = new sap.ui.model.json.JSONModel();
                 var objectData = [];
-                return new Promise((resolve, reject)=>{
+                await new Promise((resolve, reject)=>{
                     oModel.read('/VPODelSchedSet', { 
                         urlParameters: {
                             "$filter": "PONO eq '" + PONO + "'"
@@ -565,69 +1006,79 @@ sap.ui.define([
             getPODetails2: async function(PONO){
                 var oModel = this.getOwnerComponent().getModel();
                 var me = this;
-
                 this._condPOItemMatNoStore = [];
                 this._poHistPOItemStore = [];
                 var tblChange = this._tblChange;
                 var oJSONModel = new sap.ui.model.json.JSONModel();
                 var objectData = [];
-                var poItem = "";
-                return new Promise((resolve, reject)=>{
-                    oModel.read('/VPODetailsSet', { 
-                        urlParameters: {
-                            "$filter": "PONO eq '" + PONO + "'"
-                        },
-                        success: function (data, response) {
-                            if (data.results.length > 0) {
-                                data.results.forEach(item => {
-                                    item.DELDT = dateFormat.format(new Date(item.DELDT));
-                                    item.DELETED = item.DELETED === "L" ? true : false;
-                                    me._condPOItemMatNoStore.push({
-                                        poItem: item.ITEM,
-                                        matNo: item.MATNO,
-                                        shortText: item.SHORTTEXT
+
+                if(PONO === ""|| PONO === undefined || PONO === null){
+                    this._condPOItemMatNoStore = [];
+                    this._poHistPOItemStore = [];
+                    this.getView().getModel("ui").setProperty("/activePOItem", '');
+                    me.getView().getModel("ui").setProperty("/condMatNo", '');
+                    me.getView().getModel("ui").setProperty("/condShortText", '');
+                    me.getView().setModel(oJSONModel, "VPODtls");
+                    if(tblChange)
+                        me.setTableColumnsData('VPODTLS');
+                }else{
+                    await new Promise((resolve, reject)=>{
+                        oModel.read('/VPODetailsSet', { 
+                            urlParameters: {
+                                "$filter": "PONO eq '" + PONO + "'"
+                            },
+                            success: function (data, response) {
+                                if (data.results.length > 0) {
+                                    data.results.forEach(item => {
+                                        item.DELDT = dateFormat.format(new Date(item.DELDT));
+                                        item.DELETED = item.DELETED === "L" ? true : false;
+                                        me._condPOItemMatNoStore.push({
+                                            poItem: item.ITEM,
+                                            matNo: item.MATNO,
+                                            shortText: item.SHORTTEXT
+                                        });
+
+                                        me._poHistPOItemStore.push({
+                                            poItem: item.ITEM,
+                                        })
+                                    })
+                                    //sort by PO Item
+                                    me._condPOItemMatNoStore.sort(function(a, b) {
+                                        return a.poItem.localeCompare(b.poItem);
                                     });
 
-                                    me._poHistPOItemStore.push({
-                                        poItem: item.ITEM,
-                                    })
-                                })
-                                //sort by PO Item
-                                me._condPOItemMatNoStore.sort(function(a, b) {
-                                    return a.poItem.localeCompare(b.poItem);
-                                });
+                                    //sort by PO Item
+                                    me._poHistPOItemStore.sort(function(a, b) {
+                                        return a.poItem.localeCompare(b.poItem);
+                                    });
+                                    
+                                    objectData.push(data.results);
+                                    objectData[0].sort((a,b) => (a.ITEM > b.ITEM) ? 1 : ((b.ITEM > a.ITEM) ? -1 : 0));
 
-                                //sort by PO Item
-                                me._poHistPOItemStore.sort(function(a, b) {
-                                    return a.poItem.localeCompare(b.poItem);
-                                });
-                                
-                                objectData.push(data.results);
-                                objectData[0].sort((a,b) => (a.ITEM > b.ITEM) ? 1 : ((b.ITEM > a.ITEM) ? -1 : 0));
-
-                                oJSONModel.setData(data);
-                                poItem = data.results[0].ITEM;
-                                
+                                    oJSONModel.setData(data);
+                                    poItem = data.results[0].ITEM;
+                                    
+                                }
+                                var poItem = data.results[0].ITEM;
+                                var matNo = data.results[0].MATNO;
+                                var shortText = data.results[0].SHORTTEXT;
+                                me.getView().getModel("ui").setProperty("/activePOItem", poItem);
+                                me.getView().getModel("ui").setProperty("/condMatNo", matNo);
+                                me.getView().getModel("ui").setProperty("/condShortText", shortText);
+                                me.getView().setModel(oJSONModel, "VPODtls");
+                                if(tblChange)
+                                    resolve(me.setTableColumnsData('VPODTLS'));
+                                resolve();
+                            },
+                            error: function (err) {
+                                me.getView().setModel(oJSONModel, "VPODtls");
+                                if(tblChange)
+                                    resolve(me.setTableColumnsData('VPODTLS'));
+                                resolve();
                             }
-                            var poItem = data.results[0].ITEM;
-                            var matNo = data.results[0].MATNO;
-                            var shortText = data.results[0].SHORTTEXT;
-                            me.getView().getModel("ui").setProperty("/activePOItem", poItem);
-                            me.getView().getModel("ui").setProperty("/condMatNo", matNo);
-                            me.getView().getModel("ui").setProperty("/condShortText", shortText);
-                            me.getView().setModel(oJSONModel, "VPODtls");
-                            if(tblChange)
-                                resolve(me.setTableColumnsData('VPODTLS'));
-                            resolve();
-                        },
-                        error: function (err) {
-                            me.getView().setModel(oJSONModel, "VPODtls");
-                            if(tblChange)
-                                resolve(me.setTableColumnsData('VPODTLS'));
-                            resolve();
-                        }
+                        });
                     });
-                });
+                }
             },
             setSmartFilterModel: function () {
                 //Model StyleHeaderFilters is for the smartfilterbar
@@ -691,36 +1142,42 @@ sap.ui.define([
                             if (oData.results.length > 0) {
                                 me._columnLoadError = false;
                                 if (modCode === 'VENDORPO') {
+                                    me._aColumns["mainTab"] = oData.results;
                                     oJSONColumnsModel.setData(oData.results);
                                     me.getView().setModel(oJSONColumnsModel, "VENDORPOColumns");
                                     me.setTableColumnsData(modCode);
                                     resolve();
                                 }
                                 if (modCode === 'VPODTLS') {
+                                    me._aColumns["detailsTab"] = oData.results;
                                     oJSONColumnsModel.setData(oData.results);
                                     me.getView().setModel(oJSONColumnsModel, "VPODTLSColumns");
                                     me.setTableColumnsData(modCode);
                                     resolve();
                                 }
                                 if (modCode === 'VPODELSCHED') {
+                                    me._aColumns["delSchedTab"] = oData.results;
                                     oJSONColumnsModel.setData(oData.results);
                                     me.getView().setModel(oJSONColumnsModel, "VPODELSCHEDColumns");
                                     me.setTableColumnsData(modCode);
                                     resolve();
                                 }
                                 if (modCode === 'VPODELINV') {
+                                    me._aColumns["delInvTab"] = oData.results;
                                     oJSONColumnsModel.setData(oData.results);
                                     me.getView().setModel(oJSONColumnsModel, "VPODELINVColumns");
                                     me.setTableColumnsData(modCode);
                                     resolve();
                                 }
                                 if (modCode === 'VPOHISTORY') {
+                                    me._aColumns["poHistTab"] = oData.results;
                                     oJSONColumnsModel.setData(oData.results);
                                     me.getView().setModel(oJSONColumnsModel, "VPOHISTORYColumns");
                                     me.setTableColumnsData(modCode);
                                     resolve();
                                 }
                                 if (modCode === 'VPOCOND') {
+                                    me._aColumns["conditionsTab"] = oData.results;
                                     oJSONColumnsModel.setData(oData.results);
                                     me.getView().setModel(oJSONColumnsModel, "VPOCONDColumns");
                                     me.setTableColumnsData(modCode);
@@ -803,7 +1260,7 @@ sap.ui.define([
                             me.getView().getModel("ui").setProperty("/dataMode", 'NODATA');
                             me.getView().getModel("ui").setProperty("/activePONo", "");
                             me.getView().getModel("ui").setProperty("/activePOItem", "");
-                            me.closeLoadingDialog(that);
+                            Common.closeLoadingDialog(that);
                             resolve();
                         }
                     });
@@ -828,17 +1285,19 @@ sap.ui.define([
                     }
                     oColumnsData = oDataModel.getProperty('/');                 
                     this.addColumns("mainTab", oColumnsData, oData, "VPOHdr");
-
-                    //double click event
-                    this.byId("mainTab").attachBrowserEvent('dblclick',function(e){
-                        var PONo = me.getView().getModel("ui").getProperty("/activePONo");
-                        // var CONDREC = me.getView().getModel("ui").getProperty("/activeCondRec");
-                        var SBU = me.getView().getModel("ui").getData().sbu;
-                        e.preventDefault();
-                        if(me.getView().getModel("ui").getData().dataMode === 'READ'){
-                            me.navToDetail(PONo, SBU); //navigate to detail page
-                        }
-                    });
+                    if(!this._isDBClickApplied){
+                        //double click event
+                        this.byId("mainTab").attachBrowserEvent('dblclick',function(e){
+                            me._isDBClickApplied = true;
+                            var PONo = me.getView().getModel("ui").getProperty("/activePONo");
+                            // var CONDREC = me.getView().getModel("ui").getProperty("/activeCondRec");
+                            var SBU = me.getView().getModel("ui").getData().sbu;
+                            e.preventDefault();
+                            if(me.getView().getModel("ui").getData().dataMode === 'READ'){
+                                me.navToDetail(PONo, SBU); //navigate to detail page
+                            }
+                        });
+                    }
                 }
                 if (modCode === 'VPODTLS') {
                     oColumnsModel = this.getView().getModel("VPODtls");  
@@ -1041,7 +1500,7 @@ sap.ui.define([
                     if (sColumnType === "STRING" || sColumnType === "DATETIME"|| sColumnType === "BOOLEAN") {                        
                         return new sap.ui.table.Column({
                             id: model+"-"+sColumnId,
-                            label: sColumnLabel,
+                            label: new sap.m.Text({text: sColumnLabel}),
                             template: me.columnTemplate(sColumnId, sColumnType), //default text
                             width: sColumnWidth + "px",
                             hAlign: me.columnSize(sColumnId),
@@ -1055,7 +1514,7 @@ sap.ui.define([
                     }else if (sColumnType === "NUMBER") {
                         return new sap.ui.table.Column({
                             id: model+"-"+sColumnId,
-                            label: sColumnLabel,
+                            label: new sap.m.Text({text: sColumnLabel}),
                             template: new sap.m.Text({ 
                                 text: {
                                     path: sColumnId,
@@ -1077,54 +1536,68 @@ sap.ui.define([
 
                 });
 
-                //sorting with Date Sort
+                //date/number sorting
                 oTable.attachSort(function(oEvent) {
-         
                     var sPath = oEvent.getParameter("column").getSortProperty();
                     var bDescending = false;
                     
+                    //remove sort icon of currently sorted column
+                    oTable.getColumns().forEach(col => {
+                        if (col.getSorted()) {
+                            col.setSorted(false);
+                        }
+                    })
+
                     oEvent.getParameter("column").setSorted(true); //sort icon initiator
-                    if (oEvent.getParameter("sortOrder") == "Descending") {
+
+                    if (oEvent.getParameter("sortOrder") === "Descending") {
                         bDescending = true;
                         oEvent.getParameter("column").setSortOrder("Descending") //sort icon Descending
-                    }else{
+                    }
+                    else {
                         oEvent.getParameter("column").setSortOrder("Ascending") //sort icon Ascending
                     }
 
                     var oSorter = new sap.ui.model.Sorter(sPath, bDescending ); //sorter(columnData, If Ascending(false) or Descending(True))
-                    
-                    var columnType = oEvent.getParameter("column").getTemplate().getBindingInfo("text") === undefined ? "" : oEvent.getParameter("column").getTemplate().getBindingInfo("text").columnType;
+                    var oColumn = columnsData.filter(fItem => fItem.ColumnName === oEvent.getParameter("column").getProperty("sortProperty"));
+                    var columnType = oColumn[0].DataType;
+
                     if (columnType === "DATETIME") {
                         oSorter.fnCompare = function(a, b) {
-                        
                             // parse to Date object
                             var aDate = new Date(a);
                             var bDate = new Date(b);
-                            
-                            if (bDate == null) {
-                                return -1;
-                            }
-                            if (aDate == null) {
-                                return 1;
-                            }
-                            if (aDate < bDate) {
-                                return -1;
-                            }
-                            if (aDate > bDate) {
-                                return 1;
-                            }
+
+                            if (bDate === null) { return -1; }
+                            if (aDate === null) { return 1; }
+                            if (aDate < bDate) { return -1; }
+                            if (aDate > bDate) { return 1; }
+
                             return 0;
                         };
-                    } 
+                    }
+                    else if (columnType === "NUMBER") {
+                        oSorter.fnCompare = function(a, b) {
+                            // parse to Date object
+                            var aNumber = +a;
+                            var bNumber = +b;
+
+                            if (bNumber === null) { return -1; }
+                            if (aNumber === null) { return 1; }
+                            if (aNumber < bNumber) { return -1; }
+                            if (aNumber > bNumber) { return 1; }
+
+                            return 0;
+                        };
+                    }
                     
                     oTable.getBinding('rows').sort(oSorter);
-                     // prevent internal sorting by table
+                    // prevent internal sorting by table
                     oEvent.preventDefault();
-         
-         
                 });
                 //bind the data to the table
                 oTable.bindRows("/rows");
+                TableFilter.updateColumnMenu(table, this);
                 
             },
             columnTemplate: function(sColumnId, sColumnType){
@@ -1228,20 +1701,7 @@ sap.ui.define([
                 this._sbuChange = true;
                 this.getView().getModel("ui").setProperty("/sbu", this.getView().byId("cboxSBU").getSelectedKey());
             },
-            
-            showLoadingDialog(arg) {
-                if (!this._LoadingDialog) {
-                    this._LoadingDialog = sap.ui.xmlfragment("zuivendorpo.view.fragments.dialog.LoadingDialog", this);
-                    this.getView().addDependent(this._LoadingDialog);
-                }
-                // jQuery.sap.syncStyleClass("sapUiSizeCompact", this.getView(), this._LoadingDialog);
-                
-                this._LoadingDialog.setTitle(arg);
-                this._LoadingDialog.open();
-            },
-            closeLoadingDialog() {
-                this._LoadingDialog.close();
-            },
+
             onClickEdit: async function(){
                 var PONo = this.getView().getModel("ui").getProperty("/activePONo");
                 var CONDREC = this.getView().getModel("ui").getProperty("/activeCondRec");
@@ -1755,7 +2215,18 @@ sap.ui.define([
 
                     PONo = this.getView().getModel("ui").getProperty("/activePONo");
                     condrec = this.getView().getModel("ui").getProperty("/activeCondRec");
-                    _promiseResult = new Promise(async(resolve,reject)=> {
+                    
+                    await new Promise((resolve, reject)=>{
+                        oTable.getRows().forEach(row => {
+                            if(row.getBindingContext().sPath.replace("/rows/", "") === sRowPath.split("/")[2]){
+                                resolve(row.addStyleClass("activeRow"));
+                            }else{
+                                resolve(row.removeStyleClass("activeRow"));
+                            }
+                        });
+                    });
+
+                    await new Promise(async(resolve,reject)=> {
                         
                         me._tblChange = true;
                         await me.getPODetails2(PONo)
@@ -1766,20 +2237,10 @@ sap.ui.define([
                         await me.getConditions2(condrec, poItem)
                         resolve();
                     })
-                    await _promiseResult;
 
                     this.getProcessFlow();
     
-                    _promiseResult = new Promise((resolve, reject)=>{
-                        oTable.getRows().forEach(row => {
-                            if(row.getBindingContext().sPath.replace("/rows/", "") === sRowPath.split("/")[2]){
-                                resolve(row.addStyleClass("activeRow"));
-                            }else{
-                                resolve(row.removeStyleClass("activeRow"));
-                            }
-                        });
-                    });
-                    await _promiseResult;
+                    
                     this._tblChange = false;
                 }else if(oEvent.getParameters().id.includes("detailsTab")){
                     oRow = this.getView().getModel("VPODtls").getProperty(sRowPath)
@@ -1855,133 +2316,12 @@ sap.ui.define([
 
             onExportToExcel: Utils.onExport,
 
-            onTableResize: async function (oEvent){
+            onTableResize: function(oEvent){
                 var event = oEvent.getSource();
                 var oSplitter = this.byId("splitMain");
                 var oFirstPane = oSplitter.getRootPaneContainer().getPanes().at(0);
                 var oSecondPane = oSplitter.getRootPaneContainer().getPanes().at(1);
-                if(this._tableFullScreenRender !== ""){
-                    //hide Smart Filter Bar
-                    this.byId('smartFilterBar').setVisible(true)
-
-                    if(event.getParent().getParent().getId().includes("mainTab")){
-                        this.byId('itbDetail').setVisible(true)
-                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
-                            size: "46%",
-                            resizable: true
-                        });
-                        oFirstPane.setLayoutData(oLayoutData);
-                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
-                    }
-                    else if(event.getParent().getParent().getId().includes("detailsTab")){
-                        this.byId('mainTab').setVisible(true)
-                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
-                            size: "54%",
-                            resizable: true
-                        });
-                        oSecondPane.setLayoutData(oLayoutData);
-                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
-                        this.byId("itbDetail").addStyleClass("designSection2")
-                        this.byId("itbDetail").removeStyleClass("addDesignSection2")
-
-                        // this.byId("detailsIconTab").setEnabled(true);
-                        this.byId("delSchedIconTab").setEnabled(true);
-                        this.byId("delInvIconTab").setEnabled(true);
-                        this.byId("poHistIconTab").setEnabled(true);
-                        this.byId("conditionsIconTab").setEnabled(true);
-                        this.byId("procFlowIconTab").setEnabled(true);
-                    }
-                    else if(event.getParent().getParent().getId().includes("delSchedTab")){
-                        this.byId('mainTab').setVisible(true)
-                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
-                            size: "54%",
-                            resizable: true
-                        });
-                        oSecondPane.setLayoutData(oLayoutData);
-                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
-                        this.byId("itbDetail").addStyleClass("designSection2")
-                        this.byId("itbDetail").removeStyleClass("addDesignSection2")
-
-                        this.byId("detailsIconTab").setEnabled(true);
-                        // this.byId("delSchedIconTab").setEnabled(true);
-                        this.byId("delInvIconTab").setEnabled(true);
-                        this.byId("poHistIconTab").setEnabled(true);
-                        this.byId("conditionsIconTab").setEnabled(true);
-                        this.byId("procFlowIconTab").setEnabled(true);
-                    }
-                    else if(event.getParent().getParent().getId().includes("delInvTab")){
-                        this.byId('mainTab').setVisible(true)
-                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
-                            size: "54%",
-                            resizable: true
-                        });
-                        oSecondPane.setLayoutData(oLayoutData);
-                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
-                        this.byId("itbDetail").addStyleClass("designSection2")
-                        this.byId("itbDetail").removeStyleClass("addDesignSection2")
-
-                        this.byId("detailsIconTab").setEnabled(true);
-                        this.byId("delSchedIconTab").setEnabled(true);
-                        // this.byId("delInvIconTab").setEnabled(true);
-                        this.byId("poHistIconTab").setEnabled(true);
-                        this.byId("conditionsIconTab").setEnabled(true);
-                        this.byId("procFlowIconTab").setEnabled(true);
-                    }
-                    else if(event.getParent().getParent().getId().includes("poHistTab")){
-                        this.byId('mainTab').setVisible(true)
-                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
-                            size: "54%",
-                            resizable: true
-                        });
-                        oSecondPane.setLayoutData(oLayoutData);
-                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
-                        this.byId("itbDetail").addStyleClass("designSection2")
-                        this.byId("itbDetail").removeStyleClass("addDesignSection2")
-
-                        this.byId("detailsIconTab").setEnabled(true);
-                        this.byId("delSchedIconTab").setEnabled(true);
-                        this.byId("delInvIconTab").setEnabled(true);
-                        // this.byId("poHistIconTab").setEnabled(true);
-                        this.byId("conditionsIconTab").setEnabled(true);
-                        this.byId("procFlowIconTab").setEnabled(true);
-                    }
-                    else if(event.getParent().getParent().getId().includes("conditionsTab")){
-                        this.byId('mainTab').setVisible(true)
-                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
-                            size: "54%",
-                            resizable: true
-                        });
-                        oSecondPane.setLayoutData(oLayoutData);
-                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
-                        this.byId("itbDetail").addStyleClass("designSection2")
-                        this.byId("itbDetail").removeStyleClass("addDesignSection2")
-
-                        this.byId("detailsIconTab").setEnabled(true);
-                        this.byId("delSchedIconTab").setEnabled(true);
-                        this.byId("delInvIconTab").setEnabled(true);
-                        this.byId("poHistIconTab").setEnabled(true);
-                        // this.byId("conditionsIconTab").setEnabled(true);
-                        this.byId("procFlowIconTab").setEnabled(true);
-                    }
-                    else if(event.getParent().getParent().getId().includes("procFlowIconTab")){
-                        this.byId('mainTab').setVisible(true)
-                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
-                            size: "54%",
-                            resizable: true
-                        });
-                        oSecondPane.setLayoutData(oLayoutData);
-                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
-                        this.byId("itbDetail").addStyleClass("designSection2")
-                        this.byId("itbDetail").removeStyleClass("addDesignSection2")
-
-                        this.byId("detailsIconTab").setEnabled(true);
-                        this.byId("delSchedIconTab").setEnabled(true);
-                        this.byId("delInvIconTab").setEnabled(true);
-                        this.byId("poHistIconTab").setEnabled(true);
-                        this.byId("conditionsIconTab").setEnabled(true);
-                    }
-                    this._tableFullScreenRender = ""
-                }else{
+                if(this._tableFullScreenRender === ""){
                     //hide Smart Filter Bar
                     this.byId('smartFilterBar').setVisible(false)
                     
@@ -1992,6 +2332,9 @@ sap.ui.define([
                             resizable: false
                         });
                         oFirstPane.setLayoutData(oLayoutData);
+                        
+                        this.byId('btnFullScreen').setVisible(false)
+                        this.byId('btnExitFullScreen').setVisible(true)
                         this.byId("_IDGenVBox1").addStyleClass("onAddvboxHeight")
                     }
                     else if(event.getParent().getParent().getId().includes("detailsTab")){
@@ -2004,6 +2347,9 @@ sap.ui.define([
                         this.byId("_IDGenVBox1").addStyleClass("onAddvboxHeight")
                         this.byId("itbDetail").removeStyleClass("designSection2")
                         this.byId("itbDetail").addStyleClass("addDesignSection2")
+
+                        this.byId('btnFullScreenDetails').setVisible(false)
+                        this.byId('btnExitFullScreenDetails').setVisible(true)
 
                         // this.byId("detailsIconTab").setEnabled(false);
                         this.byId("delSchedIconTab").setEnabled(false);
@@ -2023,6 +2369,9 @@ sap.ui.define([
                         this.byId("itbDetail").removeStyleClass("designSection2")
                         this.byId("itbDetail").addStyleClass("addDesignSection2")
 
+                        this.byId('btnFullScreenDelSched').setVisible(false)
+                        this.byId('btnExitFullScreenDelSched').setVisible(true)
+
                         this.byId("detailsIconTab").setEnabled(false);
                         // this.byId("delSchedIconTab").setEnabled(false);
                         this.byId("delInvIconTab").setEnabled(false);
@@ -2040,6 +2389,9 @@ sap.ui.define([
                         this.byId("_IDGenVBox1").addStyleClass("onAddvboxHeight")
                         this.byId("itbDetail").removeStyleClass("designSection2")
                         this.byId("itbDetail").addStyleClass("addDesignSection2")
+
+                        this.byId('btnFullScreenDelInv').setVisible(false)
+                        this.byId('btnExitFullScreenDelInv').setVisible(true)
 
                         this.byId("detailsIconTab").setEnabled(false);
                         this.byId("delSchedIconTab").setEnabled(false);
@@ -2059,6 +2411,9 @@ sap.ui.define([
                         this.byId("itbDetail").removeStyleClass("designSection2")
                         this.byId("itbDetail").addStyleClass("addDesignSection2")
 
+                        this.byId('btnFullScreenPOHistory').setVisible(false)
+                        this.byId('btnExitFullScreenPOHistory').setVisible(true)
+
                         this.byId("detailsIconTab").setEnabled(false);
                         this.byId("delSchedIconTab").setEnabled(false);
                         this.byId("delInvIconTab").setEnabled(false);
@@ -2076,6 +2431,9 @@ sap.ui.define([
                         this.byId("_IDGenVBox1").addStyleClass("onAddvboxHeight")
                         this.byId("itbDetail").removeStyleClass("designSection2")
                         this.byId("itbDetail").addStyleClass("addDesignSection2")
+
+                        this.byId('btnFullScreenConditions').setVisible(false)
+                        this.byId('btnExitFullScreenConditions').setVisible(true)
 
                         this.byId("detailsIconTab").setEnabled(false);
                         this.byId("delSchedIconTab").setEnabled(false);
@@ -2104,6 +2462,153 @@ sap.ui.define([
                     this._tableFullScreenRender = "Value"
                 }
             },
+            
+            onExitTableResize: function (oEvent){
+                var event = oEvent.getSource();
+                var oSplitter = this.byId("splitMain");
+                var oFirstPane = oSplitter.getRootPaneContainer().getPanes().at(0);
+                var oSecondPane = oSplitter.getRootPaneContainer().getPanes().at(1);
+                if(this._tableFullScreenRender !== ""){
+                    //hide Smart Filter Bar
+                    this.byId('smartFilterBar').setVisible(true)
+
+                    if(event.getParent().getParent().getId().includes("mainTab")){
+                        this.byId('itbDetail').setVisible(true)
+                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
+                            size: "46%",
+                            resizable: true
+                        });
+                        oFirstPane.setLayoutData(oLayoutData);
+
+                        this.byId('btnFullScreen').setVisible(true)
+                        this.byId('btnExitFullScreen').setVisible(false)
+                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
+                    }
+                    else if(event.getParent().getParent().getId().includes("detailsTab")){
+                        this.byId('mainTab').setVisible(true)
+                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
+                            size: "54%",
+                            resizable: true
+                        });
+                        oSecondPane.setLayoutData(oLayoutData);
+                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
+                        this.byId("itbDetail").addStyleClass("designSection2")
+                        this.byId("itbDetail").removeStyleClass("addDesignSection2")
+
+                        this.byId('btnFullScreenDetails').setVisible(true)
+                        this.byId('btnExitFullScreenDetails').setVisible(false)
+
+                        // this.byId("detailsIconTab").setEnabled(true);
+                        this.byId("delSchedIconTab").setEnabled(true);
+                        this.byId("delInvIconTab").setEnabled(true);
+                        this.byId("poHistIconTab").setEnabled(true);
+                        this.byId("conditionsIconTab").setEnabled(true);
+                        this.byId("procFlowIconTab").setEnabled(true);
+                    }
+                    else if(event.getParent().getParent().getId().includes("delSchedTab")){
+                        this.byId('mainTab').setVisible(true)
+                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
+                            size: "54%",
+                            resizable: true
+                        });
+                        oSecondPane.setLayoutData(oLayoutData);
+                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
+                        this.byId("itbDetail").addStyleClass("designSection2")
+                        this.byId("itbDetail").removeStyleClass("addDesignSection2")
+
+                        this.byId('btnFullScreenDelSched').setVisible(true)
+                        this.byId('btnExitFullScreenDelSched').setVisible(false)
+
+                        this.byId("detailsIconTab").setEnabled(true);
+                        // this.byId("delSchedIconTab").setEnabled(true);
+                        this.byId("delInvIconTab").setEnabled(true);
+                        this.byId("poHistIconTab").setEnabled(true);
+                        this.byId("conditionsIconTab").setEnabled(true);
+                        this.byId("procFlowIconTab").setEnabled(true);
+                    }
+                    else if(event.getParent().getParent().getId().includes("delInvTab")){
+                        this.byId('mainTab').setVisible(true)
+                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
+                            size: "54%",
+                            resizable: true
+                        });
+                        oSecondPane.setLayoutData(oLayoutData);
+                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
+                        this.byId("itbDetail").addStyleClass("designSection2")
+                        this.byId("itbDetail").removeStyleClass("addDesignSection2")
+
+                        this.byId('btnFullScreenDelInv').setVisible(true)
+                        this.byId('btnExitFullScreenDelInv').setVisible(false)
+
+                        this.byId("detailsIconTab").setEnabled(true);
+                        this.byId("delSchedIconTab").setEnabled(true);
+                        // this.byId("delInvIconTab").setEnabled(true);
+                        this.byId("poHistIconTab").setEnabled(true);
+                        this.byId("conditionsIconTab").setEnabled(true);
+                        this.byId("procFlowIconTab").setEnabled(true);
+                    }
+                    else if(event.getParent().getParent().getId().includes("poHistTab")){
+                        this.byId('mainTab').setVisible(true)
+                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
+                            size: "54%",
+                            resizable: true
+                        });
+                        oSecondPane.setLayoutData(oLayoutData);
+                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
+                        this.byId("itbDetail").addStyleClass("designSection2")
+                        this.byId("itbDetail").removeStyleClass("addDesignSection2")
+
+                        this.byId('btnFullScreenPOHistory').setVisible(true)
+                        this.byId('btnExitFullScreenPOHistory').setVisible(false)
+
+                        this.byId("detailsIconTab").setEnabled(true);
+                        this.byId("delSchedIconTab").setEnabled(true);
+                        this.byId("delInvIconTab").setEnabled(true);
+                        // this.byId("poHistIconTab").setEnabled(true);
+                        this.byId("conditionsIconTab").setEnabled(true);
+                        this.byId("procFlowIconTab").setEnabled(true);
+                    }
+                    else if(event.getParent().getParent().getId().includes("conditionsTab")){
+                        this.byId('mainTab').setVisible(true)
+                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
+                            size: "54%",
+                            resizable: true
+                        });
+                        oSecondPane.setLayoutData(oLayoutData);
+                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
+                        this.byId("itbDetail").addStyleClass("designSection2")
+                        this.byId("itbDetail").removeStyleClass("addDesignSection2")
+
+                        this.byId('btnFullScreenConditions').setVisible(true)
+                        this.byId('btnExitFullScreenConditions').setVisible(false)
+
+                        this.byId("detailsIconTab").setEnabled(true);
+                        this.byId("delSchedIconTab").setEnabled(true);
+                        this.byId("delInvIconTab").setEnabled(true);
+                        this.byId("poHistIconTab").setEnabled(true);
+                        // this.byId("conditionsIconTab").setEnabled(true);
+                        this.byId("procFlowIconTab").setEnabled(true);
+                    }
+                    else if(event.getParent().getParent().getId().includes("procFlowIconTab")){
+                        this.byId('mainTab').setVisible(true)
+                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
+                            size: "54%",
+                            resizable: true
+                        });
+                        oSecondPane.setLayoutData(oLayoutData);
+                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
+                        this.byId("itbDetail").addStyleClass("designSection2")
+                        this.byId("itbDetail").removeStyleClass("addDesignSection2")
+
+                        this.byId("detailsIconTab").setEnabled(true);
+                        this.byId("delSchedIconTab").setEnabled(true);
+                        this.byId("delInvIconTab").setEnabled(true);
+                        this.byId("poHistIconTab").setEnabled(true);
+                        this.byId("conditionsIconTab").setEnabled(true);
+                    }
+                    this._tableFullScreenRender = ""
+                }
+            },
 
             onCreateManualPO() {
                 if (this.getView().getModel("ui").getData().sbu) {
@@ -2126,7 +2631,8 @@ sap.ui.define([
                     }
                 });
             },
-            callCaptionsAPI: async function(){
+            callCaptionsAPI: function(){
+                var me = this;
                 var oJSONModel = new JSONModel();
                 var oDDTextParam = [];
                 var oDDTextResult = [];
@@ -2202,6 +2708,7 @@ sap.ui.define([
                 oDDTextParam.push({CODE: "INFO_NO_LAYOUT"});
                 oDDTextParam.push({CODE: "SAVELAYOUT"});
                 oDDTextParam.push({CODE: "FULLSCREEN"});
+                oDDTextParam.push({CODE: "EXITFULLSCREEN"});
                 oDDTextParam.push({CODE: "EXPORTTOEXCEL"});
                 oDDTextParam.push({CODE: "CREATEDBY"});
 
@@ -2211,8 +2718,21 @@ sap.ui.define([
                 oDDTextParam.push({CODE: "ARROWUP"});
                 oDDTextParam.push({CODE: "ARROWDOWN"});
                 oDDTextParam.push({CODE: "POPRINT"});
-                
-                await oModel.create("/CaptionMsgSet", { CaptionMsgItems: oDDTextParam  }, {
+                oDDTextParam.push({CODE: "PRNO"});
+                oDDTextParam.push({CODE: "IONO"});
+
+                oDDTextParam.push({CODE: "TOTAL"});
+
+                oDDTextParam.push({CODE: "FLTRCRIT"});
+                oDDTextParam.push({CODE: "OK"});
+                oDDTextParam.push({CODE: "CANCEL"});
+                oDDTextParam.push({CODE: "CLRFLTRS"});
+                oDDTextParam.push({CODE: "REMOVEFLTR"});
+                oDDTextParam.push({CODE: "VALUELIST"});
+                oDDTextParam.push({CODE: "USERDEF"});
+                oDDTextParam.push({CODE: "SEARCH"});
+
+                oModel.create("/CaptionMsgSet", { CaptionMsgItems: oDDTextParam  }, {
                     method: "POST",
                     success: function(oData, oResponse) {
                         oData.CaptionMsgItems.results.forEach(item=>{
@@ -2220,10 +2740,11 @@ sap.ui.define([
                         })
                         
                         oJSONModel.setData(oDDTextResult);
-                        that.getView().setModel(oJSONModel, "captionMsg");
+                        me.getView().setModel(oJSONModel, "captionMsg");
                     },
                     error: function(err) {
                         //error message
+                        console.log(err);
                         MessageBox.error(me.getView().getModel("captionMsg").getData()["INFO_ERROR"])
                     }
                 });
@@ -2451,9 +2972,8 @@ sap.ui.define([
             },
 
             onPOLock: async function(){
-                return true;
                 var me = this;
-                var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_LOCK_SRV");
+                var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_LOCK2_SRV");
                 var sError = "";
                 var boolResult = true;
 
@@ -2476,14 +2996,14 @@ sap.ui.define([
                             if (sError.length > 0) {
                                 boolResult = false;
                                 MessageBox.information(sError);
-                                me.closeLoadingDialog();
+                                Common.closeLoadingDialog(that);
                             }
                             resolve();
                         },
                         error: function(err) {
                             MessageBox.error(err);
                             resolve();
-                            me.closeLoadingDialog();
+                            Common.closeLoadingDialog(that);
                         }
                     });
                     
@@ -2492,9 +3012,8 @@ sap.ui.define([
             },
 
             onPOUnlock: async function(){
-                return;
                 var me = this;
-                var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_LOCK_SRV");
+                var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_LOCK2_SRV");
 
                 var oParam = {
                     "N_UNLOCK_PO_ITEMTAB": this._aParamLockPOdata,
@@ -2511,11 +3030,54 @@ sap.ui.define([
                         error: function(err) {
                             MessageBox.error(err);
                             resolve();
-                            me.closeLoadingDialog();
+                            Common.closeLoadingDialog(that);
                         }
                     });
                 });
-            }
+            },
+
+            //******************************************* */
+            // Column Filtering
+            //******************************************* */
+
+            onColFilterClear: function(oEvent) {
+                TableFilter.onColFilterClear(oEvent, this);
+            },
+
+            onColFilterCancel: function(oEvent) {
+                TableFilter.onColFilterCancel(oEvent, this);
+            },
+
+            onColFilterConfirm: function(oEvent) {
+                TableFilter.onColFilterConfirm(oEvent, this);
+            },
+
+            onFilterItemPress: function(oEvent) {
+                TableFilter.onFilterItemPress(oEvent, this);
+            },
+
+            onFilterValuesSelectionChange: function(oEvent) {
+                TableFilter.onFilterValuesSelectionChange(oEvent, this);
+            },
+
+            onSearchFilterValue: function(oEvent) {
+                TableFilter.onSearchFilterValue(oEvent, this);
+            },
+
+            onCustomColFilterChange: function(oEvent) {
+                TableFilter.onCustomColFilterChange(oEvent, this);
+            },
+
+            onSetUseColFilter: function(oEvent) {
+                TableFilter.onSetUseColFilter(oEvent, this);
+            },
+
+            onRemoveColFilter: function(oEvent) {
+                TableFilter.onRemoveColFilter(oEvent, this);
+            },
+
+            pad: Common.pad
+
 
         });
     });
