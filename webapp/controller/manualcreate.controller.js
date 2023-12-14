@@ -13,7 +13,7 @@ sap.ui.define([
         var _this;
         var _sbu;
         var _oCaption = {};
-        var _startUpInfo;
+        var _startUpInfo = {};
         var _oHeader = {};
 
         var dateFormat = sap.ui.core.format.DateFormat.getDateInstance({pattern : "MM/dd/yyyy" });
@@ -55,12 +55,15 @@ sap.ui.define([
             },
 
             initializeComponent() {
-                var oModelStartUp= new sap.ui.model.json.JSONModel();
-                oModelStartUp.loadData("/sap/bc/ui2/start_up").then(() => {
-                    _startUpInfo = oModelStartUp.oData
-                    console.log(oModelStartUp, oModelStartUp.oData);
-                    // console.log(oModelStartUp.oData);
-                });
+                if (sap.ushell.Container) {
+                    var oModelStartUp= new sap.ui.model.json.JSONModel();
+                    oModelStartUp.loadData("/sap/bc/ui2/start_up").then(() => {
+                        _startUpInfo = oModelStartUp.oData;
+                    });
+                }
+                else {
+                    _startUpInfo.id = "BAS_CONN";
+                }
 
                 this.getView().setModel(new JSONModel({
                     editModeHeader: false
