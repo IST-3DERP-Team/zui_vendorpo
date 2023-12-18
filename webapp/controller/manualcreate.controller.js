@@ -49,7 +49,7 @@ sap.ui.define([
                 this.getResources("VPOManualCompanyRscSet", "company", "SBU eq '" + _sbu + "'");
                 this.getResources("VPOManualShipModeRscSet", "shipMode", "SBU eq '" + _sbu + "'");
                 this.getResources("VPOManualUomRscSet", "uom", "");
-                this.getResources("VPOManualOrderNoRscSet", "orderNo", "SBU eq '" + _sbu + "'");
+                //this.getResources("VPOManualOrderNoRscSet", "orderNo", "SBU eq '" + _sbu + "'");
 
                 this.initializeComponent();
             },
@@ -1497,43 +1497,64 @@ sap.ui.define([
                 var oModel = this.getOwnerComponent().getModel();
                 var oJSONModel = new JSONModel();
                 var oEntitySet = "/" + pEntitySet;
-                var oFilter = (pFilter ? { "$filter": pFilter } : {} )
 
-                oModel.read(oEntitySet, {
-                    urlParameters: oFilter,
-                    success: function (data, response) {
-                        console.log("getResources success", pModel, data, pFilter)
-                        oJSONModel.setData(data);
-                        _this.getView().setModel(oJSONModel, pModel);
+                if (pModel == "orderNo") {
+                    oModel.setHeaders({
+                        sbu: _sbu,
+                        doctype: _oHeader.docType
+                    });
 
-                        if (pModel == "taxCode" && data.results.length > 0) {
-                            _oHeader.taxCode = data.results[0].TAXCODE;
-                            _oHeader.kbetr = data.results[0].KBETR;
-                        } else if (pModel == "glAccount" && data.results.length > 0) {
-                            _oHeader.glAccount = data.results[0].FIELD3;
-                        } else if (pModel == "acctAssCat" && data.results.length > 0) {
-                            _oHeader.acctAssCat = data.results[0].FIELD3;
-                        } else if (pModel == "vendor") {
-                            if (data.results.length > 0) _this.byId("iptVendor").setPlaceholder("");
-                            //else _this.byId("iptVendor").setPlaceholder("No data for selected " + _oCaption.PURCHORG);
-                        } else if (pModel == "shipToPlant") {
-                            if (data.results.length > 0) _this.byId("cmbShipToPlant").setPlaceholder("");
-                            //else _this.byId("cmbShipToPlant").setPlaceholder("No data for selected " + _oCaption.PURCHORG);
-                        } else if (pModel == "incoTerms") {
-                            if (data.results.length > 0) _this.byId("cmbIncoTerms").setPlaceholder("");
-                            //else _this.byId("cmbIncoTerms").setPlaceholder("No data for selected " + _oCaption.VENDOR);
-                        } else if (pModel == "payTerms") {
-                            if (data.results.length > 0) _this.byId("cmbPayTerms").setPlaceholder("");
-                            //else _this.byId("cmbPayTerms").setPlaceholder("No data for selected " + _oCaption.VENDOR);
-                        } else if (pModel == "purchPlant") {
-                            if (data.results.length > 0) _this.byId("cmbPurchPlant").setPlaceholder("");
-                            //else _this.byId("cmbPurchPlant").setPlaceholder("No data for selected " + _oCaption.COMPANY);
+                    oModel.read(oEntitySet, {
+                        urlParameters: oFilter,
+                        success: function (data, response) {
+                            console.log("getResources success", pModel, data, pFilter)
+                            oJSONModel.setData(data);
+                            _this.getView().setModel(oJSONModel, pModel);
+                        },
+                        error: function (err) {
+                            // console.log("getResources err", err )
                         }
-                    },
-                    error: function (err) {
-                        // console.log("getResources err", err )
-                    }
-                })
+                    })
+                }
+                else {
+                    var oFilter = (pFilter ? { "$filter": pFilter } : {} )
+
+                    oModel.read(oEntitySet, {
+                        urlParameters: oFilter,
+                        success: function (data, response) {
+                            console.log("getResources success", pModel, data, pFilter)
+                            oJSONModel.setData(data);
+                            _this.getView().setModel(oJSONModel, pModel);
+    
+                            if (pModel == "taxCode" && data.results.length > 0) {
+                                _oHeader.taxCode = data.results[0].TAXCODE;
+                                _oHeader.kbetr = data.results[0].KBETR;
+                            } else if (pModel == "glAccount" && data.results.length > 0) {
+                                _oHeader.glAccount = data.results[0].FIELD3;
+                            } else if (pModel == "acctAssCat" && data.results.length > 0) {
+                                _oHeader.acctAssCat = data.results[0].FIELD3;
+                            } else if (pModel == "vendor") {
+                                if (data.results.length > 0) _this.byId("iptVendor").setPlaceholder("");
+                                //else _this.byId("iptVendor").setPlaceholder("No data for selected " + _oCaption.PURCHORG);
+                            } else if (pModel == "shipToPlant") {
+                                if (data.results.length > 0) _this.byId("cmbShipToPlant").setPlaceholder("");
+                                //else _this.byId("cmbShipToPlant").setPlaceholder("No data for selected " + _oCaption.PURCHORG);
+                            } else if (pModel == "incoTerms") {
+                                if (data.results.length > 0) _this.byId("cmbIncoTerms").setPlaceholder("");
+                                //else _this.byId("cmbIncoTerms").setPlaceholder("No data for selected " + _oCaption.VENDOR);
+                            } else if (pModel == "payTerms") {
+                                if (data.results.length > 0) _this.byId("cmbPayTerms").setPlaceholder("");
+                                //else _this.byId("cmbPayTerms").setPlaceholder("No data for selected " + _oCaption.VENDOR);
+                            } else if (pModel == "purchPlant") {
+                                if (data.results.length > 0) _this.byId("cmbPurchPlant").setPlaceholder("");
+                                //else _this.byId("cmbPurchPlant").setPlaceholder("No data for selected " + _oCaption.COMPANY);
+                            }
+                        },
+                        error: function (err) {
+                            // console.log("getResources err", err )
+                        }
+                    })
+                }
             },
 
             onDropdownSelectionChange(oEvent) {
@@ -1553,6 +1574,8 @@ sap.ui.define([
                     _oHeader.grInd = (oDocType.GRIND == "" ? false : true);
                     _oHeader.irInd = (oDocType.IRIND == "" ? false : true);
                     _oHeader.grBasedIV = (oDocType.GRBASEDIV == "" ? false : true);
+
+                    _this.getResources("VPOManualOrderNoRscSet", "orderNo", "SBU eq '" + _sbu + "'");
                 } else if (sModel == "purchOrg") {
                     this.getResources("VPOManualVendorRscSet", "vendor", "PURCHORG eq '" + sKey + "'");
                     // this.byId("iptVendor").setEditable(true);
