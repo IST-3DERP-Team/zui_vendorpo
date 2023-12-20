@@ -715,6 +715,7 @@ sap.ui.define([
                 this.getResources("VPOManualTaxSet", "taxCode", "PURCHORG eq '" + _oHeader.purchOrg + "' and VENDORCD eq '" + _oHeader.vendor + "'")
                 this.getResources("VPOManualZCheckSet", "glAccount", "SBU eq '" + _sbu + "' and FIELD1 eq 'GLACCT' and FIELD2 eq '" + _oHeader.shipToPlant + "'");
                 this.getResources("VPOManualZCheckSet", "acctAssCat", "SBU eq '" + _sbu + "' and FIELD1 eq '" + _oHeader.docType + "' and FIELD2 eq 'ACCTASS'");
+                this.getResources("VPOManualOrderNoRscSet", "orderNo", "SBU eq '" + _sbu + "'");
 
                 this.getDiscRate();
                 this.setControlEditMode("header", false);
@@ -1494,20 +1495,19 @@ sap.ui.define([
             },
 
             getResources(pEntitySet, pModel, pFilter) {
-                var oModel = this.getOwnerComponent().getModel();
+                var oModel = _this.getOwnerComponent().getModel();
                 var oJSONModel = new JSONModel();
                 var oEntitySet = "/" + pEntitySet;
 
                 if (pModel == "orderNo") {
                     oModel.setHeaders({
                         sbu: _sbu,
-                        doctype: _oHeader.docType
+                        doctype: _this.byId("cmbDocType").getSelectedKey()
                     });
 
                     oModel.read(oEntitySet, {
-                        urlParameters: oFilter,
                         success: function (data, response) {
-                            console.log("getResources success", pModel, data, pFilter)
+                            console.log("getResources success", pModel, oModel, data, pFilter)
                             oJSONModel.setData(data);
                             _this.getView().setModel(oJSONModel, pModel);
                         },
@@ -1575,7 +1575,7 @@ sap.ui.define([
                     _oHeader.irInd = (oDocType.IRIND == "" ? false : true);
                     _oHeader.grBasedIV = (oDocType.GRBASEDIV == "" ? false : true);
 
-                    _this.getResources("VPOManualOrderNoRscSet", "orderNo", "SBU eq '" + _sbu + "'");
+                    //_this.getResources("VPOManualOrderNoRscSet", "orderNo", "SBU eq '" + _sbu + "'");
                 } else if (sModel == "purchOrg") {
                     this.getResources("VPOManualVendorRscSet", "vendor", "PURCHORG eq '" + sKey + "'");
                     // this.byId("iptVendor").setEditable(true);
