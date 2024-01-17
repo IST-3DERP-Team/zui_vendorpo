@@ -12,8 +12,6 @@ sap.ui.define([
             var oButton = oEvent.getSource();
             var tabName = oButton.data('TableName')
 
-            console.log(oButton.getParent().getParent().getId())
-
             var tableName = ""
             if(oButton.getParent().getParent().getId().includes("mainTab"))
                 tableName = "mainTab";
@@ -27,6 +25,8 @@ sap.ui.define([
                 tableName = "poHistTab";
             else if(oButton.getParent().getParent().getId().includes("conditionsTab"))
                 tableName = "conditionsTab";
+            else if(oButton.getParent().getParent().getId().includes("receiptsIssuancesTab"))
+                tableName = "receiptsIssuancesTab";
             else if(oButton.getParent().getParent().getId().includes("vpoDetailsTab"))
                 tableName = "vpoDetailsTab";
             else if(oButton.getParent().getParent().getId().includes("vpoDelSchedTab"))
@@ -37,6 +37,8 @@ sap.ui.define([
                 tableName = "vpoPoHistTab";
             else if(oButton.getParent().getParent().getId().includes("vpoConditionsTab"))
                 tableName = "vpoConditionsTab";
+            else if(oButton.getParent().getParent().getId().includes("vpoReceiptsIssuancesTab"))
+                tableName = "vpoReceiptsIssuancesTab";
 
             var oTable = this.getView().byId(tableName);
 
