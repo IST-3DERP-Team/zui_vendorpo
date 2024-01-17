@@ -86,6 +86,7 @@ sap.ui.define([
                 this.byId("vpoDelInvTab").addEventDelegate(_oDelegateKeyUp);
                 this.byId("vpoPoHistTab").addEventDelegate(_oDelegateKeyUp);
                 this.byId("vpoConditionsTab").addEventDelegate(_oDelegateKeyUp);
+                this.byId("vpoReceiptsIssuancesTab").addEventDelegate(_oDelegateKeyUp);
 
                 
                 //Initialize translations
@@ -480,7 +481,7 @@ sap.ui.define([
                 oDDTextParam.push({CODE: "SEARCH"});
 
                 oDDTextParam.push({CODE: "LOADING"});
-
+                oDDTextParam.push({CODE: "RECEIPTS_ISSUANCES"});
 
                 await new Promise((resolve)=>{
                     oModel.create("/CaptionMsgSet", { CaptionMsgItems: oDDTextParam  }, {
@@ -811,12 +812,18 @@ sap.ui.define([
                     _this.getView().setModel(new JSONModel({
                         results: []
                     }), "VPOHdrDownloadHist");
+
+                    _this.getView().setModel(new JSONModel({
+                        results: []
+                    }), "VPOReceiptsIssuancesVPODet");
+                    
                     resolve(await _this.getPODetails2(poNo));
                     resolve(await _this.getDelSchedule2(poNo));
                     resolve(await _this.getDelInvoice2(poNo));
                     poItem = _this.getView().getModel("ui").getProperty("/activePOItem");
                     resolve(await _this.getPOHistory2(poNo, poItem));
                     resolve(await _this.getConditions2(condrec, poItem));
+                    resolve(await _this.getReceiptAndIssuances(poNo));
                     resolve(await _this.onLoadHeaderConditions(condrec));
                     resolve(await _this.onLoadHeaderDownloadHist(poNo));
                     resolve();
@@ -976,7 +983,7 @@ sap.ui.define([
                                 me._poItemStore.sort(function(a, b) {
                                     return a.poItem.localeCompare(b.poItem);
                                 });
-
+                                
                                 objectData.push(data.results);
                                 objectData[0].sort((a,b) => (a.ITEM > b.ITEM) ? 1 : ((b.ITEM > a.ITEM) ? -1 : 0));
                                 
@@ -1002,6 +1009,33 @@ sap.ui.define([
                     });
                 });
             },
+            getReceiptAndIssuances: async function(PONO){
+                var oModel = this.getOwnerComponent().getModel();
+                var me = this;
+                var tblChange = this._tblChange;
+                var oJSONModel = new JSONModel();
+                var objectData = [];
+                await new Promise((resolve, reject)=>{
+                    oModel.read('/VPOReceiptsAndIssuancesSet', { 
+                        urlParameters: {
+                            "$filter": "PONO eq '" + PONO + "'"
+                        },
+                        success: function (data, response) {
+                            if (data.results.length > 0) {
+                                objectData.push(data.results);
+                                objectData[0].sort((a,b) => (a.ITEM > b.ITEM) ? 1 : ((b.ITEM > a.ITEM) ? -1 : 0));
+                                oJSONModel.setData(data);
+                            }
+                            me.getView().setModel(oJSONModel, "VPOReceiptsIssuancesVPODet");
+                            resolve();
+                        },
+                        error: function (err) { 
+                            resolve();
+                        }
+                    });
+                });
+            },
+
 
             getCols: async function() {
                 await this.getDynamicColumns("VPODTLS", "ZDV_3DERP_VPDTLS");
@@ -1017,6 +1051,8 @@ sap.ui.define([
                 await this.getDynamicColumns('VPOHDRCOND','ZDV3DERP_HDRCOND');
 
                 await this.getDynamicColumns('VPOHDRDOWNLOADHIST','ZDV3DERP_POHIST');
+
+                await this.getDynamicColumns('VPORECEIPTSISSUANCES','ZVB_VPO_RECISS');
 
             },
             getDynamicColumns: async function(model, dataSource) {
@@ -1074,6 +1110,14 @@ sap.ui.define([
                                     me.setTableColumnsData(modCode);
                                     resolve();
                                 }
+
+                                if (modCode === 'VPORECEIPTSISSUANCES') {
+                                    me._aColumns["vpoReceiptsIssuancesTab"] = oData.results;
+                                    oJSONColumnsModel.setData(oData.results);
+                                    me.getView().setModel(oJSONColumnsModel, "VPOReceiptsIssuancesColumnsVPODet");
+                                    me.setTableColumnsData(modCode);
+                                    resolve();
+                                }
                                 //Add PR to PO Column
                                 if (modCode === 'VPOADDPRTOPO') {
                                     me._aColumns["vpoAddPRtoPOTbl"] = oData.results;
@@ -1126,6 +1170,13 @@ sap.ui.define([
                                     me.setTableColumnsData(modCode);
                                     resolve();
                                 }
+
+                                if (modCode === 'VPORECEIPTSISSUANCES') {
+                                    me.getView().setModel(oJSONColumnsModel, "VPOReceiptsIssuancesColumnsVPODet");
+                                    me.setTableColumnsData(modCode);
+                                    resolve();
+                                }
+
                                 //Add PR to PO Column
                                 if (modCode === 'VPOADDPRTOPO') {
                                     me.getView().setModel(oJSONColumnsModel, "VPOAddPRtoPOColumns");
@@ -1223,6 +1274,20 @@ sap.ui.define([
                     oColumnsData = oDataModel.getProperty('/');   
                     me.addColumns("vpoConditionsTab", oColumnsData, oData, "VPOCondVPODet");
                 }
+
+                if (modCode === 'VPORECEIPTSISSUANCES') {
+                    oColumnsModel = me.getView().getModel("VPOReceiptsIssuancesVPODet");  
+                    oDataModel = me.getView().getModel("VPOReceiptsIssuancesColumnsVPODet"); 
+                    
+                    oData = oColumnsModel === undefined ? [] :oColumnsModel.getProperty('/results');
+
+                    if(me._columnLoadError){
+                        oData = [];
+                    }
+                    oColumnsData = oDataModel.getProperty('/');   
+                    me.addColumns("vpoReceiptsIssuancesTab", oColumnsData, oData, "VPOReceiptsIssuancesVPODet");
+                }
+                
                 //Add PR To PO
                 if (modCode === 'VPOADDPRTOPO') {
                     oColumnsModel = me.getView().getModel("VPOAddPRtoPO");  
@@ -1299,6 +1364,41 @@ sap.ui.define([
                                     DOCTYPE: "PR",
                                     PRNO: vPRNo,
                                     PRITEM: vPRItem
+                                }
+
+                                me.viewDoc(oData);
+
+                                // window.open(`https://ltd.luenthai.com:44300/sap/bc/ui2/flp?sap-client=888#ZSO_3DERP_PUR_PR-dispaly&/PRDetail/VER/5000000487/00010` , "_blank");
+                            },
+                        })
+                        oControl.addStyleClass("hyperlink");
+
+                        return new sap.ui.table.Column({
+                            id: model+"-"+sColumnId,
+                            label: new sap.m.Text({text: sColumnLabel}),
+                            template: oControl,
+                            width: sColumnWidth + "px",
+                            hAlign: me.columnSize(sColumnId),
+                            sortProperty: sColumnId,
+                            filterProperty: sColumnId,
+                            autoResizable: true,
+                            visible: sColumnVisible,
+                            sorted: sColumnSorted,
+                            sortOrder: ((sColumnSorted === true) ? sColumnSortOrder : "Ascending" )
+                        });
+                    }else if (table === "vpoDetailsTab" && sColumnId === "BATCH") {
+                        var oControl = new sap.m.Link({
+                            text: "{" + sColumnId + "}",
+                            wrapping: false, 
+                            tooltip: "{" + sColumnId + "}",
+                            press: function(oEvent) {
+                                const vRow = oEvent.oSource.getBindingInfo("text").binding.getContext().sPath;
+                                const vIONo =  oEvent.oSource.mProperties.text;
+                                const vStyleNo =  oTable.getModel().getProperty(vRow + "/STYLENO");
+                                var oData = {
+                                    DOCTYPE: "BATCH",
+                                    STYLENO: vStyleNo,
+                                    IONO: vIONo
                                 }
 
                                 me.viewDoc(oData);
@@ -4957,6 +5057,7 @@ sap.ui.define([
                                                 me.byId("vpoDelInvIconTab").setEnabled(false);
                                                 me.byId("vpoPoHistIconTab").setEnabled(false);
                                                 me.byId("vpoConditionsIconTab").setEnabled(false);
+                                                me.byId("vpoReceiptsIssuancesIconTab").setEnabled(false);
 
                                                 // me.byId("vpoNewHdrTxtRemarks").setEnabled(false);
                                                 // me.byId("vpoEditHdrTxtRemarks").setEnabled(false);
@@ -5084,6 +5185,7 @@ sap.ui.define([
                                                 me.byId("vpoDelInvIconTab").setEnabled(false);
                                                 me.byId("vpoPoHistIconTab").setEnabled(false);
                                                 me.byId("vpoConditionsIconTab").setEnabled(false);
+                                                me.byId("vpoReceiptsIssuancesIconTab").setEnabled(false);
 
                                                 // me.byId("vpoNewHdrTxtRemarks").setEnabled(false);
                                                 // me.byId("vpoEditHdrTxtRemarks").setEnabled(false);
@@ -5700,6 +5802,7 @@ sap.ui.define([
                         me.byId("vpoDelInvIconTab").setEnabled(true);
                         me.byId("vpoPoHistIconTab").setEnabled(true);
                         me.byId("vpoConditionsIconTab").setEnabled(true);
+                        me.byId("vpoReceiptsIssuancesIconTab").setEnabled(true);
                         // me.byId("vpoNewHdrTxtRemarks").setEnabled(true);
                         // me.byId("vpoEditHdrTxtRemarks").setEnabled(true);
                         // me.byId("vpoDeleteHdrTxtRemarks").setEnabled(true);
@@ -5947,6 +6050,7 @@ sap.ui.define([
                                                 me.byId("vpoDelInvIconTab").setEnabled(false);
                                                 me.byId("vpoPoHistIconTab").setEnabled(false);
                                                 me.byId("vpoConditionsIconTab").setEnabled(false);
+                                                me.byId("vpoReceiptsIssuancesIconTab").setEnabled(false);
 
                                                 me.onRowEditPO("vpoDelSchedTab", "VPODELSCHEDColumnsVPODet");
                                                 
@@ -6006,6 +6110,7 @@ sap.ui.define([
                                                 me.byId("vpoDelInvIconTab").setEnabled(false);
                                                 me.byId("vpoPoHistIconTab").setEnabled(false);
                                                 me.byId("vpoConditionsIconTab").setEnabled(false);
+                                                me.byId("vpoReceiptsIssuancesIconTab").setEnabled(false);
 
                                                 me.onRowEditPO("vpoDelSchedTab", "VPODELSCHEDColumnsVPODet");
                                                 
@@ -6294,6 +6399,7 @@ sap.ui.define([
                         me.byId("vpoDelInvIconTab").setEnabled(true);
                         me.byId("vpoPoHistIconTab").setEnabled(true);
                         me.byId("vpoConditionsIconTab").setEnabled(true);
+                        me.byId("vpoReceiptsIssuancesIconTab").setEnabled(true);
                         me.loadAllData()
                         resolve()
                     });
@@ -6443,6 +6549,7 @@ sap.ui.define([
                             me.byId("vpoDelInvIconTab").setEnabled(true);
                             me.byId("vpoPoHistIconTab").setEnabled(true);
                             me.byId("vpoConditionsIconTab").setEnabled(true);
+                            me.byId("vpoReceiptsIssuancesIconTab").setEnabled(true);
                             me.loadAllData()
                             resolve()
                         });
@@ -6531,6 +6638,7 @@ sap.ui.define([
                                                 me.byId("vpoDelSchedIconTab").setEnabled(false);
                                                 me.byId("vpoPoHistIconTab").setEnabled(false);
                                                 me.byId("vpoConditionsIconTab").setEnabled(false);
+                                                me.byId("vpoReceiptsIssuancesIconTab").setEnabled(false);
 
                                                 me.onRowEditPO("vpoDelInvTab", "VPODELINVColumnsVPODet");
                                                 
@@ -6589,6 +6697,7 @@ sap.ui.define([
                                                 me.byId("vpoDelSchedIconTab").setEnabled(false);
                                                 me.byId("vpoPoHistIconTab").setEnabled(false);
                                                 me.byId("vpoConditionsIconTab").setEnabled(false);
+                                                me.byId("vpoReceiptsIssuancesIconTab").setEnabled(false);
 
                                                 me.onRowEditPO("vpoDelInvTab", "VPODELINVColumnsVPODet");
                                                 
@@ -6755,6 +6864,7 @@ sap.ui.define([
                         me.byId("vpoDelSchedIconTab").setEnabled(true);
                         me.byId("vpoPoHistIconTab").setEnabled(true);
                         me.byId("vpoConditionsIconTab").setEnabled(true);
+                        me.byId("vpoReceiptsIssuancesIconTab").setEnabled(true);
                         me.loadAllData()
                         resolve()
                     });
@@ -7137,6 +7247,7 @@ sap.ui.define([
                 this.byId("vpoDelInvIconTab").setEnabled(true);
                 this.byId("vpoPoHistIconTab").setEnabled(true);
                 this.byId("vpoConditionsIconTab").setEnabled(true);
+                this.byId("vpoReceiptsIssuancesIconTab").setEnabled(true);
 
                 this.byId("vpoBtnLineSplit").setVisible(true);
                 this.byId("vpoBtnEditDelSched").setVisible(true);
@@ -7711,8 +7822,9 @@ sap.ui.define([
                                 method: "POST",
                                 success: async function(oData, oResponse){
                                     if(oData.N_ChangePOReturn.results.length > 0){
-                                        if(oData.N_ChangePOReturn.results[0].Msgtyp === "E"){
-                                            message = oData.N_ChangePOReturn.results[0].Msgv1;
+                                        const lastKey = oData.N_ChangePOReturn.results.length - 1;
+                                        if(oData.N_ChangePOReturn.results[lastKey].Msgtyp === "E"){
+                                            message = oData.N_ChangePOReturn.results[lastKey].Msgv1;
                                             MessageBox.error(message);
                                             resolve()
                                         }else{
@@ -7842,6 +7954,20 @@ sap.ui.define([
                         });
                     });
                     await _promiseResult;
+                }else if(oEvent.getParameters().id.includes("vpoReceiptsIssuancesTab")){
+                    oRow = this.getView().getModel("VPOReceiptsIssuancesVPODet").getProperty(sRowPath)
+                    oTable = this.byId("vpoReceiptsIssuancesTab");
+                    oTable.clearSelection();
+                    _promiseResult = new Promise((resolve, reject)=>{
+                        oTable.getRows().forEach(row => {
+                            if(row.getBindingContext().sPath.replace("/rows/", "") === sRowPath.split("/")[2]){
+                                resolve(row.addStyleClass("activeRow"));
+                            }else{
+                                resolve(row.removeStyleClass("activeRow"));
+                            }
+                        });
+                    });
+                    await _promiseResult;
                 }
                 
             },
@@ -7920,6 +8046,20 @@ sap.ui.define([
                     if(oEvent.srcControl.sId.includes("vpoConditionsTab")){
                         oRow = this.getView().getModel("VPOCondVPODet").getProperty(sRowPath);
                         oTable = this.byId("vpoConditionsTab")
+                        _promiseResult = new Promise((resolve, reject)=>{
+                            oTable.getRows().forEach(row => {
+                                if(row.getBindingContext().sPath.replace("/rows/", "") === index[2]){
+                                    resolve(row.addStyleClass("activeRow"));
+                                }else{
+                                    resolve(row.removeStyleClass("activeRow"));
+                                }
+                            });
+                        });
+                        await _promiseResult;
+                    }
+                    if(oEvent.srcControl.sId.includes("vpoReceiptsIssuancesTab")){
+                        oRow = this.getView().getModel("VPOReceiptsIssuancesVPODet").getProperty(sRowPath);
+                        oTable = this.byId("vpoReceiptsIssuancesTab")
                         _promiseResult = new Promise((resolve, reject)=>{
                             oTable.getRows().forEach(row => {
                                 if(row.getBindingContext().sPath.replace("/rows/", "") === index[2]){
@@ -8128,6 +8268,7 @@ sap.ui.define([
                         this.byId("vpoPoHistIconTab").setEnabled(false);
                         this.byId("vpoConditionsIconTab").setEnabled(false);
                         this.byId("vpoProcFlowIconTab").setEnabled(false);
+                        this.byId("vpoReceiptsIssuancesIconTab").setEnabled(false);
                     }
                     else if(event.getParent().getParent().getId().includes("vpoDelSchedTab")){
                         this.byId('idIconTabBarInlineMode').setVisible(false)
@@ -8149,6 +8290,7 @@ sap.ui.define([
                         this.byId("vpoPoHistIconTab").setEnabled(false);
                         this.byId("vpoConditionsIconTab").setEnabled(false);
                         this.byId("vpoProcFlowIconTab").setEnabled(false);
+                        this.byId("vpoReceiptsIssuancesIconTab").setEnabled(false);
                     }
                     else if(event.getParent().getParent().getId().includes("vpoDelInvTab")){
                         this.byId('idIconTabBarInlineMode').setVisible(false)
@@ -8170,6 +8312,7 @@ sap.ui.define([
                         this.byId("vpoPoHistIconTab").setEnabled(false);
                         this.byId("vpoConditionsIconTab").setEnabled(false);
                         this.byId("vpoProcFlowIconTab").setEnabled(false);
+                        this.byId("vpoReceiptsIssuancesIconTab").setEnabled(false);
                     }
                     else if(event.getParent().getParent().getId().includes("vpoPoHistTab")){
                         this.byId('idIconTabBarInlineMode').setVisible(false)
@@ -8191,6 +8334,7 @@ sap.ui.define([
                         // this.byId("vpoPoHistIconTab").setEnabled(false);
                         this.byId("vpoConditionsIconTab").setEnabled(false);
                         this.byId("vpoProcFlowIconTab").setEnabled(false);
+                        this.byId("vpoReceiptsIssuancesIconTab").setEnabled(false);
                     }
                     else if(event.getParent().getParent().getId().includes("vpoConditionsTab")){
                         this.byId('idIconTabBarInlineMode').setVisible(false)
@@ -8212,6 +8356,7 @@ sap.ui.define([
                         this.byId("vpoPoHistIconTab").setEnabled(false);
                         // this.byId("vpoConditionsIconTab").setEnabled(false);
                         this.byId("vpoProcFlowIconTab").setEnabled(false);
+                        this.byId("vpoReceiptsIssuancesIconTab").setEnabled(false);
                     }
                     else if(event.getParent().getParent().getId().includes("vpoProcFlowIconTab")){
                         this.byId('idIconTabBarInlineMode').setVisible(false)
@@ -8232,6 +8377,29 @@ sap.ui.define([
                         this.byId("vpoDelInvIconTab").setEnabled(false);
                         this.byId("vpoPoHistIconTab").setEnabled(false);
                         this.byId("vpoConditionsIconTab").setEnabled(false);
+                        this.byId("vpoReceiptsIssuancesIconTab").setEnabled(false);
+                    }
+                    else if(event.getParent().getParent().getId().includes("vpoReceiptsIssuancesTab")){
+                        this.byId('idIconTabBarInlineMode').setVisible(false)
+                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
+                            size: "100%",
+                            resizable: false
+                        });
+                        oSecondPane.setLayoutData(oLayoutData);
+                        this.byId("_IDGenVBox1").addStyleClass("onAddvboxHeight")
+                        this.byId("vpoDetailTab").removeStyleClass("vpoDetSection")
+                        this.byId("vpoDetailTab").addStyleClass("addDesignSection2")
+
+                        this.byId('vpoBtnFullScreenReceiptsIssuancesTab').setVisible(false)
+                        this.byId('vpoBtnExitFullScreenReceiptsIssuancesTab').setVisible(true)
+
+                        this.byId("vpoDetailsIconTab").setEnabled(false);
+                        this.byId("vpoDelSchedIconTab").setEnabled(false);
+                        this.byId("vpoDelInvIconTab").setEnabled(false);
+                        this.byId("vpoPoHistIconTab").setEnabled(false);
+                        this.byId("vpoConditionsIconTab").setEnabled(false);
+                        this.byId("vpoProcFlowIconTab").setEnabled(false);
+                        // this.byId("vpoReceiptsIssuancesIconTab").setEnabled(false);
                     }
                     this._tableFullScreenRender = "Value"
                 }
@@ -8276,6 +8444,7 @@ sap.ui.define([
                         this.byId("vpoPoHistIconTab").setEnabled(true);
                         this.byId("vpoConditionsIconTab").setEnabled(true);
                         this.byId("vpoProcFlowIconTab").setEnabled(true);
+                        this.byId("vpoReceiptsIssuancesIconTab").setEnabled(true);
                     }
                     else if(event.getParent().getParent().getId().includes("vpoDelSchedTab")){
                         this.byId('idIconTabBarInlineMode').setVisible(true)
@@ -8297,6 +8466,7 @@ sap.ui.define([
                         this.byId("vpoPoHistIconTab").setEnabled(true);
                         this.byId("vpoConditionsIconTab").setEnabled(true);
                         this.byId("vpoProcFlowIconTab").setEnabled(true);
+                        this.byId("vpoReceiptsIssuancesIconTab").setEnabled(true);
                     }
                     else if(event.getParent().getParent().getId().includes("vpoDelInvTab")){
                         this.byId('idIconTabBarInlineMode').setVisible(true)
@@ -8318,6 +8488,7 @@ sap.ui.define([
                         this.byId("vpoPoHistIconTab").setEnabled(true);
                         this.byId("vpoConditionsIconTab").setEnabled(true);
                         this.byId("vpoProcFlowIconTab").setEnabled(true);
+                        this.byId("vpoReceiptsIssuancesIconTab").setEnabled(true);
                     }
                     else if(event.getParent().getParent().getId().includes("vpoPoHistTab")){
                         this.byId('idIconTabBarInlineMode').setVisible(true)
@@ -8339,6 +8510,7 @@ sap.ui.define([
                         this.byId("vpoPoHistIconTab").setEnabled(true);
                         this.byId("vpoConditionsIconTab").setEnabled(true);
                         this.byId("vpoProcFlowIconTab").setEnabled(true);
+                        this.byId("vpoReceiptsIssuancesIconTab").setEnabled(true);
                     }
                     else if(event.getParent().getParent().getId().includes("vpoConditionsTab")){
                         this.byId('idIconTabBarInlineMode').setVisible(true)
@@ -8360,6 +8532,7 @@ sap.ui.define([
                         this.byId("vpoPoHistIconTab").setEnabled(true);
                         this.byId("vpoConditionsIconTab").setEnabled(true);
                         this.byId("vpoProcFlowIconTab").setEnabled(true);
+                        this.byId("vpoReceiptsIssuancesIconTab").setEnabled(true);
                     }
                     else if(event.getParent().getParent().getId().includes("vpoProcFlowIconTab")){
                         this.byId('idIconTabBarInlineMode').setVisible(true)
@@ -8380,6 +8553,29 @@ sap.ui.define([
                         this.byId("vpoDelInvIconTab").setEnabled(true);
                         this.byId("vpoPoHistIconTab").setEnabled(true);
                         this.byId("vpoConditionsIconTab").setEnabled(true);
+                        this.byId("vpoReceiptsIssuancesIconTab").setEnabled(true);
+                    }
+                    else if(event.getParent().getParent().getId().includes("vpoReceiptsIssuancesTab")){
+                        this.byId('idIconTabBarInlineMode').setVisible(true)
+                        var oLayoutData = new sap.ui.layout.SplitterLayoutData({
+                            size: "50%",
+                            resizable: true
+                        });
+                        oSecondPane.setLayoutData(oLayoutData);
+                        this.byId("_IDGenVBox1").removeStyleClass("onAddvboxHeight")
+                        this.byId("vpoDetailTab").addStyleClass("vpoDetSection")
+                        this.byId("vpoDetailTab").removeStyleClass("addDesignSection2")
+
+                        this.byId('vpoBtnFullScreenReceiptsIssuancesTab').setVisible(true)
+                        this.byId('vpoBtnExitFullScreenReceiptsIssuancesTab').setVisible(false)
+
+                        this.byId("vpoDetailsIconTab").setEnabled(true);
+                        this.byId("vpoDelSchedIconTab").setEnabled(true);
+                        this.byId("vpoDelInvIconTab").setEnabled(true);
+                        this.byId("vpoPoHistIconTab").setEnabled(true);
+                        this.byId("vpoConditionsIconTab").setEnabled(true);
+                        this.byId("vpoProcFlowIconTab").setEnabled(true);
+                        this.byId("vpoReceiptsIssuancesIconTab").setEnabled(true);
                     }
                     this._tableFullScreenRender = ""
                 }
@@ -8412,6 +8608,10 @@ sap.ui.define([
                 if(table == 'vpoAddPRtoPOTbl'){
                     type = "VPOADDPRTOPO";
                     tabName = "ZDV_VPOADDPRTOPO";
+                }
+                if(table == 'vpoReceiptsIssuancesTab'){
+                    type = "VPORECEIPTSISSUANCES";
+                    tabName = "ZVB_VPO_RECISS";
                 }
                     
                 
@@ -8637,6 +8837,12 @@ sap.ui.define([
             },
 
             viewDoc: function(oData) {
+                if(oData.DOCTYPE === "BATCH"){
+                    if(oData.STYLENO === "" || oData.STYLENO === undefined || oData.STYLENO === null){
+                        return;
+                    }
+                }
+
                 var vSBU = this._sbu;
                 var oCrossAppNavigator = sap.ushell.Container.getService("CrossApplicationNavigation");
 
@@ -8669,6 +8875,8 @@ sap.ui.define([
                 }
                 else if (oData.DOCTYPE === "PR") {
                     var hash = "ZSO_3DERP_PUR_PR-display&/PRDetail/" + vSBU + "/" + oData.PRNO + "/" + oData.PRITEM;
+                }else if (oData.DOCTYPE === "BATCH"){
+                    var hash = "ZSO_IO2-display&/RouteIODetail/" + oData.IONO + "/" + vSBU + "/" + oData.STYLENO + "/itfIOHDR";
                 }
                 // else if (oData.DOCTYPE === "PR") {
                 //     var hash = (oCrossAppNavigator && oCrossAppNavigator.hrefForExternal({

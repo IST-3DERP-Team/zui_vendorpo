@@ -23,7 +23,7 @@
                 <OverflowToolbar id="_ovfToolBarIO1" design="Transparent" >
                     <Text text="{ui>/poVendorVendName}" class="selHdrKeyFontStyle" />
                     <ToolbarSpacer/>
-                    <Button id ="vpoBtnRefreshtRelStrat" type="Ghost"  icon="sap-icon://refresh" text="{captionMsg>/REFRESH}" tooltip="{captionMsg>/REFRESH}" press=".onReleaseStratRefresh"/>
+                    <Button id ="vpoBtnRefreshtRelStrat" type="Ghost"  icon="sap-icon://refresh" tooltip="{captionMsg>/REFRESH}" press=".onReleaseStratRefresh"/>
                 </OverflowToolbar>
 
                 <f:Form id="PORelStatDetailForm1" editable="false" class="sapUiNoContentPadding formHdr1">

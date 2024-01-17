@@ -16,7 +16,7 @@
             <OverflowToolbar design="Transparent">
                 <Text text="{ui>/poVendorVendName}" class="selHdrKeyFontStyle" />
                 <ToolbarSpacer/>
-                <Button id ="vpoBtnRefreshtDownloadHist" type="Ghost"  icon="sap-icon://refresh" text="{captionMsg>/REFRESH}" tooltip="{captionMsg>/REFRESH}" press=".onRefreshDownloadHist"/>
+                <Button id ="vpoBtnRefreshtDownloadHist" type="Ghost"  icon="sap-icon://refresh" tooltip="{captionMsg>/REFRESH}" press=".onRefreshDownloadHist"/>
             </OverflowToolbar>
         </uiT:extension>
     </uiT:Table>
