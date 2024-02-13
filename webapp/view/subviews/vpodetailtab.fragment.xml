@@ -42,6 +42,7 @@
                             <Button id="vpoBtnItemChanges" visible="true" text="{captionMsg>/ITEMCHANGES}" />
                             <Button id="vpoBtnUpdatePrice" visible="true" text="{captionMsg>/UPDATEPRICE}" press=".onUpdatePricePODtls"/>
                             <Button id="vpoBtnDelCompleteDetails" visible="true" text="{captionMsg>/DLVCOMPLETE}" press=".onDelCompletePODtls"/>
+                            <Button id="vpoBtnChangeMatNo" visible="true" text="{captionMsg>/CHANGEMATNO}" press=".onChangeMatNoPODtls"/>
                             <Button id="vpoBtnEditDetails" 
                                 icon="sap-icon://edit"
                                 tooltip="{captionMsg>/EDIT}"

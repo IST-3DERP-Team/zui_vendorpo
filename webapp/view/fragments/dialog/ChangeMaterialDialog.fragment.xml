@@ -1,0 +1,36 @@
+<core:FragmentDefinition xmlns="sap.m" xmlns:core="sap.ui.core"
+xmlns:f="sap.ui.layout.form" xmlns:uiT="sap.ui.table">
+	<Dialog title="{/Title}" draggable= "true" escapeHandler=".onCancelChangeMaterial" afterClose=".onCancelChangeMaterial">
+		<uiT:Table id="vpoChangeMatTbl"
+			class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
+			visibleRowCountMode="Auto"
+			showColumnVisibilityMenu="true"
+			enableColumnFreeze="true"
+			selectionMode="Single"
+			selectionBehavior="Row"
+			sort="onSorted">
+			<uiT:extension>
+				<Toolbar>
+					<Text text="PO No: {ui>/activePONo}" class="selHdrKeyFontStyle" />
+					<ToolbarSpacer/>
+					<Button id="vpoChangeMatSaveBtn" 
+						icon="sap-icon://save"
+						press=".onChangeMaterial"
+						visible="true" />
+					<Button id="vpoChangeMatCancelBtn" 
+						icon="sap-icon://sys-cancel"
+						press=".onCancelChangeMaterial" 
+						visible="true" />
+					<Button id="vpoChangeMatSaveLayoutBtn" 
+						icon="sap-icon://table-column"
+						press=".onSaveTableLayout('vpoChangeMatTbl')"
+						tooltip="Columns"
+						visible="true" />
+				</Toolbar>
+			</uiT:extension>
+			<uiT:layoutData>
+				<FlexItemData growFactor="1" baseSize="0%"/>
+			</uiT:layoutData>                        
+		</uiT:Table> 
+	</Dialog>
+</core:FragmentDefinition>

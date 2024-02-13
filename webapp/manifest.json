@@ -78,6 +78,33 @@
                     "localUri": "localService/ZGW_3DERP_LOCK2_SRV/metadata.xml",
                     "odataVersion": "2.0"
                 }
+            },
+            "ZGW_3DERP_PR_SRV": {
+                "uri": "/sap/opu/odata/sap/ZGW_3DERP_PR_SRV/",
+                "type": "OData",
+                "settings": {
+                    "annotations": [],
+                    "localUri": "localService/ZGW_3DERP_PR_SRV/metadata.xml",
+                    "odataVersion": "2.0"
+                }
+            },
+            "ZGW_3DERP_IO_SRV": {
+                "uri": "/sap/opu/odata/sap/ZGW_3DERP_IO_SRV/",
+                "type": "OData",
+                "settings": {
+                    "annotations": [],
+                    "localUri": "localService/ZGW_3DERP_IO_SRV/metadata.xml",
+                    "odataVersion": "2.0"
+                }
+            },
+            "ZGW_3DERP_IOMATLIST_SRV": {
+                "uri": "/sap/opu/odata/sap/ZGW_3DERP_IOMATLIST_SRV/",
+                "type": "OData",
+                "settings": {
+                    "annotations": [],
+                    "localUri": "localService/ZGW_3DERP_IOMATLIST_SRV/metadata.xml",
+                    "odataVersion": "2.0"
+                }
             }
         }
     },
@@ -224,6 +251,42 @@
             },
             "LOOKUP_MODEL": {
                 "type": "sap.ui.model.json.JSONModel"
+            },
+            "ZGW_3DERP_PR_SRV": {
+                "dataSource": "ZGW_3DERP_PR_SRV",
+                "preload": true,
+                "settings": {
+                    "defaultBindingMode": "TwoWay",
+                    "defaultCountMode": "Inline",
+                    "refreshAfterChange": false,
+                    "metadataUrlParams": {
+                        "sap-value-list": "none"
+                    }
+                }
+            },
+            "ZGW_3DERP_IO_SRV": {
+                "dataSource": "ZGW_3DERP_IO_SRV",
+                "preload": true,
+                "settings": {
+                    "defaultBindingMode": "TwoWay",
+                    "defaultCountMode": "Inline",
+                    "refreshAfterChange": false,
+                    "metadataUrlParams": {
+                        "sap-value-list": "none"
+                    }
+                }
+            },
+            "ZGW_3DERP_IOMATLIST_SRV": {
+                "dataSource": "ZGW_3DERP_IOMATLIST_SRV",
+                "preload": true,
+                "settings": {
+                    "defaultBindingMode": "TwoWay",
+                    "defaultCountMode": "Inline",
+                    "refreshAfterChange": false,
+                    "metadataUrlParams": {
+                        "sap-value-list": "none"
+                    }
+                }
             }
         },
         "resources": {
@@ -269,6 +332,14 @@
                     ]
                 },
                 {
+                    "name": "ioMaterialList",
+                    "pattern": "IOMaterialList/{IONO}/{SBU}/{STYLENO}",
+                    "greedy": false,
+                    "target": [
+                        "TargetIOMaterialList"
+                    ]
+                },
+                {
                     "name": "RouteSplitPO",
                     "pattern": "RouteSplitPO",
                     "greedy": false,
@@ -298,6 +369,13 @@
                     "clearControlAggregation": false,
                     "viewId": "vendorpodetail",
                     "viewName": "vendorpodetail"
+                },
+                "TargetIOMaterialList": {
+                    "viewType": "XML",
+                    "transition": "slide",
+                    "clearControlAggregation": false,
+                    "viewId": "ioMaterialList",
+                    "viewName": "ioMaterialList"
                 },
                 "TargetSplitPO": {
                     "viewType": "XML",

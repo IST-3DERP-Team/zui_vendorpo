@@ -148,6 +148,11 @@ sap.ui.define([
                 this._poHistPOItemCount = 0; //Store Count every time user click arrow button in PO History
                 this._procFlowPOItemCount = 0; //Store Count every time user click arrow button in PO Proccess Flow
 
+                //Change MatNo- Stores Selected PO Det Data to get the MatTyp when processing change Material
+                this._storePODetChangeMatNo = [];
+
+                //Store 
+
                 this._appAction = "" //global variable of Application Action if Display or Change
                 await this.getAppAction(); //Get the Application actions if Display or Change in LTD
 
@@ -256,7 +261,6 @@ sap.ui.define([
             },
 
             loadAllData: async function(){
-                var me = this;
                 await this.onSuggestionItems(); //Load Suggestion Items in Header
                 await this.getColumnProp();
                 // //Load header
@@ -482,6 +486,8 @@ sap.ui.define([
 
                 oDDTextParam.push({CODE: "LOADING"});
                 oDDTextParam.push({CODE: "RECEIPTS_ISSUANCES"});
+                oDDTextParam.push({CODE: "CHANGEMATNO"});
+                
 
                 await new Promise((resolve)=>{
                     oModel.create("/CaptionMsgSet", { CaptionMsgItems: oDDTextParam  }, {
@@ -1127,6 +1133,15 @@ sap.ui.define([
                                     resolve();
                                 }
 
+                                //Change Material
+                                if (modCode === 'VPOCHANGEMAT') {
+                                    me._aColumns["vpoChangeMatTbl"] = oData.results;
+                                    oJSONColumnsModel.setData(oData.results);
+                                    me.getView().setModel(oJSONColumnsModel, "VPOChangeMaterialColumns");
+                                    me.setTableColumnsData(modCode);
+                                    resolve();
+                                }
+
                                 if (modCode === 'VPOHDRCOND') {
                                     me._aColumns["HdrConditonsTbl"] = oData.results;
                                     oJSONColumnsModel.setData(oData.results);
@@ -1180,6 +1195,13 @@ sap.ui.define([
                                 //Add PR to PO Column
                                 if (modCode === 'VPOADDPRTOPO') {
                                     me.getView().setModel(oJSONColumnsModel, "VPOAddPRtoPOColumns");
+                                    me.setTableColumnsData(modCode);
+                                    resolve();
+                                }
+
+                                //Change Material
+                                if (modCode === 'VPOCHANGEMAT') {
+                                    me.getView().setModel(oJSONColumnsModel, "VPOChangeMaterialColumns");
                                     me.setTableColumnsData(modCode);
                                     resolve();
                                 }
@@ -1302,6 +1324,20 @@ sap.ui.define([
                     me.addColumns("vpoAddPRtoPOTbl", oColumnsData, oData, "VPOAddPRtoPO");
                 }
 
+                //Change Material
+                if (modCode === 'VPOCHANGEMAT') {
+                    oColumnsModel = me.getView().getModel("VPOChangeMaterialData");  
+                    oDataModel = me.getView().getModel("VPOChangeMaterialColumns"); 
+                    
+                    oData = oColumnsModel === undefined ? [] :oColumnsModel.getProperty('/');
+
+                    if(me._columnLoadError){
+                        oData = [];
+                    }
+                    oColumnsData = oDataModel.getProperty('/');   
+                    me.addColumns("vpoChangeMatTbl", oColumnsData, oData, "VPOChangeMaterialData");
+                }
+
                 if (modCode === 'VPOHDRCOND') {
                     oColumnsModel = me.getView().getModel("VPOHdrCond");  
                     oDataModel = me.getView().getModel("VPOHdrCondColumns"); 
@@ -1330,7 +1366,7 @@ sap.ui.define([
             },
             addColumns: async function(table, columnsData, data, model) {
                 var me = this;
-
+                
                 var oModel = new JSONModel();
                 oModel.setData({
                     columns: columnsData,
@@ -1396,14 +1432,10 @@ sap.ui.define([
                                 const vIONo =  oEvent.oSource.mProperties.text;
                                 const vStyleNo =  oTable.getModel().getProperty(vRow + "/STYLENO");
                                 var oData = {
-                                    DOCTYPE: "BATCH",
                                     STYLENO: vStyleNo,
                                     IONO: vIONo
                                 }
-
-                                me.viewDoc(oData);
-
-                                // window.open(`https://ltd.luenthai.com:44300/sap/bc/ui2/flp?sap-client=888#ZSO_3DERP_PUR_PR-dispaly&/PRDetail/VER/5000000487/00010` , "_blank");
+                                me.navToIOMatList(oData);
                             },
                         })
                         oControl.addStyleClass("hyperlink");
@@ -3212,6 +3244,8 @@ sap.ui.define([
                 var oModel = this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
                 var oEntitySet = "/ValidatePO_ChangeSet"
                 var bProceed = true;
+
+                this._validPOChange = 0;
 
                 _promiseResult = new Promise((resolve, reject)=>{
                     oModel.read(oEntitySet, {
@@ -7025,77 +7059,79 @@ sap.ui.define([
                                         },
                                         success: function (oData, oResponse) {
                                             oData.results.forEach(async item => {
-                                                if(dataRow.at(selRowItem).MATTYP !== item.FIELD2){
-                                                    oParamPODATA = {
-                                                        EBELN:          "",
-                                                        EBELP:          "",
-                                                        WEMNG:          "0",
-                                                        FOCQTY:         "0",
-                                                        TOLALLOWEDIT:   "",
-                                                        QTYMIN:         "0",
-                                                        QTYMAX:         "0",
-                                                        UNTTOMIN:       "0",
-                                                        UNTTOMAX:       "0",
-                                                        UEBTOMIN:       "0",
-                                                        UEBTOMAX:       "0",
-                                                    }       
-                                                    //exec ZERP_PODATA
-                                                    oModel.create("/PODATASet", oParamPODATA, modelParameter);
-                                                    _promiseResult = new Promise((resolve, reject)=>{
-                                                        oModel.submitChanges({
-                                                            groupId: "insert",
-                                                            success: function(oData, oResponse){
-                                                                //Success Message
-                                                                resolve();
-                                                            },error: function(error){
-                                                                //error message
-                                                                MessageBox.error(error);
-                                                                resolve();
-                                                            }
-                                                        })
-                                                    });
-                                                    await _promiseResult;
-                                                    //EXEC Info Record
-                                                    var infoRecMainParam = {};
-                                                    var inforRecReturn = [];
-                                                    oParamInfoRec = [];
-                                                    oParamInfoRec.push({
-                                                        Vendor: vendorCd,
-                                                        Material: dataRow.at(selRowItem).MATNO,
-                                                        PurchOrg: purchOrg,
-                                                        PurGroup: purchGrp,
-                                                        Plant: ""
-                                                    });
-                                                    infoRecMainParam["N_GetInfoRecMatParam"] = oParamInfoRec;
-                                                    _promiseResult = new Promise((resolve, reject)=>{
-                                                        rfcModel.create("/GetInfoRecordSet", infoRecMainParam, {
-                                                            method: "POST",
-                                                            success: function(oData, oResponse) {
-                                                                inforRecReturn.push(oData.N_GetInfoRecReturn)
-                                                                resolve();
-                                                            },
-                                                            error: function(err){
-                                                                resolve();
-                                                            }
+                                                if(item.FIELD1 === "INFORECORD"){
+                                                    if(dataRow.at(selRowItem).MATTYP !== item.FIELD2){
+                                                        oParamPODATA = {
+                                                            EBELN:          "",
+                                                            EBELP:          "",
+                                                            WEMNG:          "0",
+                                                            FOCQTY:         "0",
+                                                            TOLALLOWEDIT:   "",
+                                                            QTYMIN:         "0",
+                                                            QTYMAX:         "0",
+                                                            UNTTOMIN:       "0",
+                                                            UNTTOMAX:       "0",
+                                                            UEBTOMIN:       "0",
+                                                            UEBTOMAX:       "0",
+                                                        }       
+                                                        //exec ZERP_PODATA
+                                                        oModel.create("/PODATASet", oParamPODATA, modelParameter);
+                                                        _promiseResult = new Promise((resolve, reject)=>{
+                                                            oModel.submitChanges({
+                                                                groupId: "insert",
+                                                                success: function(oData, oResponse){
+                                                                    //Success Message
+                                                                    resolve();
+                                                                },error: function(error){
+                                                                    //error message
+                                                                    MessageBox.error(error);
+                                                                    resolve();
+                                                                }
+                                                            })
                                                         });
-                                                    });
-                                                    await _promiseResult;
+                                                        await _promiseResult;
+                                                        //EXEC Info Record
+                                                        var infoRecMainParam = {};
+                                                        var inforRecReturn = [];
+                                                        oParamInfoRec = [];
+                                                        oParamInfoRec.push({
+                                                            Vendor: vendorCd,
+                                                            Material: dataRow.at(selRowItem).MATNO,
+                                                            PurchOrg: purchOrg,
+                                                            PurGroup: purchGrp,
+                                                            Plant: ""
+                                                        });
+                                                        infoRecMainParam["N_GetInfoRecMatParam"] = oParamInfoRec;
+                                                        _promiseResult = new Promise((resolve, reject)=>{
+                                                            rfcModel.create("/GetInfoRecordSet", infoRecMainParam, {
+                                                                method: "POST",
+                                                                success: function(oData, oResponse) {
+                                                                    inforRecReturn.push(oData.N_GetInfoRecReturn)
+                                                                    resolve();
+                                                                },
+                                                                error: function(err){
+                                                                    resolve();
+                                                                }
+                                                            });
+                                                        });
+                                                        await _promiseResult;
 
-                                                    //Populate below
-                                                    //Update PO Details Field
-                                                    //UEBTO
-                                                    //UNTTO
-                                                    //UEBTK
-                                                    for (var i = 0; i < poDetailsData.length; i++) {
-                                                        if (poDetailsData[i].PRNO === dataRow.at(selRowItem).PRNO && poDetailsData[i].PRITM === dataRow.at(selRowItem).PRITM) {
-                                                            poDetailsData[i].UNLIMITED = inforRecReturn[0].Unlimited
-                                                            poDetailsData[i].OVERDELTOL = inforRecReturn[0].OverDelTol
-                                                            poDetailsData[i].UNDERDELTOL = inforRecReturn[0].Under_Tol
+                                                        //Populate below
+                                                        //Update PO Details Field
+                                                        //UEBTO
+                                                        //UNTTO
+                                                        //UEBTK
+                                                        for (var i = 0; i < poDetailsData.length; i++) {
+                                                            if (poDetailsData[i].PRNO === dataRow.at(selRowItem).PRNO && poDetailsData[i].PRITM === dataRow.at(selRowItem).PRITM) {
+                                                                poDetailsData[i].UNLIMITED = inforRecReturn[0].Unlimited
+                                                                poDetailsData[i].OVERDELTOL = inforRecReturn[0].OverDelTol
+                                                                poDetailsData[i].UNDERDELTOL = inforRecReturn[0].Under_Tol
+                                                            }
                                                         }
+                                                    }else{
+                                                        forGetGMCPOTol = true;
+                                                        //call VPOGetGMCPOTolSet
                                                     }
-                                                }else{
-                                                    forGetGMCPOTol = true;
-                                                    //call VPOGetGMCPOTolSet
                                                 }
                                             })
                                             resolve();
@@ -8227,6 +8263,542 @@ sap.ui.define([
                 }
             },
 
+            onChangeMatNoPODtls: async function(){
+                var me = this;
+
+                await new Promise((resolve)=>{
+                    resolve(me.validatePOChange());
+                });
+
+                if(this._validPOChange != 1){
+                    MessageBox.error(_captionList.INFO_PO_NOT_VALID_TO_EDIT)
+                    return;
+                }
+
+                var oModel = this.getOwnerComponent().getModel();
+                var oTable = this.byId("vpoDetailsTab");
+                var aSelIndices = oTable.getSelectedIndices();
+                var oTmpSelectedIndices = [];
+                var vMatno, vBatch = "";
+                var vGMC, vIONO = "";
+
+                this._storePODetChangeMatNo = [];//initialise Object to Store PO Det Data;
+
+                var aData = this.getView().getModel("VPODtlsVPODet").getData().results;
+
+                //Change Material View Variables
+                var oChangeMatNoData = [];
+                var oJSONModel = new JSONModel();
+
+                if (aSelIndices.length === 1) {
+                    aSelIndices.forEach(item => {
+                        oTmpSelectedIndices.push(oTable.getBinding("rows").aIndices[item])
+                    });
+
+                    aSelIndices = oTmpSelectedIndices;
+
+                    for(var item of aSelIndices){
+                        vMatno = aData.at(item).MATNO;
+                        vBatch = aData.at(item).BATCH;
+                        await new Promise((resolve)=>{
+                            oModel.read("/ChangeMatNoGetGMCIOSet",{
+                                urlParameters: {
+                                    "$filter": "MATNO eq '" + vMatno + "' and BATCH eq '"+ vBatch +"'"
+                                },
+                                success: async function (data, response) {
+                                    if(data.results.length > 0){
+                                        vGMC = data.results[0].GMCDESCEN;
+                                        vIONO = data.results[0].IONO;
+                                    }
+                                    resolve();
+                                },error: function(error){
+                                    //error occured
+                                    resolve();
+                                }
+
+                            });
+                        });
+                        me._storePODetChangeMatNo = aData.at(item);
+                    }
+
+                    if(vGMC !== "" && vGMC !== null && vGMC !== undefined){
+                        if(vIONO !== "" && vIONO !== null && vIONO !== undefined){
+                            await new Promise((resolve)=>{
+                                oModel.read("/ChangeMatNoDataSet",{
+                                    urlParameters: {
+                                        "$filter": "GMCDESCEN eq '" + vGMC + "' and IONO eq '"+ vIONO +"'"
+                                    },
+                                    success: async function (data, response) {
+                                        oChangeMatNoData = data.results;
+                                        resolve();
+                                    },error: function(error){
+                                        resolve();
+                                        //error occured
+                                    }
+        
+                                });
+                            })
+                        }
+                    }
+                    console.log(oChangeMatNoData);
+                    if(oChangeMatNoData.length > 0){
+                        me.changeMaterialDialog = sap.ui.xmlfragment(me.getView().getId(), "zuivendorpo.view.fragments.dialog.ChangeMaterialDialog", me);
+                        me.changeMaterialDialog.setModel(
+                            new JSONModel({
+                                Title: "Change Material"
+                            }) 
+                        );
+                        me.getView().addDependent(me.changeMaterialDialog);
+
+                        oJSONModel.setData(oChangeMatNoData);
+                        me.getView().setModel(oJSONModel, "VPOChangeMaterialData");
+
+                        await me.getDynamicColumns('VPOCHANGEMAT','ZDV_VPOCHMATNO')
+
+                        me.changeMaterialDialog.open();
+                    }
+                }else{
+
+                }
+            },
+
+            onChangeMaterial: async function(){
+                var me = this;
+
+                var oTable = this.byId("vpoChangeMatTbl");
+                var aSelIndices = oTable.getSelectedIndices();
+                var oTmpSelectedIndices = [];
+                var aData = oTable.getModel().getData().rows;
+                var oModel = this.getOwnerComponent().getModel();
+
+                var prModel = this.getOwnerComponent().getModel("ZGW_3DERP_PR_SRV");
+                var rfcModel = this.getOwnerComponent().getModel("ZGW_3DERP_RFC_SRV");
+                var vSBU = this._sbu;
+
+                var chkInfoRec = false, chkSourceList = false; //check Info Rec/Src List if Required
+                var validInfoRec = false, validSourceList = false; //check if there is exisiting InfoRec/SrcList
+                var poDetData = this._storePODetChangeMatNo;
+                console.log(poDetData);
+                console.log(this.getView().getModel("topHeaderData").getData());
+                var sPlantCd = this.getView().getModel("topHeaderData").getData().PURCHPLANT;
+                var sVendorCd = this.getView().getModel("topHeaderData").getData().VENDOR;
+                var sPurchOrg = this.getView().getModel("topHeaderData").getData().PURCHORG
+
+                var bProceed = true;
+
+                //Create PR Variables
+                var prCreateSetParamSet = {}
+                var prCreateSetParamMain = {}
+                var prCreateSetParam = []
+
+                var prData = []; //store PR of PO
+                var prItems = 0;
+
+                //save PO and delete PO Variables
+                var poNo = me._pono
+                var oParamInitParam = {}
+                var oParamDataPO = [];
+                var oParamDataPOClose = [];
+                var oParam = {};
+                var topHeaderData = this.getView().getModel("topHeaderData").getData();
+                var shipToPlant = topHeaderData.SHIPTOPLANT;//this.byId("f1ShipToPlant").getValue().split('-')[0].trim();
+                var incoTerms = topHeaderData.INCOTERMS;//this.byId("f1Incoterms").getValue().split('-')[0].trim();
+                var destination = topHeaderData.DEST;//this.byId("f1Destination").getValue();
+                var shipMode = topHeaderData.SHIPMODE;//this.byId("f1ShipMode").getValue().split('-')[0].trim();
+
+                //validation if PR/PO Created
+                var prCreated = false;
+                var poCreated = false;
+                var bError = false;
+                var bSuccess = false;
+
+                var vData = [];
+                var message = "";
+
+                if (aSelIndices.length > 0) {
+                    aSelIndices.forEach(item => {
+                        oTmpSelectedIndices.push(oTable.getBinding("rows").aIndices[item])
+                    });
+
+                    aSelIndices = oTmpSelectedIndices;
+
+                    for(var item of aSelIndices){
+                        vData.push(aData.at(item));
+                    }
+                    Common.openLoadingDialog(me);
+                    //check in ZERP_CHECK if SourceList or InfoRecord is required. 
+                    //InfoRecord
+                    await new Promise((resolve)=>{
+                        oModel.read("/ZERP_CHECKSet", {
+                            urlParameters: {
+                                "$filter": "SBU eq '" + vSBU + "'"
+                            },
+                            success: function (oData, oResponse) {
+                                for(var x in oData.results){
+                                    if(oData.results[x].FIELD1 === "INFORECORD" && poDetData.MATTYP === oData.results[x].FIELD2){
+                                        chkInfoRec = true;
+                                    }
+                                }
+                                resolve();
+                            },
+                            error: function () {
+                                resolve();
+                            }
+                        });
+                    });
+
+                    //SourceList
+                    await new Promise((resolve)=>{
+                        oModel.read("/ZERP_CHECKSet", {
+                            urlParameters: {
+                                "$filter": "SBU eq '" + vSBU + "'"
+                            },
+                            success: function (oData, oResponse) {
+                                for(var x in oData.results){
+                                    if(oData.results[x].FIELD1 === "SOURCELIST" && poDetData.MATTYP === oData.results[x].FIELD2){
+                                        chkSourceList = true;
+                                    }
+                                }
+                                resolve();
+                            },
+                            error: function () {
+                                resolve();
+                            }
+                        });
+                    });
+
+
+                    if(chkInfoRec){
+                        if(poDetData.PURCHINFOREC === "" && poDetData.PURCHINFOREC === null && poDetData.PURCHINFOREC === undefined){
+                            bProceed = false;
+                        }
+                        if(!bProceed){
+                            console.log("Info Rec is Required!");
+                        }
+                    }
+
+                    
+                    if(chkSourceList){
+                        await new Promise((resolve)=>{
+                            oModel.read("/ChangeMatNoGetSrcListSet", {
+                                urlParameters: {
+                                    "$filter": "MATNO eq '" + poDetData.MATNO + "' and PURCHPLANT eq '" + sPlantCd + "'  and VENDOR eq '" + sVendorCd + "'  and PURCHORG eq '" + sPurchOrg + "'"
+                                },
+                                success: function (oData, oResponse) {
+
+                                    if(oData.results.length){
+                                        bProceed = false;
+                                    }
+                                    resolve();
+                                },
+                                error: function () {
+                                    resolve();
+                                }
+                            });
+                            if(!bProceed){
+                                console.log("No Source List Found!");
+                            }
+                        })
+                        
+                    }
+
+                    if(bProceed){
+                        //Lock in ZERP_MRPDATA
+                        
+                        //get PR and count PR Items
+                        await new Promise((resolve, reject) => {
+                            prModel.read("/PRSet", {//"/PRSet(PRNO='" + prno + "',PRITM='"+ pritm +"')", {
+                                success: async function (oData, oResponse) {
+                                    if (oData.results.length > 0) {
+                                        oData.results.forEach((item, index) => {
+                                            item.DELETED = item.DELETED === "" ? false : true;
+                                            item.CREATEDDT = dateFormat.format(new Date(item.CREATEDDT));
+                                            item.UPDATEDDT = dateFormat.format(new Date(item.UPDATEDDT));
+                                            item.RELDT = dateFormat.format(new Date(item.RELDT));
+                                            item.REQDT = dateFormat.format(new Date(item.REQDT));
+                                            item.DELDT = dateFormat.format(new Date(item.DELDT));
+                                        })
+                                        
+                                        //get PR Items
+                                        for(var item in oData.results){
+                                            if(oData.results[item].PRNO === poDetData.PRNO){
+                                                prData.push(oData.results[item]);
+                                            }
+                                        }
+                                    }
+                                    resolve();
+                                },
+                                error: function () {
+                                    resolve();
+                                }
+                            })
+                        });
+
+                        var prItemArr = [];
+                        for(var x = 0; x < prData.length; x++){
+                            prItemArr.push(prData[x].PRITM);
+                        }
+
+                        prItemArr.sort((a, b) => {return b - a});
+                        var prItemIncrement = String(parseInt(prItemArr[0]) + 10);
+
+                        if(prItemIncrement != "" || prItemIncrement != null){
+                            while(prItemIncrement.length < 5) prItemIncrement = "0" + prItemIncrement.toString();
+                            
+                        }
+
+                        for(var item in prData){
+                            if(poDetData.PRNO === prData[item].PRNO && poDetData.PRITM === prData[item].PRITM){
+                                //Insert PR Line Item
+                                prCreateSetParam.push({
+                                    PreqNo: poDetData.PRNO,
+                                    PreqItem: prItemIncrement,
+                                    Matno: vData[0].MATNO,
+                                    Uom: vData[0].BASEUOM,
+                                    Quantity: vData[0].REQDQTY,
+                                    DelivDate: sapDateFormat.format(new Date(prData[item].DELDT)) + "T00:00:00",
+                                    Batch: prData[item].BATCH,
+                                    Plant: prData[item].PLANTCD,
+                                    Purgrp: prData[item].PURGRP,
+                                    Reqsnr: prData[item].REQSTNR,
+                                    DesVendor: prData[item].VENDOR,
+                                    PurchOrg: prData[item].PURORG,
+                                    Trackingno: prData[item].TRCKNO,
+                                    Supplytyp: prData[item].SUPTYP,
+                                    InfoRec: prData[item].INFORECORD,
+                                    Shiptoplant: prData[item].SHIPTOPLANT,
+                                    Seasoncd: prData[item].SEASONCD,
+                                    // ShortText: vData[0].GMCDESCEN,
+                                    Callbapi: 'X'
+                                })
+                            }
+                        }
+                        
+                        if(prCreateSetParam.length > 0){
+                            prCreateSetParamSet['N_ChangePRParam'] = prCreateSetParam;
+                            prCreateSetParamSet['N_ChangePRReturn'] = [];
+                            await new Promise((resolve, reject)=>{
+                                rfcModel.create("/ChangePRSet", prCreateSetParamSet, {
+                                    method: "POST",
+                                    success: function(oResultCPR, oResponse) {
+                                        var oRetMsg = oResultCPR.N_ChangePRReturn.results.filter(fItem => fItem.PreqNo === poDetData.PRNO )//&& fItem.PreqItem === aData.at(item).PRITM);
+            
+                                        if (oRetMsg.length > 0) {
+                                            if (oRetMsg[0].Type === 'S') {
+                                                prCreated = true;
+                                            }else{
+                                                bError = true;
+                                            }
+                                        }
+                                        resolve();
+                                    },
+                                    error: function(err) {
+                                        bError = true;
+                                        resolve();
+                                    }
+                                })
+                            });
+
+                            if(bError){
+                                message = "Change Material: Error Encountered in PR Creation!"
+                            }
+
+                            if(prCreated){
+                                //insert PO Line Item
+                                var poDtlsSet = this.getView().getModel("VPODtlsVPODet").getProperty('/results');  
+                                var poItemArr = [];
+                                var poItemLastCnt = 0;
+
+                                for(var x = 0; x < poDtlsSet.length; x++){
+                                    poItemArr.push(poDtlsSet[x].ITEM);
+                                }
+
+                                poItemArr.sort(function(a, b){return b - a});
+                                poItemLastCnt = poItemArr[0];
+
+                                poItemLastCnt = String(parseInt(poItemLastCnt) + 10);
+
+                                if(poItemLastCnt != "" || poItemLastCnt != null){
+                                    while(poItemLastCnt.length < 5) poItemLastCnt = "0" + poItemLastCnt.toString();
+                                    
+                                }
+
+                                oParamInitParam = {
+                                    IPoNumber: me._pono,
+                                    IDoDownload: "N",
+                                    IChangeonlyHdrplants: "N",
+                                }
+                                for(var item in prData){
+                                    if(poDetData.PRNO === prData[item].PRNO && poDetData.PRITM === prData[item].PRITM){
+                                        oParamDataPO.push({
+                                            Bedat     : sapDateFormat.format(new Date(topHeaderData.PODT)) + "T00:00:00", //PODocDt
+                                            Bsart     : topHeaderData.DOCTYPE, //PODocTyp
+                                            Banfn     : poDetData.PRNO, //PR
+                                            Bnfpo     : prItemIncrement, //PRITM
+                                            Ebeln     : poNo, //PONO
+                                            Ebelp     : poItemLastCnt, //POITM
+                                            Unsez     : shipToPlant, //shipToPlant
+                                            Inco1     : incoTerms, // Incoterms
+                                            Inco2     : destination, //Destination
+                                            Evers     : shipMode, //ShipMode
+                                            Bukrs     : topHeaderData.COMPANY,//COCD
+                                            Werks     : topHeaderData.PURCHPLANT,//PLANTCD
+                                            Unsez     : topHeaderData.SHIPTOPLANT,//
+                                            Matnr     : vData[0].MATNO, //MatNo
+                                            Charg     : poDetData.BATCH,
+                                            Txz01     : poDetData.SHORTTEXT,//ShortText
+                                            Menge     : vData[0].REQDQTY,//OrdQTY
+                                            Meins     : vData[0].BASEUOM,//UOM
+                                            Netpr     : poDetData.NETPRICE,//net price
+                                            Repos     : poDetData.INVRCPTIND, //aData.at(item).INVRCPTIND, //IR Indicator
+                                            Webre     : poDetData.GRBASEDIVIND, //aData.at(item).GRBASEDIVIND, //GR Based Ind
+                                            Eindt     : sapDateFormat.format(new Date(poDetData.DELDT)) + "T00:00:00", //DlvDt
+                                            Uebtk     : poDetData.UNLIMITED,//Unlimited
+                                            Uebto     : poDetData.OVERDELTOL,//OverDel Tol.
+                                            Untto     : poDetData.UNDERDELTOL,//UnderDel Tol.
+                                            Zzmakt    : poDetData.POADDTLDESC, //PO Addtl Desc
+                                        });
+                                        
+                                        //Tag PR as Close if PRQty = POQty
+                                        oParamDataPOClose.push({
+                                            Banfn: poDetData.PRNO, //PRNO
+                                            Bnfpo: prItemIncrement, //PRITM
+                                            Ebakz: "" 
+                                        });
+                                    }
+                                }
+                                if (oParamDataPO.length > 0) {
+                                    oParam = oParamInitParam;
+                                    oParam['N_ChangePOItemParam'] = oParamDataPO;
+                                    oParam['N_ChangePOClosePRParam'] = oParamDataPOClose;
+                                    oParam['N_ChangePOReturn'] = [];
+
+                                    await new Promise((resolve, reject)=>{
+                                        rfcModel.create("/ChangePOSet", oParam, {
+                                            method: "POST",
+                                            success: async function(oData, oResponse){
+                                                if(oData.N_ChangePOReturn.results.length > 0){
+                                                    if(oData.N_ChangePOReturn.results[0].Msgtyp === "E"){
+                                                        bError = true;
+                                                    }else{
+                                                        poCreated = true;
+                                                    }
+                                                    resolve();
+                                                }else{
+                                                    bError = true;
+                                                    resolve()
+                                                }
+                                            },error: function(error){
+                                                //error message
+                                                bError = true;
+                                                resolve()
+                                            }
+                                        })
+                                    });
+                                }
+
+                                if(bError){
+                                    message = "Change Material: Error Encountered in PO Creation!"
+                                }
+                            }
+                        }
+
+                        //Tag Selected PO as Deleted
+                        if(poCreated){
+                            oParamInitParam = {}
+                            oParamDataPO = [];
+                            oParamDataPOClose = [];
+                            oParam = {};
+                            oParamInitParam = {
+                                IPoNumber: me._pono,
+                                IDoDownload: "N",
+                                IChangeonlyHdrplants: "N",
+                            }
+                            oParamDataPO.push({
+                                Banfn: poDetData.PRNO, //PRNO
+                                Bnfpo: poDetData.PRITM, //PRITM
+                                Ebeln: me._pono,//pono
+                                Unsez: shipToPlant, //shipToPlant
+                                Inco1: incoTerms, // Incoterms
+                                Inco2: destination, //Destination
+                                Evers: shipMode, //ShipMode
+                                Ebelp: poDetData.ITEM,//poitem
+                                Txz01: poDetData.SHORTTEXT,//shorttext
+                                Menge: poDetData.POQTY,//QTY
+                                Meins: poDetData.UOM,//UOM
+                                Netpr: poDetData.NETPRICE,//net price
+                                Peinh: poDetData.PER,//PER
+                                Bprme: poDetData.ORDERPRICEUOM, //Order Price Unit
+                                Repos: poDetData.INVRCPTIND, //IR Indicator
+                                Webre: poDetData.GRBASEDIVIND, //GR Based Ind
+                                Eindt: sapDateFormat.format(new Date(poDetData.DELDT)) + "T00:00:00", //DlvDt
+                                Uebtk: poDetData.UNLIMITED,//Unlimited
+                                Uebto: poDetData.OVERDELTOL,//OverDel Tol.
+                                Untto: poDetData.UNDERDELTOL,//UnderDel Tol.
+                                Zzmakt: poDetData.POADDTLDESC, //PO Addtl Desc
+                                DeleteRec: true//Delete
+                                
+                            });
+                            oParamDataPOClose.push({
+                                Banfn: poDetData.PRNO, //PRNO
+                                Bnfpo: poDetData.PRITM, //PRITM
+                                Ebakz: "" 
+                            })
+
+                            if (oParamDataPO.length > 0) {
+                                oParam = oParamInitParam;
+                                oParam['N_ChangePOItemParam'] = oParamDataPO;
+                                oParam['N_ChangePOClosePRParam'] = oParamDataPOClose;
+                                oParam['N_ChangePOReturn'] = [];
+                                console.log(oParam);
+
+                                await new Promise((resolve, reject)=>{
+                                    rfcModel.create("/ChangePOSet", oParam, {
+                                        method: "POST",
+                                        success: async function(oData, oResponse){
+                                            if(oData.N_ChangePOReturn.results.length > 0){
+                                                if(oData.N_ChangePOReturn.results[0].Msgtyp === 'E'){
+                                                    bError = true;
+                                                }
+                                            }else{
+                                                bError = true;
+                                            }
+                                            resolve();
+                                        },error: function(error){
+                                            bError = true;
+                                        }
+                                    })
+                                });
+                            }
+                        }
+
+                        if(bError){
+                            message = "Change Material: Error Encountered!"
+                        }else{
+                            message = "Material Successfuly Changed!"
+                        }
+
+                        if(message !== undefined || message !== "" || message !== null){
+                            if(bError){
+                                MessageBox.error(message);
+                            }else{
+                                MessageBox.information(message);
+                                me.changeMaterialDialog.destroy(true);
+                                await me.loadAllData();
+                            }
+                        }
+
+                        //Update ZERP_MRPDATA SET MRP = 3
+                        //Close Dialog
+                    }
+                    Common.closeLoadingDialog(me);
+                }
+            },
+
+            onCancelChangeMaterial: async function(){
+                this.changeMaterialDialog.destroy(true);
+            },
+            
             onExportToExcel: Utils.onExport,
 
             onTableResize: function (oEvent){
@@ -8609,6 +9181,10 @@ sap.ui.define([
                     type = "VPOADDPRTOPO";
                     tabName = "ZDV_VPOADDPRTOPO";
                 }
+                if(table == 'vpoChangeMatTbl'){
+                    type = "VPOCHANGEMAT";
+                    tabName = "ZDV_VPOCHMATNO";
+                }
                 if(table == 'vpoReceiptsIssuancesTab'){
                     type = "VPORECEIPTSISSUANCES";
                     tabName = "ZVB_VPO_RECISS";
@@ -8837,12 +9413,6 @@ sap.ui.define([
             },
 
             viewDoc: function(oData) {
-                if(oData.DOCTYPE === "BATCH"){
-                    if(oData.STYLENO === "" || oData.STYLENO === undefined || oData.STYLENO === null){
-                        return;
-                    }
-                }
-
                 var vSBU = this._sbu;
                 var oCrossAppNavigator = sap.ushell.Container.getService("CrossApplicationNavigation");
 
@@ -8875,8 +9445,6 @@ sap.ui.define([
                 }
                 else if (oData.DOCTYPE === "PR") {
                     var hash = "ZSO_3DERP_PUR_PR-display&/PRDetail/" + vSBU + "/" + oData.PRNO + "/" + oData.PRITEM;
-                }else if (oData.DOCTYPE === "BATCH"){
-                    var hash = "ZSO_IO2-display&/RouteIODetail/" + oData.IONO + "/" + vSBU + "/" + oData.STYLENO + "/itfIOHDR";
                 }
                 // else if (oData.DOCTYPE === "PR") {
                 //     var hash = (oCrossAppNavigator && oCrossAppNavigator.hrefForExternal({
@@ -8891,6 +9459,19 @@ sap.ui.define([
                     target: {
                         shellHash: hash
                     }
+                });
+            },
+
+            navToIOMatList: function(oData){
+                if(oData.STYLENO === "" || oData.STYLENO === undefined || oData.STYLENO === null){
+                    return;
+                }
+
+                var vSBU = this._sbu;
+                that._router.navTo("ioMaterialList", {
+                    IONO: oData.IONO,
+                    SBU: vSBU,
+                    STYLENO:  oData.STYLENO
                 });
             },
 
