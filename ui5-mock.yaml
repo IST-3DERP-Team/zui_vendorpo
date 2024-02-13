@@ -54,6 +54,26 @@ server:
             url: http://190.92.230.65:8000
             client: "888"
             destination: LTD888_S4HANA2022
+          - path: /sap/opu/odata/sap/ZGW_3DERP_PR_SRV/
+            url: http://190.92.230.65:8000
+            client: "888"
+            destination: LTD888_S4HANA2022
+          - path: /sap/opu/odata/sap/ZGW_3DERP_PR_SRV
+            url: http://190.92.230.65:8000
+            client: "888"
+            destination: LTD888_S4HANA2022
+          - path: /sap/opu/odata/sap/ZGW_3DERP_PR_SRV/
+            url: http://190.92.230.65:8000
+            client: "888"
+            destination: LTD888_S4HANA2022
+          - path: /sap/opu/odata/sap/ZGW_3DERP_IO_SRV/
+            url: http://190.92.230.65:8000
+            client: "888"
+            destination: LTD888_S4HANA2022
+          - path: /sap/opu/odata/sap/ZGW_3DERP_IOMATLIST_SRV/
+            url: http://190.92.230.65:8000
+            client: "888"
+            destination: LTD888_S4HANA2022
     - name: fiori-tools-appreload
       afterMiddleware: compression
       configuration:
@@ -91,4 +111,16 @@ server:
           - urlPath: /sap/opu/odata/sap/ZGW_3DERP_LOCK2_SRV
             metadataXmlPath: ./webapp/localService/ZGW_3DERP_LOCK2_SRV/metadata.xml
             mockdataRootPath: ./webapp/localService/ZGW_3DERP_LOCK2_SRV/mockdata
+            generateMockData: true
+          - urlPath: /sap/opu/odata/sap/ZGW_3DERP_PR_SRV/
+            metadataXmlPath: ./webapp/localService/ZGW_3DERP_PR_SRV/metadata.xml
+            mockdataRootPath: ./webapp/localService/ZGW_3DERP_PR_SRV/mockdata
+            generateMockData: true
+          - urlPath: /sap/opu/odata/sap/ZGW_3DERP_IO_SRV/
+            metadataXmlPath: ./webapp/localService/ZGW_3DERP_IO_SRV/metadata.xml
+            mockdataRootPath: ./webapp/localService/ZGW_3DERP_IO_SRV/mockdata
+            generateMockData: true
+          - urlPath: /sap/opu/odata/sap/ZGW_3DERP_IOMATLIST_SRV/
+            metadataXmlPath: ./webapp/localService/ZGW_3DERP_IOMATLIST_SRV/metadata.xml
+            mockdataRootPath: ./webapp/localService/ZGW_3DERP_IOMATLIST_SRV/mockdata
             generateMockData: true

@@ -54,6 +54,18 @@ server:
             url: http://190.92.230.65:8000
             client: '888'
             destination: LTD888_S4HANA2022
+          - path: /sap/opu/odata/sap/ZGW_3DERP_PR_SRV/
+            url: http://190.92.230.65:8000
+            client: '888'
+            destination: LTD888_S4HANA2022
+          - path: /sap/opu/odata/sap/ZGW_3DERP_IO_SRV/
+            url: http://190.92.230.65:8000
+            client: '888'
+            destination: LTD888_S4HANA2022
+          - path: /sap/opu/odata/sap/ZGW_3DERP_IOMATLIST_SRV/
+            url: http://190.92.230.65:8000
+            client: '888'
+            destination: LTD888_S4HANA2022
     - name: sap-fe-mockserver
       beforeMiddleware: csp
       configuration:

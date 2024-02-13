@@ -1,0 +1,69 @@
+<mvc:View
+    controllerName="zuivendorpo.controller.ioMaterialList"
+    xmlns:mvc="sap.ui.core.mvc"
+    displayBlock="true"
+    xmlns="sap.m"
+    xmlns:cards="sap.f.cards"
+    xmlns:core="sap.ui.core"
+    xmlns:smartFilterBar="sap.ui.comp.smartfilterbar"
+    xmlns:smartTable="sap.ui.comp.smarttable"
+    xmlns:sv="sap.ui.comp.smartvariants"
+    xmlns:layout="sap.ui.layout"
+    xmlns:m="sap.m.Table"
+    xmlns:uiT="sap.ui.table"
+    xmlns:plugins="sap.ui.table.plugins"
+    xmlns:fb="sap.ui.comp.filterbar"
+    xmlns:smartfilterbar="sap.ui.comp.smartfilterbar"
+    height="100%"
+>
+    <Page id="pageIOmatList" title="test" showHeader="false" titleLevel="H3" class="iodet">
+        <VBox fitContainer="true">
+            <ObjectHeader
+                id="objectHeader"
+                responsive="true"
+                fullScreenOptimized="true"
+                backgroundDesign="Solid"
+                icon="sap-icon://multiselect-none"
+                class="sapUiResponsivePadding--header"
+                title="IO# {headerData>/IOPREFIX}-{headerData>/IONO}-{headerData>/IOSUFFIX}     ({headerData>/IODESC})"
+                intro="{captionMsg>/STYLENO} : {headerData>/STYLENO} / {headerData>/VERNO}"
+                number="{headerData>/STATUSCD}"
+                numberUnit="{captionMsg>/STATUS}"
+                numberState="{= ${headerData>/STATUSCD} === 'REL' ? 'Success' : ${headerData>/STATUSCD} === 'CNL' ? 'Error' : 'Information'}"
+            >
+                <attributes>
+                    <ObjectAttribute title="{captionMsg>/CREATEDBY}" text="{headerData>/CREATEDBY}" />
+                    <ObjectAttribute title="{captionMsg>/CREATEDDT}" text="{headerData>/CREATEDDT}" />
+                    <ObjectAttribute title="{captionMsg>/UPDATEDBY}" text="{headerData>/UPDATEDBY}" />
+                    <ObjectAttribute title="{captionMsg>/UPDATEDDT}" text="{headerData>/UPDATEDDT}" />
+                </attributes>
+                <layoutData>
+                    <FlexItemData growFactor="0" />
+                </layoutData>
+            </ObjectHeader>
+            <IconTabBar id="idIconTabBarInlineMode" select="onSelectChanged" headerMode="Inline" selectedKey="itfIOHDR" expanded="{device>/isNoPhone}" 
+                stretchContentHeight="true" applyContentPadding="false" class="sapUiNoContentPadding" expandable="false">
+                    <items>
+                        <IconTabFilter text="{captionMsg>/IOITFMATLIST}" key="itfMATLIST">
+                            <uiT:Table id="ioMatListTbl"
+                                class="sapUiTinyMarginBottom"
+                                visibleRowCountMode="Auto"
+                                showColumnVisibilityMenu="true"
+                                enableColumnFreeze="true"
+                                selectionMode="None"
+                                alternateRowColors="true"
+                                sort="onSorted"
+                            >
+                            <uiT:layoutData>
+                                <FlexItemData growFactor="1" baseSize="0%"/>
+                            </uiT:layoutData>   
+                            </uiT:Table>
+                        </IconTabFilter>
+                    </items>
+                    <layoutData>
+                        <FlexItemData growFactor="1" baseSize="0%" />
+                    </layoutData>
+            </IconTabBar>
+        </VBox>
+    </Page>
+</mvc:View>
