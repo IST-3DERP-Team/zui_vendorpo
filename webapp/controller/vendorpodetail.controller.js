@@ -1028,8 +1028,13 @@ sap.ui.define([
                         },
                         success: function (data, response) {
                             if (data.results.length > 0) {
-                                objectData.push(data.results);
-                                objectData[0].sort((a,b) => (a.ITEM > b.ITEM) ? 1 : ((b.ITEM > a.ITEM) ? -1 : 0));
+                                data.results.forEach(item => {
+                                    item.CREATEDDT = dateFormat.format(item.CREATEDDT) + " " + timeFormat.format(new Date(item.CREATEDDTM.ms + TZOffsetMs));
+                                    item.POSTINGDT = dateFormat.format(item.POSTINGDT);
+                                })
+
+                                // objectData.push(data.results);
+                                // objectData[0].sort((a,b) => (a.ITEM > b.ITEM) ? 1 : ((b.ITEM > a.ITEM) ? -1 : 0));
                                 oJSONModel.setData(data);
                             }
                             me.getView().setModel(oJSONModel, "VPOReceiptsIssuancesVPODet");
