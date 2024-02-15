@@ -1,0 +1,48 @@
+<core:FragmentDefinition
+		xmlns="sap.m"
+        xmlns:f="sap.ui.layout.form"
+		xmlns:core="sap.ui.core"
+        xmlns:uiT="sap.ui.table"
+        xmlns:uiL="sap.ui.layout"
+        fragmentName="fragment1">
+    <Dialog contentWidth="1000px"
+        contentHeight="400px"
+        title=""
+        resizable="true"
+        draggable="true">
+        <buttons>
+            <Button text="Submit" press="onSubmitOrder()"/>
+			<Button text="Cancel" press="onCancelOrder()"/>
+		</buttons>
+
+        <uiT:Table id="orderTab"
+            class="sapUiTinyMarginBottom sapUiTinyMarginBegin sapUiTinyMarginEnd"
+            rows="{order>/results}"
+            visibleRowCountMode="Auto"
+            showColumnVisibilityMenu="true"
+            enableColumnFreeze="true"
+            enableCellFilter="true"
+            selectionMode="MultiToggle"
+            selectionBehavior="RowSelector"
+            firstVisibleRowChanged="onFirstVisibleRowChanged"
+            cellClick="onCellClickMatClass"
+            sort="onSorted"
+            filter="onFilter"
+            columnFreeze="onColumnUpdated"
+            columnMove="onColumnUpdated"
+            columnResize="onColumnUpdated"
+            columnSelect="onColumnUpdated"
+            columnVisibility="onColumnUpdated">
+            <uiT:extension>
+                <OverflowToolbar>
+                    <Text text="{ui>/rowCountOrder} {ddtext>/ITEM(S)}" class="selHdrKeyFontStyle" />
+                    <!-- <ToolbarSpacer/>
+                    <Button id="btnRefreshMatClass" 
+                        icon="sap-icon://refresh"
+                        press="onRefreshMatClass"
+                        visible="true"/>  -->
+                </OverflowToolbar>
+            </uiT:extension>
+        </uiT:Table>
+    </Dialog>
+</core:FragmentDefinition>
