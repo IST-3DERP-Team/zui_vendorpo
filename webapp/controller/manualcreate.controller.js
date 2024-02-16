@@ -807,7 +807,6 @@ sap.ui.define([
                     oTable = this.byId(sModel + "Tab");
                 }
             
-                _oHeader.docType = "ZVAS" // temporary
                 if (sModel == "detail" && _oHeader.docType == "ZVAS") {
                     this.showOrderDialog();
                 }
@@ -819,7 +818,14 @@ sap.ui.define([
             },
 
             onAddRow(arg) {
-                this.setRowCreateMode(arg);
+                var sModel = arg;
+
+                if (sModel == "detail" && _oHeader.docType == "ZVAS") {
+                    this.showOrderDialog();
+                }
+                else {
+                    this.setRowCreateMode(arg);
+                }
             },
 
             onRemoveRow(pModel) {
@@ -852,9 +858,9 @@ sap.ui.define([
                 else sModel = arg;
 
                 var oTable = this.byId(sModel + "Tab");
-                var aSelRows = oTable.getSelectedIndices();
+                var aSelIdx = oTable.getSelectedIndices();
 
-                if (aSelRows.length === 0) {
+                if (aSelIdx.length === 0) {
                     sap.m.MessageBox.information(_oCaption.INFO_NO_RECORD_SELECT);
                 }
                 else {
@@ -862,9 +868,20 @@ sap.ui.define([
                         actions: ["Yes", "No"],
                         onClose: function (sAction) {
                             if (sAction === "Yes") {
-                                var aRows = _this.getView().getModel(sModel).getData().results;
-                                aRows.splice(oTable.getSelectedIndices(), 1);
-                                _this.getView().getModel(sModel).setProperty("/results", aRows);
+                                var aOrigSelIdx = [];
+                                aSelIdx.forEach(i => {
+                                    aOrigSelIdx.push(oTable.getBinding("rows").aIndices[i]);
+                                })
+
+                                var aData = _this.getView().getModel(sModel).getData().results;
+                                var aDataFiltered = JSON.parse(JSON.stringify(aData));
+
+                                aOrigSelIdx.forEach((i, idx) => {
+                                    var oData = aData[i];
+                                    aDataFiltered = aDataFiltered.filter(x => x.POITEM != oData.POITEM);
+                                });
+
+                                _this.getView().getModel(sModel).setProperty("/results", aDataFiltered);
                             }
                         }
                     });
@@ -933,9 +950,11 @@ sap.ui.define([
                 var aData = {results: []};
                 var aDataAfterChange = jQuery.extend(true, {}, this.getView().getModel(sModel).getData());
 
-                _this._oDataBeforeChange.results.forEach(item => {
-                    aData.results.push(item);
-                });
+                if (aNewRows.length > 0) {
+                    _this._oDataBeforeChange.results.forEach(item => {
+                        aData.results.push(item);
+                    });
+                }
 
                 aDataAfterChange.results.forEach(item => {
                     aData.results.push(item);
@@ -1016,6 +1035,8 @@ sap.ui.define([
                         // Set row count
                         _this.getView().getModel("ui").setProperty("/rowCountOrder", data.results.length);
 
+                        _this._SelectOrderDialog.open();
+
                         _this.closeLoadingDialog();
                     },
                     error: function (err) { 
@@ -1026,10 +1047,7 @@ sap.ui.define([
             },
 
             showOrderDialog() {
-                _oHeader.shipToPlant = "C601"; // temporary
-
                 this.getOrder();
-                this._SelectOrderDialog.open();
             },
 
             onSubmitOrder() {
@@ -1054,19 +1072,18 @@ sap.ui.define([
                 var aData = _this.getView().getModel("order").getData().results;
                 aOrigSelIdx.forEach((i, idx) => {
                     var oData = aData[i];
-                    console.log(oData)
+
                     this.setRowCreateMode("detail");
-                    console.log("test0")
                     var aNewRow = this.getView().getModel("detail").getData().results;
 
                     var sDescrip = oData.PROCESSCD + "," + oData.VASTYPE + "," + oData.ATTRIBUTE;
+                    if (sDescrip.slice(-1) == ",") {
+                        sDescrip = sDescrip.slice(0, -1);
+                    }
+
                     this.getView().getModel("detail").setProperty("/results/" + (aNewRow.length - 1).toString() + "/DESCRIP", sDescrip);
                     this.getView().getModel("detail").setProperty("/results/" + (aNewRow.length - 1).toString() + "/ORDERNO", oData.IONO);
-
-                    console.log("test", aNewRow, oData.IONO, (aNewRow.length - 1).toString())
                 });
-
-                
             },
 
             onCancelOrder() {
@@ -1796,7 +1813,7 @@ sap.ui.define([
                     this.getView().getModel("ui").setProperty("/editModeHeader", pEditable);
 
                     // Detail
-                    // this.byId("btnCreateDetail").setEnabled(!pEditable); // temporary
+                    this.byId("btnCreateDetail").setEnabled(!pEditable);
                     this.byId("btnEditDetail").setEnabled(!pEditable);
                     this.byId("btnDeleteDetail").setEnabled(!pEditable);
                 } else if (pType == "detail") {
