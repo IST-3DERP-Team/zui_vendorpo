@@ -1,0 +1,233 @@
+<core:FragmentDefinition 
+    xmlns:core="sap.ui.core"
+    xmlns="sap.m"
+    xmlns:f="sap.ui.layout.form" 
+    displayBlock="false"> 
+    <IconTabBar
+        id="vpoHeaderOthInfoIconTab"
+        headerMode="Inline"
+        expanded="{device>/isNoPhone}"
+        stretchContentHeight="true" 
+        applyContentPadding="false"
+        class="sapUiResponsivePadding iconTabPOHdrFrag" 
+        expandable="false">
+            <dependents>
+                <!-- <core:CommandExecution id="comVpoHdrOthSave" command="Save" enabled="true" execute="onSaveVPOHeader" />
+                <core:CommandExecution id="comVpoHdrEdit" command="Edit" enabled="true" execute="onEditVPOHeader" /> -->
+            </dependents>
+            <content>
+                <!-- <OverflowToolbar id="_ovfToolBarIO" design="Transparent" >
+                    <Text text="{ui>/poVendorVendName}" class="selHdrKeyFontStyle" />
+                    <ToolbarSpacer/>
+                    <MenuButton id="vpoHdrMenuBtn" text="{captionMsg>/POACTIONS}">
+                        <menu>
+                            <Menu id="vpoHdrMenu">
+                                <MenuItem id="_IDGenMenuItem_02_1" text="{captionMsg>/CHANGEDELVDATE}" press=".onChangeVPODelvDate"/>
+                                <MenuItem id="_IDGenMenuItem_02_2" text="{captionMsg>/CHANGEVENDOR}" press=".onChangeVendorVPOHeader"/>
+                                <MenuItem id="_IDGenMenuItem_02_3" text="{captionMsg>/DELETEPO}" press=".onDeleteVPO"/>
+                                <MenuItem id="_IDGenMenuItem_02_4" text="{captionMsg>/CANCELPO}" press=".onCancelVPO" />
+                                <MenuItem id="_IDGenMenuItem_02_5" text="{captionMsg>/SPLITPO}" press=".onSplitVPO"/>
+                                <MenuItem id="_IDGenMenuItem_02_6" text="{captionMsg>/POPRINT}" press=".onPOPrint"/>
+                            </Menu>
+                        </menu>                    
+                    </MenuButton>
+                    <Button id ="vpoBtnEditHeader" type="Ghost"  icon="sap-icon://edit" tooltip="{captionMsg>/EDIT}" press=".onEditVPOHeader"/>
+                    <Button id ="vpoBtnRefreshtHeader" type="Ghost"  icon="sap-icon://refresh" tooltip="{captionMsg>/REFRESH}" press=".onRefresh"/>
+                    
+                    <Button id ="vpoBtnSaveHeader" type="Ghost"  icon="sap-icon://save" visible="false" tooltip="{captionMsg>/SAVE}" press=".onSaveVPOHeader"/>
+                    <Button id ="vpoBtnCancelHeader" type="Ghost"  icon="sap-icon://sys-cancel" visible="false" tooltip="{captionMsg>/CANCEL}" press=".onCancelVPOHeader"/>
+                </OverflowToolbar> -->
+
+                <MessageStrip id="HeaderMessageStrip" text="" showIcon="true" showCloseButton="true" class="sapUiMediumMarginBottom" type="Error" visible="false"/>
+
+                <!-- <f:Form id="POHeaderDetailForm1" editable="false" class="sapUiNoContentPadding formHdr1">
+                    <f:layout>
+                        <f:ResponsiveGridLayout columnsXL="4" columnsL="3" columnsM="3" singleContainerFullSize="false" />
+                    </f:layout>
+                    <f:formContainers>
+                        <f:FormContainer ariaLabelledBy="Grp1" class="sapUiNoContentPadding" >
+                            <f:formElements>
+                                <f:FormElement label="{captionMsg>/PONO}" visible="true">
+                                    <f:fields>
+                                        <Input id="f1PONo" value="{topHeaderData>/PONO}" editable="{topHeaderDataEdit>/PONO}" valueStateText="Required" 
+                                            change="onHeaderInputChange" liveChange="onHeaderInputChange">
+                                        </Input>
+                                    </f:fields>
+                                </f:FormElement>
+                                <f:FormElement label="{captionMsg>/PODATE}" visible="true">
+                                    <f:fields>
+                                        <Input id="f1PODT" value="{topHeaderData>/PODT}" editable="{topHeaderDataEdit>/PODT}" valueStateText="Required" 
+                                            change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
+                                    </f:fields>
+                                </f:FormElement>
+                                <f:FormElement label="{captionMsg>/DOCTYP}" visible="true">
+                                    <f:fields>
+                                        <Input id="f1DocTyp" value="{topHeaderData>/DOCTYPE}{topHeaderData>/DocTypDesc}" editable="{topHeaderDataEdit>/DOCTYPE}" valueStateText="Required" 
+                                            change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
+                                    </f:fields>
+                                </f:FormElement>
+                                <f:FormElement label="{captionMsg>/VENDOR}" visible="true">
+                                    <f:fields>
+                                        <Input id="f1Vendor" value="{topHeaderData>/VENDOR}" editable="{topHeaderDataEdit>/VENDOR}" valueStateText="Required" 
+                                            change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
+                                    </f:fields>
+                                </f:FormElement>
+                            </f:formElements>
+                        </f:FormContainer>
+                        <f:FormContainer ariaLabelledBy="Grp2">
+                            <f:formElements>
+                                <f:FormElement label="{captionMsg>/PURCHORG}" visible="true">
+                                    <f:fields>
+                                        <Input id="f1PurOrg" value="{topHeaderData>/PURCHORG}{topHeaderData>/PurchOrgDesc}" editable="{topHeaderDataEdit>/PURCHORG}" valueStateText="Required" 
+                                            change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
+                                    </f:fields>
+                                </f:FormElement>
+                                <f:FormElement label="{captionMsg>/PURCHGRP}" visible="true">
+                                    <f:fields>
+                                        <Input id="f1PurGrp" value="{topHeaderData>/PURCHGRP}{topHeaderData>/PurchGrpDesc}" editable="{topHeaderDataEdit>/PURCHGRP}" valueStateText="Required" 
+                                            change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
+                                    </f:fields>
+                                </f:FormElement>
+                                <f:FormElement label="{captionMsg>/COMPANY}" visible="true">
+                                    <f:fields>
+                                        <Input id="f1Company" value="{topHeaderData>/COMPANY}{topHeaderData>/CompanyDesc}" editable="{topHeaderDataEdit>/COMPANY}" valueStateText="Required" 
+                                            change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
+                                    </f:fields>
+                                </f:FormElement>
+                                <f:FormElement label="{captionMsg>/PURCHPLANT}" visible="true">
+                                    <f:fields>
+                                        <Input id="f1PurPlant" value="{topHeaderData>/PURCHPLANT}{topHeaderData>/PurchPlantDesc}" editable="{topHeaderDataEdit>/PURCHPLANT}" valueStateText="Required" 
+                                            change="onHeaderInputChange" liveChange="onHeaderInputChange">
+                                        </Input>
+                                    </f:fields>
+                                </f:FormElement>
+                                <f:FormElement label="{captionMsg>/SHIPTOPLANT}" visible="true">
+                                    <f:fields>
+                                        <Input id="f1ShipToPlant" 
+                                            type="Text"
+                                            value="{
+                                                parts: [{path: 'topHeaderData>/SHIPTOPLANT'}, { value: 'onSuggSHIPTOPLANT' }, { value: 'Item' }, { value: 'Desc' }, { value: 'ValueKey' }],
+                                                formatter: '.formatValueHelp',
+                                                mandatory: 'SHIPTOPLANT'
+                                            }" 
+                                            textFormatMode="ValueKey"
+                                            showValueHelp="true" 
+                                            editable="{topHeaderDataEdit>/SHIPTOPLANT}"
+                                            valueStateText="Required"
+                                            valueHelpRequest="handleFormValueHelp"
+                                            showSuggestion="true" 
+                                            suggestionItems="{path: 'onSuggSHIPTOPLANT>/', length: 10000, templateShareable: false}"
+                                            maxSuggestionWidth="160px"
+                                            change="onInputLiveChangeSuggestion">
+                                                <suggestionItems>
+                                                    <core:ListItem key="{onSuggSHIPTOPLANT>Item}" text="{onSuggSHIPTOPLANT>Desc}" additionalText="{onSuggSHIPTOPLANT>Item}" />
+                                                </suggestionItems>
+                                        </Input>
+                                    </f:fields>
+                                </f:FormElement>
+                            </f:formElements>
+                        </f:FormContainer>
+                        <f:FormContainer ariaLabelledBy="Grp3">
+                            <f:formElements>
+                                <f:FormElement label="{captionMsg>/CURRENCY}" visible="true">
+                                    <f:fields>
+                                        <Input id="f1Currency" value="{topHeaderData>/CURRENCY}" editable="{topHeaderDataEdit>/CURRENCY}" valueStateText="Required" 
+                                            change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
+                                    </f:fields>
+                                </f:FormElement>
+                                <f:FormElement label="{captionMsg>/PAYMNTTERMS}" visible="true">
+                                    <f:fields>
+                                        <Input id="f1PaymentTerms" 
+                                            type="Text"
+                                            value="{
+                                                parts: [{path: 'topHeaderData>/PAYMNTTERMS'}, { value: 'onSuggPAYMNTTERMS' }, { value: 'Item' }, { value: 'Desc' }, { value: 'ValueKey' }],
+                                                formatter: '.formatValueHelp',
+                                                mandatory: 'PAYMNTTERMS'
+                                            }" 
+                                            textFormatMode="ValueKey"
+                                            showValueHelp="true" 
+                                            editable="{topHeaderDataEdit>/PAYMNTTERMS}"
+                                            valueStateText="Required"
+                                            valueHelpRequest="handleFormValueHelp"
+                                            showSuggestion="true" 
+                                            suggestionItems="{path: 'onSuggPAYMNTTERMS>/', length: 10000, templateShareable: false}"
+                                            maxSuggestionWidth="160px"
+                                            change="onInputLiveChangeSuggestion">
+                                                <suggestionItems>
+                                                    <core:ListItem key="{onSuggPAYMNTTERMS>Item}" text="{onSuggPAYMNTTERMS>Desc}" additionalText="{onSuggPAYMNTTERMS>Item}" />
+                                                </suggestionItems>
+                                        </Input>
+                                    </f:fields>
+                                </f:FormElement>
+                                <f:FormElement label="{captionMsg>/INCOTERMS}" visible="true">
+                                    <f:fields>
+                                        <Input id="f1Incoterms" 
+                                            type="Text"
+                                            value="{
+                                                parts: [{path: 'topHeaderData>/INCOTERMS'}, { value: 'onSuggINCOTERMS' }, { value: 'Item' }, { value: 'Desc' }, { value: 'ValueKey' }],
+                                                formatter: '.formatValueHelp',
+                                                mandatory: 'INCOTERMS'
+                                            }" 
+                                            textFormatMode="ValueKey"
+                                            showValueHelp="true" 
+                                            editable="{topHeaderDataEdit>/INCOTERMS}"
+                                            valueStateText="Required"
+                                            valueHelpRequest="handleFormValueHelp"
+                                            showSuggestion="true" 
+                                            suggestionItems="{path: 'onSuggINCOTERMS>/', length: 10000, templateShareable: false}"
+                                            maxSuggestionWidth="160px"
+                                            change="onInputLiveChangeSuggestion">
+                                                <suggestionItems>
+                                                    <core:ListItem key="{onSuggINCOTERMS>Item}" text="{onSuggINCOTERMS>Desc}" additionalText="{onSuggINCOTERMS>Item}" />
+                                                </suggestionItems>
+                                        </Input>
+                                    </f:fields>
+                                </f:FormElement>
+                                <f:FormElement label="{captionMsg>/DESTINATION}" visible="true">
+                                    <f:fields>
+                                        <Input id="f1Destination" value="{topHeaderData>/DEST}" editable="{topHeaderDataEdit>/DEST}" valueStateText="Required" 
+                                            change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
+                                    </f:fields>
+                                </f:FormElement>
+                                <f:FormElement label="{captionMsg>/SHIPMODE}" visible="true">
+                                    <f:fields>
+                                        <Input id="f1ShipMode" value="{topHeaderData>/SHIPMODE}{topHeaderData>/ShipModeDesc}" editable="{topHeaderDataEdit>/SHIPMODE}" valueStateText="Required" 
+                                            change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
+                                    </f:fields>
+                                </f:FormElement>
+                            </f:formElements>
+                        </f:FormContainer>
+                        <f:FormContainer ariaLabelledBy="Grp4">
+                            <f:FormElement label="{captionMsg>/RELSTAT}" visible="true">
+                                <f:fields>
+                                    <Input id="f1RelStat" value="{topHeaderData>/RELSTAT}" editable="{topHeaderDataEdit>/RELSTAT}" valueStateText="Required" 
+                                        change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
+                                </f:fields>
+                            </f:FormElement>
+                            <f:formElements>
+                                <f:FormElement label="{captionMsg>/CREATEDBY}" visible="true">
+                                    <f:fields>
+                                        <Input id="f1CreatedBy" value="{topHeaderData>/CREATEDBY}" editable="{topHeaderDataEdit>/CREATEDBY}" valueStateText="Required" 
+                                            change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
+                                    </f:fields>
+                                </f:FormElement>
+                                <f:FormElement label="{captionMsg>/CREATEDDT}" visible="true">
+                                    <f:fields>
+                                        <Input id="f1CreatedDt" value="{topHeaderData>/CREATEDDT}" editable="{topHeaderDataEdit>/CREATEDDT}" valueStateText="Required" 
+                                            change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
+                                    </f:fields>
+                                </f:FormElement>
+                                <f:FormElement label="{captionMsg>/UPDATEDDT}" visible="true">
+                                    <f:fields>
+                                        <Input id="f1UpdatedDt" value="{topHeaderData>/UPDATEDDT}" editable="{topHeaderDataEdit>/UPDATEDDT}" valueStateText="Required" 
+                                            change="onHeaderInputChange" liveChange="onHeaderInputChange"/>
+                                    </f:fields>
+                                </f:FormElement>
+                            </f:formElements>
+                        </f:FormContainer>
+                    </f:formContainers>
+                </f:Form> -->
+
+            </content>
+    </IconTabBar>
+</core:FragmentDefinition>
