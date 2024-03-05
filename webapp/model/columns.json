@@ -198,6 +198,31 @@
             {"ColumnName": "UNDERDELTOL", "type": "NUMBER", "required": false, "length": "3", "decimal": "1",
                 "ValueHelp": {"show": false}}             
       ],
+      "othInfoData": [
+            {
+                  "ColumnName": "CURR", "TextFormatMode": "ValueKey",
+                  "ValueHelp": {"show": true, "items": {"path": "othInfoCurrencyRsc", "value": "WAERS", "text": "KTEXT"},
+                        "SuggestionItems": {"path": "othInfoCurrencyRsc>/", "text": "{othInfoCurrencyRsc>WAERS}", "additionalText": "{othInfoCurrencyRsc>KTEXT}", "maxSuggestionWidth": "300px" },
+                        "columns": "tvthd_curr"
+                  }
+            },
+            {
+                  "ColumnName": "ORDERUOM", "TextFormatMode": "ValueKey",
+                  "ValueHelp": {"show": true, "items": {"path": "othInfoUomRsc", "value": "UOM", "text": "DESCRIPTION"},
+                        "SuggestionItems": {"path": "othInfoUomRsc>/", "text": "{othInfoUomRsc>UOM}", "additionalText": "{othInfoUomRsc>DESCRIPTION}", "maxSuggestionWidth": "300px" },
+                        "columns": "tvthd_orderuom"
+                  }
+            }
+      ],
+      "tvthd_curr": [
+            {"ColumnName": "WAERS", "DataType": "STRING", "ColumnWidth": "200px", "Visible": true, "Key": true, "Value": false},
+            {"ColumnName": "LTEXT", "DataType": "STRING", "ColumnWidth": "300px", "Visible": true, "Key": false, "Value": true},
+            {"ColumnName": "KTEXT", "DataType": "STRING", "ColumnWidth": "300px", "Visible": true, "Key": false, "Value": false}
+      ],
+      "tvthd_orderuom": [
+            {"ColumnName": "UOM", "DataType": "STRING", "ColumnWidth": "200px", "Visible": true, "Key": true, "Value": false},
+            {"ColumnName": "DESCRIPTION", "DataType": "STRING", "ColumnWidth": "300px", "Visible": true, "Key": false, "Value": true}
+      ],
       "topHeaderData": [
             {
                   "ColumnName": "SHIPTOPLANT", "TextFormatMode": "ValueKey",

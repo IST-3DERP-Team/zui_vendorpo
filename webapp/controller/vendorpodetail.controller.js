@@ -196,9 +196,16 @@ sap.ui.define([
                     this.byId("comVpoHdrTextPEdit").setEnabled(false);
                     this.byId("comVpoHdrTextPSave").setEnabled(false);
 
+                    // Other Info
+                    this.byId("mbAddOthInfo").setVisible(false);
+                    this.byId("btnEditOthInfo").setVisible(false);
+                    this.byId("btnDeleteOthInfo").setVisible(false);
+
                     this.byId("comVpoDetailsEdit").setEnabled(false);
                     this.byId("comVpoDetailsSave").setEnabled(false);
                 }
+
+                this.onInitOtherInfo();
             },
 
             getAppAction: async function(){
@@ -335,6 +342,7 @@ sap.ui.define([
                 oDDTextParam.push({CODE: "CONDITIONS"});
                 oDDTextParam.push({CODE: "HEADERTEXT"});
                 oDDTextParam.push({CODE: "CHANGES"});
+                oDDTextParam.push({CODE: "OTHERINFO"});
                 oDDTextParam.push({CODE: "DLVCOMPLETE"});
                 oDDTextParam.push({CODE: "UPDATEPRICE"});
 
@@ -364,6 +372,25 @@ sap.ui.define([
 
                 oDDTextParam.push({CODE: "REMARKS"});
                 oDDTextParam.push({CODE: "PACKINSTRUCT"});
+
+                // Other Info
+                oDDTextParam.push({CODE: "MANUAL"});
+                oDDTextParam.push({CODE: "COPYDEFAULT"});
+                oDDTextParam.push({CODE: "CONSIGNEENAME"});
+                oDDTextParam.push({CODE: "COMPANYNAME"});
+                oDDTextParam.push({CODE: "COMPANYADDR"});
+                oDDTextParam.push({CODE: "TELNO"});
+                oDDTextParam.push({CODE: "FAXNO"});
+                oDDTextParam.push({CODE: "CURRENCY"});
+                oDDTextParam.push({CODE: "FINCONTNAME"});
+                oDDTextParam.push({CODE: "FINCONTNO"});
+                oDDTextParam.push({CODE: "WHSECONTNAME"});
+                oDDTextParam.push({CODE: "WHSECONTNO"});
+                oDDTextParam.push({CODE: "WHSECONTADDR"});
+                oDDTextParam.push({CODE: "DISCVAT"});
+                oDDTextParam.push({CODE: "ORDERUOM"});
+                oDDTextParam.push({CODE: "CREATEDBY"});
+                oDDTextParam.push({CODE: "CREATEDDT"});
 
                 oDDTextParam.push({CODE: "ADDPRTOPO"});
                 oDDTextParam.push({CODE: "ITEMCHANGES"});
@@ -789,6 +816,7 @@ sap.ui.define([
                 var _this = this;
                 var poNo = this._pono;
                 var condrec = this.getView().getModel("ui").getProperty("/activeCondRec");
+
                 let poItem = "";
                 await new Promise(async (resolve, reject) => {
                     _this.getView().setModel(new JSONModel({
@@ -817,6 +845,10 @@ sap.ui.define([
 
                     _this.getView().setModel(new JSONModel({
                         results: []
+                    }), "VPOHdrOthInfo");
+
+                    _this.getView().setModel(new JSONModel({
+                        results: []
                     }), "VPOHdrDownloadHist");
 
                     _this.getView().setModel(new JSONModel({
@@ -831,6 +863,7 @@ sap.ui.define([
                     resolve(await _this.getConditions2(condrec, poItem));
                     resolve(await _this.getReceiptAndIssuances(poNo));
                     resolve(await _this.onLoadHeaderConditions(condrec));
+                    resolve(await _this.onLoadHeaderOthInfo(poNo));
                     resolve(await _this.onLoadHeaderDownloadHist(poNo));
                     resolve();
                 });
@@ -3197,6 +3230,35 @@ sap.ui.define([
                                 oJSONModel.setData(data);
                             }
                             me.getView().setModel(oJSONModel, "VPOHdrCond");
+                            resolve();
+                        },
+                        error: function (err) {
+                            resolve();    
+                        }
+                    });
+                });
+            },
+
+            onLoadHeaderOthInfo: async function(poNo){
+                var oModel = this.getOwnerComponent().getModel();
+                var me = this;
+                var oJSONModel = new JSONModel();
+                return new Promise((resolve, reject)=>{
+                    oModel.read('/OthInfoSet', { 
+                        urlParameters: {
+                            "$filter": "EBELN eq '" + poNo + "'"
+                        },
+                        success: function (data, response) {
+                            if (data.results.length > 0) {
+                                data.results.forEach(item => {
+                                    item.CREATEDDT = dateFormat.format(item.CREATEDDT) + " " + timeFormat.format(new Date(item.CREATEDTM.ms + TZOffsetMs));
+                                    item.UPDATEDDT = dateFormat.format(item.UPDATEDDT) + " " + timeFormat.format(new Date(item.UPDATEDTM.ms + TZOffsetMs));
+                                })
+                                oJSONModel.setData(data);
+                            }
+
+                            me.getView().setModel(oJSONModel, "othInfoData");
+                            me.getView().getModel("ui").setProperty("/othInfoDataEdit", false);
                             resolve();
                         },
                         error: function (err) {
@@ -9243,24 +9305,24 @@ sap.ui.define([
 
             disableOtherTabs: function (tabName) {
                 var oIconTabBar = this.byId(tabName);
-                this.byId("idChangesIconTabBar").setEnabled(false);
+                // this.byId("idChangesIconTabBar").setEnabled(false);
                 oIconTabBar.getItems().filter(item => item.getProperty("key") !== oIconTabBar.getSelectedKey())
                     .forEach(item => item.setProperty("enabled", false));
             },
             disableOtherTabsChild: function (tabName) {
                 var oIconTabBar = this.byId(tabName);
-                this.byId("idChangesIconTabBar").setEnabled(false);
+                // this.byId("idChangesIconTabBar").setEnabled(false);
                 oIconTabBar.getItems().filter(item => item.getProperty("key"))
                 .forEach(item => item.setProperty("enabled", false));
             },
             enableOtherTabs: function (tabName) {
                 var oIconTabBar = this.byId(tabName);
-                this.byId("idChangesIconTabBar").setEnabled(false);
+                // this.byId("idChangesIconTabBar").setEnabled(false);
                 oIconTabBar.getItems().forEach(item => item.setProperty("enabled", true));
             },
             enableOtherTabsChild: function (tabName) {
                 var oIconTabBar = this.byId(tabName);
-                this.byId("idChangesIconTabBar").setEnabled(false);
+                // this.byId("idChangesIconTabBar").setEnabled(false);
                 oIconTabBar.getItems().filter(item => item.getProperty("key"))
                 .forEach(item => item.setProperty("enabled", true));
             },
@@ -9699,7 +9761,96 @@ sap.ui.define([
                 TableFilter.onRemoveColFilter(oEvent, this);
             },
 
-            pad: Common.pad
+            pad: Common.pad,
+
+
+            //******************************************* */
+            // Other Info
+            //******************************************* */
+
+            onInitOtherInfo() {
+                this.getResourceOthInfo("OthInfoCurrencyRscSet", "othInfoCurrencyRsc");
+                this.getResourceOthInfo("OthInfoUomRscSet", "othInfoUomRsc");
+            },
+
+            getResourceOthInfo(pEntitySet, pModel) {
+                var me = this;
+                var oModel = me.getOwnerComponent().getModel();
+
+                oModel.read("/" + pEntitySet, {
+                    success: async function (oData, oResponse) {
+                        me.getView().setModel(new JSONModel(oData.results), pModel);
+                        me.getOwnerComponent().getModel("LOOKUP_MODEL").setProperty("/" + pModel, oData.results);
+                    },
+                    error: function () {
+                    }
+                })
+            },
+
+            onAddManualOthInfo() {
+                var me = this;
+                var bProceed = true
+                var isValid = true
+
+                var count = me.getView().getModel("VPODtlsVPODet").getProperty("/results").length;
+                var itemCount = 0;
+                var isValidObj = [];
+                
+                this.getView().getModel("VPODtlsVPODet").getProperty("/results").forEach(item => {
+
+                    if(item.DELETED === true || item.CLOSED === true){
+                        isValidObj.push({
+                            Deleted: item.DELETED,
+                            Closed: item.CLOSED
+                        });
+                        itemCount++
+                    }else{
+                        isValidObj.push({
+                            Deleted: item.DELETED,
+                            Closed: item.CLOSED
+                        })
+                        itemCount++
+                    }
+                    if(itemCount === count){
+                        var result = isValidObj.find(item => item.Deleted === false && item.Closed === false)
+                        if(result != undefined){
+                            if(result.Deleted === false && result.Closed === false){
+                                bProceed = true;
+                            }else{
+                                bProceed = false;
+                            }
+                        }else{
+                            bProceed = false;
+                        }
+                    }
+                })
+
+                if(!isValid){
+                    MessageBox.error(_captionList.INFO_PO_IS_DELETED)
+                    return;
+                }
+                if(!bProceed){
+                    MessageBox.error(_captionList.INFO_PO_CLOSED_DELETED)
+                    return;
+                }
+                if(bProceed){
+                    this.getView().getModel("ui").setProperty("/othInfoDataEdit", true);    
+                
+                    this.byId("mbAddOthInfo").setVisible(false);
+                    this.byId("btnEditOthInfo").setVisible(false);
+                    this.byId("btnSaveOthInfo").setVisible(true);
+                    this.byId("btnCancelOthInfo").setVisible(true);
+                    this.byId("btnDeleteOthInfo").setVisible(false);
+                    this.byId("btnRefreshOthInfo").setVisible(false);
+
+                    this.disableOtherTabs("idIconTabBarInlineMode");
+                    this.disableOtherTabs("vpoDetailTab");
+                }
+            },
+
+            onCancelOthInfo() {
+                
+            },
 
         });
     });
