@@ -204,8 +204,6 @@ sap.ui.define([
                     this.byId("comVpoDetailsEdit").setEnabled(false);
                     this.byId("comVpoDetailsSave").setEnabled(false);
                 }
-
-                this.onInitOtherInfo();
             },
 
             getAppAction: async function(){
@@ -264,6 +262,9 @@ sap.ui.define([
                 // this.getView().getModel("FileModel").refresh();
                 var poItem = this.getView().getModel("ui").getProperty("/activePOItem"); 
                 await this.getProcessFlow(poItem);
+
+                this.onInitOtherInfo();
+
                 Common.closeLoadingDialog(that);
             },
 
@@ -430,6 +431,7 @@ sap.ui.define([
                 oDDTextParam.push({CODE: "SAVELAYOUT"});
                 oDDTextParam.push({CODE: "INFO_NO_LAYOUT"});
                 oDDTextParam.push({CODE: "INFO_LAYOUT_SAVE"});
+                oDDTextParam.push({CODE: "INFO_CREATE_DATA_NOT_ALLOW"});
 
                 oDDTextParam.push({CODE: "CREATEDBY"});
                 oDDTextParam.push({CODE: "CREATEDDT"});
@@ -863,7 +865,7 @@ sap.ui.define([
                     resolve(await _this.getConditions2(condrec, poItem));
                     resolve(await _this.getReceiptAndIssuances(poNo));
                     resolve(await _this.onLoadHeaderConditions(condrec));
-                    resolve(await _this.onLoadHeaderOthInfo(poNo));
+                    // resolve(await _this.onLoadHeaderOthInfo(poNo));
                     resolve(await _this.onLoadHeaderDownloadHist(poNo));
                     resolve();
                 });
@@ -3254,10 +3256,11 @@ sap.ui.define([
                                     item.CREATEDDT = dateFormat.format(item.CREATEDDT) + " " + timeFormat.format(new Date(item.CREATEDTM.ms + TZOffsetMs));
                                     item.UPDATEDDT = dateFormat.format(item.UPDATEDDT) + " " + timeFormat.format(new Date(item.UPDATEDTM.ms + TZOffsetMs));
                                 })
-                                oJSONModel.setData(data);
+                                oJSONModel.setData(data.results);
                             }
 
-                            me.getView().setModel(oJSONModel, "othInfoData");
+                            //me.getView().setModel(oJSONModel, "othInfoData");
+                            me.getView().getModel("othInfoData").setProperty("/", data.results);
                             me.getView().getModel("ui").setProperty("/othInfoDataEdit", false);
                             resolve();
                         },
@@ -9771,6 +9774,8 @@ sap.ui.define([
             onInitOtherInfo() {
                 this.getResourceOthInfo("OthInfoCurrencyRscSet", "othInfoCurrencyRsc");
                 this.getResourceOthInfo("OthInfoUomRscSet", "othInfoUomRsc");
+
+                this.getOthInfo();
             },
 
             getResourceOthInfo(pEntitySet, pModel) {
@@ -9787,52 +9792,83 @@ sap.ui.define([
                 })
             },
 
+            getOthInfo() {
+                var oModel = this.getOwnerComponent().getModel();
+                var me = this;
+                var sPONo = this._pono;
+
+                oModel.read('/OthInfoSet', { 
+                    urlParameters: {
+                        "$filter": "EBELN eq '" + sPONo + "'"
+                    },
+                    success: function (data, response) {
+                        console.log("getOthInfo", data);
+                        if (data.results.length > 0) {
+                            data.results.forEach(item => {
+                                item.CREATEDDT = dateFormat.format(item.CREATEDDT) + " " + timeFormat.format(new Date(item.CREATEDTM.ms + TZOffsetMs));
+                                item.UPDATEDDT = dateFormat.format(item.UPDATEDDT) + " " + timeFormat.format(new Date(item.UPDATEDTM.ms + TZOffsetMs));
+                            })
+                        }
+
+                        var oJSONModel = new JSONModel();
+                        oJSONModel.setData(data.results);
+                        me.getView().setModel(oJSONModel, "othInfoData");
+                        me.getView().getModel("ui").setProperty("/othInfoDataEdit", false);
+
+                        if (data.results.length > 0) {
+                            var oData = data.results[0];
+
+                            me.byId("iptOthInfoPONo").setValue(oData.EBELN);
+                            me.byId("iptOthInfoConsigneeName").setValue(oData.CNEENAME);
+                            me.byId("iptOthInfoCompanyName").setValue(oData.COMPNAME);
+                            me.byId("iptOthInfoCompanyAddr").setValue(oData.COMPADD);
+                            me.byId("iptOthInfoTelNo").setValue(oData.TELF1);
+                            me.byId("iptOthInfoFaxNo").setValue(oData.TELFX);
+                            me.byId("iptOthInfoCurrency").setValue(oData.CURR);
+                            me.byId("iptOthInfoFinContName").setValue(oData.FINNAME);
+                            me.byId("iptOthInfoFinContNo").setValue(oData.FINTELF1);
+                            me.byId("iptOthInfoWhseContName").setValue(oData.WHSNAME);
+                            me.byId("iptOthInfoWhseContNo").setValue(oData.WHSTELF1);
+                            me.byId("iptOthInfoWhseContAddr").setValue(oData.WHSADD);
+                            me.byId("iptOthInfoDiscVat").setValue(oData.DISCVAT);
+                            me.byId("iptOthInfoOrderUom").setValue(oData.ORDERUOM);
+                            me.byId("iptOthInfoCreatedBy").setValue(oData.CREATEDBY);
+                            me.byId("iptOthInfoCreatedDt").setValue(oData.CREATEDDT);
+                        }
+                        else {
+                            me.byId("iptOthInfoPONo").setValue("");
+                            me.byId("iptOthInfoConsigneeName").setValue("");
+                            me.byId("iptOthInfoCompanyName").setValue("");
+                            me.byId("iptOthInfoCompanyAddr").setValue("");
+                            me.byId("iptOthInfoTelNo").setValue("");
+                            me.byId("iptOthInfoFaxNo").setValue("");
+                            me.byId("iptOthInfoCurrency").setValue("");
+                            me.byId("iptOthInfoFinContName").setValue("");
+                            me.byId("iptOthInfoFinContNo").setValue("");
+                            me.byId("iptOthInfoWhseContName").setValue("");
+                            me.byId("iptOthInfoWhseContNo").setValue("");
+                            me.byId("iptOthInfoWhseContAddr").setValue("");
+                            me.byId("iptOthInfoDiscVat").setValue("");
+                            me.byId("iptOthInfoOrderUom").setValue("");
+                            me.byId("iptOthInfoCreatedBy").setValue("");
+                            me.byId("iptOthInfoCreatedDt").setValue("");
+                        }
+                    },
+                    error: function (err) {
+                    }
+                });
+            },
+
             onAddManualOthInfo() {
                 var me = this;
-                var bProceed = true
-                var isValid = true
+                var bProceed = true;
+                bProceed = me.validatePOOthInfo();
 
-                var count = me.getView().getModel("VPODtlsVPODet").getProperty("/results").length;
-                var itemCount = 0;
-                var isValidObj = [];
-                
-                this.getView().getModel("VPODtlsVPODet").getProperty("/results").forEach(item => {
-
-                    if(item.DELETED === true || item.CLOSED === true){
-                        isValidObj.push({
-                            Deleted: item.DELETED,
-                            Closed: item.CLOSED
-                        });
-                        itemCount++
-                    }else{
-                        isValidObj.push({
-                            Deleted: item.DELETED,
-                            Closed: item.CLOSED
-                        })
-                        itemCount++
-                    }
-                    if(itemCount === count){
-                        var result = isValidObj.find(item => item.Deleted === false && item.Closed === false)
-                        if(result != undefined){
-                            if(result.Deleted === false && result.Closed === false){
-                                bProceed = true;
-                            }else{
-                                bProceed = false;
-                            }
-                        }else{
-                            bProceed = false;
-                        }
-                    }
-                })
-
-                if(!isValid){
-                    MessageBox.error(_captionList.INFO_PO_IS_DELETED)
+                if (me.byId("iptOthInfoPONo").getValue().length > 0) {
+                    MessageBox.information(_captionList.INFO_CREATE_DATA_NOT_ALLOW);
                     return;
                 }
-                if(!bProceed){
-                    MessageBox.error(_captionList.INFO_PO_CLOSED_DELETED)
-                    return;
-                }
+
                 if(bProceed){
                     this.getView().getModel("ui").setProperty("/othInfoDataEdit", true);    
                 
@@ -9845,12 +9881,162 @@ sap.ui.define([
 
                     this.disableOtherTabs("idIconTabBarInlineMode");
                     this.disableOtherTabs("vpoDetailTab");
+
+                    this._othInfoDataTemp = jQuery.extend(true, {}, this.getView().getModel("othInfoData").getData());
+                }
+            },
+
+            onAddCopyDefaultOthInfo() {
+                var me = this;
+                var bProceed = true;
+
+                bProceed = me.validatePOOthInfo();
+            },
+
+            onEditOthInfo() {
+
+            },
+
+            onSaveOthInfo() {
+                var me = this;
+                var oParam = {
+                    EBELN: me._pono,
+                    CNEENAME: (me.byId("iptOthInfoConsigneeName").getValue() ? me.byId("iptOthInfoConsigneeName").getValue() : null),
+                    COMPNAME: (me.byId("iptOthInfoCompanyName").getValue() ? me.byId("iptOthInfoCompanyName").getValue() : null),
+                    COMPADD: (me.byId("iptOthInfoCompanyAddr").getValue() ? me.byId("iptOthInfoCompanyAddr").getValue() : null),
+                    TELF1: (me.byId("iptOthInfoTelNo").getValue() ? me.byId("iptOthInfoTelNo").getValue() : null),
+                    TELFX: (me.byId("iptOthInfoFaxNo").getValue() ? me.byId("iptOthInfoFaxNo").getValue() : null),
+                    CURR: (me.byId("iptOthInfoCurrency").getValue() ? me.byId("iptOthInfoCurrency").getValue() : null),
+                    FINNAME: (me.byId("iptOthInfoFinContName").getValue() ? me.byId("iptOthInfoFinContName").getValue() : null),
+                    FINTELF1: (me.byId("iptOthInfoFinContNo").getValue() ? me.byId("iptOthInfoFinContNo").getValue() : null),
+                    WHSNAME: (me.byId("iptOthInfoWhseContName").getValue() ? me.byId("iptOthInfoWhseContName").getValue() : null),
+                    WHSTELF1: (me.byId("iptOthInfoWhseContNo").getValue() ? me.byId("iptOthInfoWhseContNo").getValue() : null),
+                    WHSADD: (me.byId("iptOthInfoWhseContAddr").getValue() ? me.byId("iptOthInfoWhseContAddr").getValue() : null),
+                    DISCVAT: (me.byId("iptOthInfoDiscVat").getValue() ? me.byId("iptOthInfoDiscVat").getValue() : "0"),
+                    ORDERUOM: (me.byId("iptOthInfoOrderUom").getValue() ? me.byId("iptOthInfoOrderUom").getValue() : null)
+                }
+
+                var oModel = me.getOwnerComponent().getModel();
+                if (me.byId("iptOthInfoPONo").getValue() == "") {
+                    oModel.create("/OthInfoSet", oParam, {
+                        method: "POST",
+                        success: function(data, oResponse) {
+                            console.log("success", oResponse)
+                            
+                            me.getOthInfo();
+
+                            me.byId("mbAddOthInfo").setVisible(true);
+                            me.byId("btnEditOthInfo").setVisible(true);
+                            me.byId("btnSaveOthInfo").setVisible(false);
+                            me.byId("btnCancelOthInfo").setVisible(false);
+                            me.byId("btnDeleteOthInfo").setVisible(true);
+                            me.byId("btnRefreshOthInfo").setVisible(true);
+
+                            me.enableOtherTabs("idIconTabBarInlineMode");
+                            me.enableOtherTabs("vpoDetailTab");
+                        },
+                        error: function(err) {
+                            console.log("error", err)
+                            var oError = JSON.parse(err.responseText);
+                            var sError = oError.error.message.value;
+
+                            sError = sError.replace("Property", "Column");
+                            sError = sError.replace("at offset '20'", "");
+
+                            MessageBox.error(sError);
+                        }
+                    });
+                }
+                else {
+
                 }
             },
 
             onCancelOthInfo() {
-                
+                var me = this;
+
+                MessageBox.confirm(_captionList.CONF_DISCARD_CHANGE, {
+                    actions: ["Yes", "No"],
+                    onClose: function (sAction) {
+                        if (sAction == "Yes") {
+                            me.getOthInfo();
+
+                            me.byId("mbAddOthInfo").setVisible(true);
+                            me.byId("btnEditOthInfo").setVisible(true);
+                            me.byId("btnSaveOthInfo").setVisible(false);
+                            me.byId("btnCancelOthInfo").setVisible(false);
+                            me.byId("btnDeleteOthInfo").setVisible(true);
+                            me.byId("btnRefreshOthInfo").setVisible(true);
+
+                            me.enableOtherTabs("idIconTabBarInlineMode");
+                            me.enableOtherTabs("vpoDetailTab");
+                        }
+                    }
+                });
             },
+
+            onDeleteOthInfo() {
+
+            },
+
+            onRefreshOthInfo() {
+
+            },
+
+            validatePOOthInfo() {
+                var me = this;
+                var bProceed = true
+                var isValid = true
+
+                var count = me.getView().getModel("VPODtlsVPODet").getProperty("/results").length;
+                var itemCount = 0;
+                var isValidObj = [];
+                
+                this.getView().getModel("VPODtlsVPODet").getProperty("/results").forEach(item => {
+
+                    if (item.DELETED === true || item.CLOSED === true){
+                        isValidObj.push({
+                            Deleted: item.DELETED,
+                            Closed: item.CLOSED
+                        });
+                        itemCount++
+                    }
+                    else {
+                        isValidObj.push({
+                            Deleted: item.DELETED,
+                            Closed: item.CLOSED
+                        })
+                        itemCount++
+                    }
+
+                    if(itemCount === count){
+                        var result = isValidObj.find(item => item.Deleted === false && item.Closed === false)
+                        if(result != undefined){
+                            if (result.Deleted === false && result.Closed === false){
+                                bProceed = true;
+                            }
+                            else{
+                                bProceed = false;
+                            }
+                        }
+                        else{
+                            bProceed = false;
+                        }
+                    }
+                })
+
+                if(!isValid){
+                    MessageBox.error(_captionList.INFO_PO_IS_DELETED)
+                    return false;
+                }
+
+                if(!bProceed){
+                    MessageBox.error(_captionList.INFO_PO_CLOSED_DELETED)
+                    return false;
+                }
+
+                return true;
+            }
 
         });
     });
