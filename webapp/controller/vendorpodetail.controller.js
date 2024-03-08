@@ -431,7 +431,11 @@ sap.ui.define([
                 oDDTextParam.push({CODE: "SAVELAYOUT"});
                 oDDTextParam.push({CODE: "INFO_NO_LAYOUT"});
                 oDDTextParam.push({CODE: "INFO_LAYOUT_SAVE"});
-                oDDTextParam.push({CODE: "INFO_CREATE_DATA_NOT_ALLOW"});
+                oDDTextParam.push({CODE: "WARN_ADD_NOT_ALLOW"});
+                oDDTextParam.push({CODE: "WARN_EDIT_NOT_ALLOW"});
+                oDDTextParam.push({CODE: "WARN_DELETE_NOT_ALLOW"});
+                oDDTextParam.push({CODE: "INFO_PROCEED_DELETE"});
+                oDDTextParam.push({CODE: "CONFIRM_PROCEED_COPYDEFAULT"});
 
                 oDDTextParam.push({CODE: "CREATEDBY"});
                 oDDTextParam.push({CODE: "CREATEDDT"});
@@ -3574,6 +3578,7 @@ sap.ui.define([
             },
 
             formatValueHelp: function(sValue, sPath, sKey, sText, sFormat) {
+                console.log("formatValueHelp", sValue, sPath, sKey, sText, sFormat)
                 if(this.getView().getModel(sPath) !== undefined){
                     if(this.getView().getModel(sPath).getData().length > 0){
                         var oValue = this.getView().getModel(sPath).getData().filter(v => v[sKey] === sValue);
@@ -9824,14 +9829,14 @@ sap.ui.define([
                             me.byId("iptOthInfoCompanyAddr").setValue(oData.COMPADD);
                             me.byId("iptOthInfoTelNo").setValue(oData.TELF1);
                             me.byId("iptOthInfoFaxNo").setValue(oData.TELFX);
-                            me.byId("iptOthInfoCurrency").setValue(oData.CURR);
+                            me.byId("iptOthInfoCurrency").setSelectedKey(oData.CURR);
                             me.byId("iptOthInfoFinContName").setValue(oData.FINNAME);
                             me.byId("iptOthInfoFinContNo").setValue(oData.FINTELF1);
                             me.byId("iptOthInfoWhseContName").setValue(oData.WHSNAME);
                             me.byId("iptOthInfoWhseContNo").setValue(oData.WHSTELF1);
                             me.byId("iptOthInfoWhseContAddr").setValue(oData.WHSADD);
                             me.byId("iptOthInfoDiscVat").setValue(oData.DISCVAT);
-                            me.byId("iptOthInfoOrderUom").setValue(oData.ORDERUOM);
+                            me.byId("iptOthInfoOrderUom").setSelectedKey(oData.ORDERUOM);
                             me.byId("iptOthInfoCreatedBy").setValue(oData.CREATEDBY);
                             me.byId("iptOthInfoCreatedDt").setValue(oData.CREATEDDT);
                         }
@@ -9865,11 +9870,11 @@ sap.ui.define([
                 bProceed = me.validatePOOthInfo();
 
                 if (me.byId("iptOthInfoPONo").getValue().length > 0) {
-                    MessageBox.information(_captionList.INFO_CREATE_DATA_NOT_ALLOW);
+                    MessageBox.information(_captionList.WARN_ADD_NOT_ALLOW);
                     return;
                 }
 
-                if(bProceed){
+                if(bProceed) {
                     this.getView().getModel("ui").setProperty("/othInfoDataEdit", true);    
                 
                     this.byId("mbAddOthInfo").setVisible(false);
@@ -9889,12 +9894,77 @@ sap.ui.define([
             onAddCopyDefaultOthInfo() {
                 var me = this;
                 var bProceed = true;
-
                 bProceed = me.validatePOOthInfo();
+
+                if (me.byId("iptOthInfoPONo").getValue().length > 0) {
+                    MessageBox.information(_captionList.WARN_ADD_NOT_ALLOW);
+                    return;
+                }
+
+                if(bProceed) {
+                    MessageBox.confirm(_captionList.CONFIRM_PROCEED_COPYDEFAULT, {
+                        actions: ["Yes", "No"],
+                        onClose: function (sAction) {
+                            if (sAction == "Yes") {
+                                var oParam = {
+                                    EBELN: me._pono,
+                                    CNEENAME: "COPY_DEFAULT",
+                                    COMPNAME: null,
+                                    COMPADD: null,
+                                    TELF1: null,
+                                    TELFX: null,
+                                    CURR: null,
+                                    FINNAME: null,
+                                    FINTELF1: null,
+                                    WHSNAME: null,
+                                    WHSTELF1: null,
+                                    WHSADD: null,
+                                    DISCVAT: null,
+                                    ORDERUOM: null
+                                }
+            
+                                var oModel = me.getOwnerComponent().getModel();
+                                oModel.create("/OthInfoSet", oParam, {
+                                    method: "POST",
+                                    success: function(data, oResponse) {
+                                        console.log("success", oResponse)
+                                        me.getOthInfo();
+                                    },
+                                    error: function(err) {
+                                        console.log("error", err);
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
             },
 
             onEditOthInfo() {
+                var me = this;
+                var bProceed = true;
+                bProceed = me.validatePOOthInfo();
 
+                if (me.byId("iptOthInfoPONo").getValue().length == 0) {
+                    MessageBox.information(_captionList.WARN_EDIT_NOT_ALLOW);
+                    return;
+                }
+
+                if(bProceed) {
+                    this.getView().getModel("ui").setProperty("/othInfoDataEdit", true);    
+                
+                    this.byId("mbAddOthInfo").setVisible(false);
+                    this.byId("btnEditOthInfo").setVisible(false);
+                    this.byId("btnSaveOthInfo").setVisible(true);
+                    this.byId("btnCancelOthInfo").setVisible(true);
+                    this.byId("btnDeleteOthInfo").setVisible(false);
+                    this.byId("btnRefreshOthInfo").setVisible(false);
+
+                    this.disableOtherTabs("idIconTabBarInlineMode");
+                    this.disableOtherTabs("vpoDetailTab");
+
+                    this._othInfoDataTemp = jQuery.extend(true, {}, this.getView().getModel("othInfoData").getData());
+                }
             },
 
             onSaveOthInfo() {
@@ -9906,14 +9976,14 @@ sap.ui.define([
                     COMPADD: (me.byId("iptOthInfoCompanyAddr").getValue() ? me.byId("iptOthInfoCompanyAddr").getValue() : null),
                     TELF1: (me.byId("iptOthInfoTelNo").getValue() ? me.byId("iptOthInfoTelNo").getValue() : null),
                     TELFX: (me.byId("iptOthInfoFaxNo").getValue() ? me.byId("iptOthInfoFaxNo").getValue() : null),
-                    CURR: (me.byId("iptOthInfoCurrency").getValue() ? me.byId("iptOthInfoCurrency").getValue() : null),
+                    CURR: (me.byId("iptOthInfoCurrency").getSelectedKey() ? me.byId("iptOthInfoCurrency").getSelectedKey() : null),
                     FINNAME: (me.byId("iptOthInfoFinContName").getValue() ? me.byId("iptOthInfoFinContName").getValue() : null),
                     FINTELF1: (me.byId("iptOthInfoFinContNo").getValue() ? me.byId("iptOthInfoFinContNo").getValue() : null),
                     WHSNAME: (me.byId("iptOthInfoWhseContName").getValue() ? me.byId("iptOthInfoWhseContName").getValue() : null),
                     WHSTELF1: (me.byId("iptOthInfoWhseContNo").getValue() ? me.byId("iptOthInfoWhseContNo").getValue() : null),
                     WHSADD: (me.byId("iptOthInfoWhseContAddr").getValue() ? me.byId("iptOthInfoWhseContAddr").getValue() : null),
                     DISCVAT: (me.byId("iptOthInfoDiscVat").getValue() ? me.byId("iptOthInfoDiscVat").getValue() : "0"),
-                    ORDERUOM: (me.byId("iptOthInfoOrderUom").getValue() ? me.byId("iptOthInfoOrderUom").getValue() : null)
+                    ORDERUOM: (me.byId("iptOthInfoOrderUom").getSelectedKey() ? me.byId("iptOthInfoOrderUom").getSelectedKey() : null)
                 }
 
                 var oModel = me.getOwnerComponent().getModel();
@@ -9948,7 +10018,27 @@ sap.ui.define([
                     });
                 }
                 else {
+                    oModel.update("/OthInfoSet(EBELN='" + oParam.EBELN + "')", oParam, {
+                        method: "PUT",
+                        success: function(data, oResponse) {
+                            console.log("success", oResponse)
+                            
+                            me.getOthInfo();
 
+                            me.byId("mbAddOthInfo").setVisible(true);
+                            me.byId("btnEditOthInfo").setVisible(true);
+                            me.byId("btnSaveOthInfo").setVisible(false);
+                            me.byId("btnCancelOthInfo").setVisible(false);
+                            me.byId("btnDeleteOthInfo").setVisible(true);
+                            me.byId("btnRefreshOthInfo").setVisible(true);
+
+                            me.enableOtherTabs("idIconTabBarInlineMode");
+                            me.enableOtherTabs("vpoDetailTab");
+                        },
+                        error: function(err) {
+                            console.log("error", err);
+                        }
+                    });
                 }
             },
 
@@ -9976,11 +10066,39 @@ sap.ui.define([
             },
 
             onDeleteOthInfo() {
+                var me = this;
+                var bProceed = true;
+                bProceed = me.validatePOOthInfo();
 
+                if (me.byId("iptOthInfoPONo").getValue().length == 0) {
+                    MessageBox.information(_captionList.WARN_DELETE_NOT_ALLOW);
+                    return;
+                }
+
+                if(bProceed) {
+                    MessageBox.confirm(_captionList.INFO_PROCEED_DELETE, {
+                        actions: ["Yes", "No"],
+                        onClose: function (sAction) {
+                            if (sAction === "Yes") {
+                                var oModel = me.getOwnerComponent().getModel();
+                                oModel.remove("/OthInfoSet(EBELN='" + me._pono + "')", {
+                                    method: "DELETE",
+                                    success: function(data, oResponse) {
+                                        console.log("success", oResponse)
+                                        me.getOthInfo();
+                                    },
+                                    error: function(err) {
+                                        console.log("error", err);
+                                    }
+                                });                      
+                            }
+                        }
+                    });
+                }
             },
 
             onRefreshOthInfo() {
-
+                this.getOthInfo();
             },
 
             validatePOOthInfo() {
